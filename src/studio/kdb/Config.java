@@ -94,13 +94,15 @@ public class Config {
             return;
         }
 
-        try {
-            InputStream in = Files.newInputStream(file);
-            p.load(in);
-            in.close();
-        } catch (IOException e) {
-            System.err.println("Cant't read configuration from file " + FILENAME);
-            e.printStackTrace(System.err);
+        if (Files.exists(file)) {
+            try {
+                InputStream in = Files.newInputStream(file);
+                p.load(in);
+                in.close();
+            } catch (IOException e) {
+                System.err.println("Can't read configuration from file " + FILENAME);
+                e.printStackTrace(System.err);
+            }
         }
         initServers();
     }
@@ -357,7 +359,7 @@ public class Config {
     }
 
     private void initServers() {
-        if (p.getProperty("version").equals(OLD_VERSION)) {
+        if (p.contains("version") && p.getProperty("version").equals(OLD_VERSION)) {
             convertFromOldVerion();
         }
         serverNames = new ArrayList<>();
