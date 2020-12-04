@@ -54,7 +54,6 @@ public class StudioPanel extends JPanel implements Observer,WindowListener {
 
     private JComboBox<String> comboServer;
     private JTextField txtServer;
-    private JTable table;
     private String exportFilename;
     private String lastQuery = null;
     private JMenuBar menubar;
@@ -95,11 +94,13 @@ public class StudioPanel extends JPanel implements Observer,WindowListener {
     private UserAction editServerAction;
     private UserAction addServerAction;
     private UserAction removeServerAction;
+    private UserAction toggleCommaFormatAction;
     private static int scriptNumber = 0;
     private static int myScriptNumber;
     private JFrame frame;
     public static java.util.List windowList = Collections.synchronizedList(new LinkedList());
-    private int menuShortcutKeyMask = java.awt.Toolkit.getDefaultToolkit().getMenuShortcutKeyMask();
+
+    public final static int menuShortcutKeyMask = java.awt.Toolkit.getDefaultToolkit().getMenuShortcutKeyMask();
 
     private final static int MAX_SERVERS_TO_CLONE = 20;
 
@@ -166,6 +167,10 @@ public class StudioPanel extends JPanel implements Observer,WindowListener {
         Document doc = null;
         if (textArea == null) {
             textArea = new JEditorPane("text/q","");
+
+            textArea.getInputMap().put(toggleCommaFormatAction.getKeyStroke(), toggleCommaFormatAction.getText());
+            textArea.getActionMap().put(toggleCommaFormatAction.getText(), toggleCommaFormatAction);
+
 
             BaseKit baseKit = ((BaseKit)textArea.getUI().getEditorKit(textArea));
             copyAction = baseKit.getActionByName(BaseKit.copyAction);
@@ -349,7 +354,7 @@ public class StudioPanel extends JPanel implements Observer,WindowListener {
     }
 
     private void exportAsExcel(final String filename) {
-        new ExcelExporter().exportTableX(frame,table,new File(filename),false);
+        new ExcelExporter().exportTableX(frame,getSelectedTable(),new File(filename),false);
     }
 
     private void exportAsDelimited(final TableModel model,final String filename,final char delimiter) {
@@ -395,7 +400,7 @@ public class StudioPanel extends JPanel implements Observer,WindowListener {
 
                                 K.KBase o = (K.KBase) model.getValueAt(r - 1,col);
                                 if (!o.isNull())
-                                    fw.write(o.toString(false));
+                                    fw.write(o.toString(KFormatContext.NO_TYPE));
                             }
                             fw.write(lineSeparator);
 
@@ -487,7 +492,7 @@ public class StudioPanel extends JPanel implements Observer,WindowListener {
 
                                 K.KBase o = (K.KBase) model.getValueAt(r - 1,col);
                                 if (!o.isNull())
-                                    fw.write(o.toString(false));
+                                    fw.write(o.toString(KFormatContext.NO_TYPE));
 
                                 fw.write("</" + columns[col] + ">");
                             }
@@ -541,11 +546,11 @@ public class StudioPanel extends JPanel implements Observer,WindowListener {
     }
 
     private void exportAsTxt(String filename) {
-        exportAsDelimited(table.getModel(),filename,'\t');
+        exportAsDelimited(getSelectedTable().getModel(),filename,'\t');
     }
 
     private void exportAsCSV(String filename) {
-        exportAsDelimited(table.getModel(),filename,',');
+        exportAsDelimited(getSelectedTable().getModel(),filename,',');
     }
 
     private void export() {
@@ -559,7 +564,7 @@ public class StudioPanel extends JPanel implements Observer,WindowListener {
         FileFilter xmlFilter = null;
         FileFilter xlsFilter = null;
 
-        if (table != null) {
+        if (getSelectedTable() != null) {
             csvFilter =
                 new FileFilter() {
                     public String getDescription() {
@@ -628,7 +633,7 @@ public class StudioPanel extends JPanel implements Observer,WindowListener {
             File dir = new File(file.getPath());
             chooser.setCurrentDirectory(dir);
             chooser.ensureFileIsVisible(file);
-            if (table != null)
+            if (getSelectedTable() != null)
                 if (exportFilename.endsWith(".xls"))
                     chooser.setFileFilter(xlsFilter);
                 else if (exportFilename.endsWith(".csv"))
@@ -654,7 +659,7 @@ public class StudioPanel extends JPanel implements Observer,WindowListener {
 
                 exportFilename = dir + "/" + sf.getName();
 
-                if (table != null)
+                if (getSelectedTable() != null)
                     if (exportFilename.endsWith(".xls"))
                         exportAsExcel(exportFilename);
                     else if (exportFilename.endsWith(".csv"))
@@ -662,7 +667,7 @@ public class StudioPanel extends JPanel implements Observer,WindowListener {
                     else if (exportFilename.endsWith(".txt"))
                         exportAsTxt(exportFilename);
                     else if (exportFilename.endsWith(".xml"))
-                        exportAsXml(table.getModel(),exportFilename);
+                        exportAsXml(getSelectedTable().getModel(),exportFilename);
                     /*                    else if (exportFilename.endsWith(".res")) {
                     exportAsBin(exportFilename);
                     }
@@ -675,7 +680,7 @@ public class StudioPanel extends JPanel implements Observer,WindowListener {
                         else if (ff == txtFilter)
                             exportAsTxt(exportFilename);
                         else if (ff == xmlFilter)
-                            exportAsXml(table.getModel(),exportFilename);
+                            exportAsXml(getSelectedTable().getModel(),exportFilename);
                         /*else if( ff == binFilter){
                         exportAsBin(exportFilename);
                         }
@@ -1231,8 +1236,7 @@ public class StudioPanel extends JPanel implements Observer,WindowListener {
                                      new Integer(KeyEvent.VK_E),
                                      null) {
             public void actionPerformed(ActionEvent e) {
-                new LineChart((KTableModel) table.getModel());
-            //new PriceVolumeChart(table);
+                new LineChart((KTableModel) getSelectedTable().getModel());
             }
         };
 
@@ -1261,7 +1265,7 @@ public class StudioPanel extends JPanel implements Observer,WindowListener {
             public void actionPerformed(ActionEvent e) {
                 try {
                     File file = File.createTempFile("studioExport",".xls");
-                    new ExcelExporter().exportTableX(frame,table,file,true);
+                    new ExcelExporter().exportTableX(frame,getSelectedTable(),file,true);
                 }
                 catch (IOException ex) {
                     ex.printStackTrace();
@@ -1304,6 +1308,16 @@ public class StudioPanel extends JPanel implements Observer,WindowListener {
                 refreshQuery();
             }
         };
+
+        toggleCommaFormatAction = UserAction.create("Toggle Comma Format",
+                                                    Util.COMMA_ICON,
+                                                    "Add/remove thousands separator in selected result",
+                                                    KeyEvent.VK_F,
+                                                    KeyStroke.getKeyStroke(KeyEvent.VK_J, menuShortcutKeyMask),
+                                                            (event) -> {
+                                                                TabPanel tab = (TabPanel) tabbedPane.getSelectedComponent();
+                                                                if (tab != null) tab.toggleCommaFormatting();
+                                                            });
 
         aboutAction = new UserAction(I18n.getString("About"),
                                      Util.ABOUT_ICON,
@@ -1577,6 +1591,7 @@ public class StudioPanel extends JPanel implements Observer,WindowListener {
         menu.add(new JMenuItem(executeAction));
         menu.add(new JMenuItem(stopAction));
         menu.add(new JMenuItem(refreshAction));
+        menu.add(new JMenuItem(toggleCommaFormatAction));
         menubar.add(menu);
 
         menu = new JMenu(I18n.getString("Window"));
@@ -1872,10 +1887,13 @@ public class StudioPanel extends JPanel implements Observer,WindowListener {
     }
 
     private void toggleDividerOrientation() {
-        if (splitpane.getOrientation() == JSplitPane.VERTICAL_SPLIT)
+        if (splitpane.getOrientation() == JSplitPane.VERTICAL_SPLIT) {
             splitpane.setOrientation(JSplitPane.HORIZONTAL_SPLIT);
-        else
+            tabbedPane.setTabPlacement(JTabbedPane.LEFT);
+        } else {
             splitpane.setOrientation(JSplitPane.VERTICAL_SPLIT);
+            tabbedPane.setTabPlacement(JTabbedPane.TOP);
+        }
 
         splitpane.setDividerLocation(0.5);
     }
@@ -1904,7 +1922,7 @@ public class StudioPanel extends JPanel implements Observer,WindowListener {
         menubar = createMenuBar();
         toolbar = createToolbar();
 
-        tabbedPane = new JTabbedPane();
+        tabbedPane = new JTabbedPane(JTabbedPane.TOP);
         splitpane.setBottomComponent(tabbedPane);
         splitpane.setOneTouchExpandable(true);
         splitpane.setOrientation(JSplitPane.VERTICAL_SPLIT);
@@ -2018,7 +2036,6 @@ public class StudioPanel extends JPanel implements Observer,WindowListener {
     }
 
     public void refreshQuery() {
-        table = null;
         executeK4Query(lastQuery);
     }
 
@@ -2031,8 +2048,6 @@ public class StudioPanel extends JPanel implements Observer,WindowListener {
     }
 
     private void executeQuery(String text) {
-        table = null;
-
         if (text == null) {
             JOptionPane.showMessageDialog(frame,
                                           "\nNo text available to submit to server.\n\n",
@@ -2117,50 +2132,34 @@ public class StudioPanel extends JPanel implements Observer,WindowListener {
         return text;
     }
 
-    private void processK4Results(K.KBase r) throws c.K4Exception {
-        if (r != null) {
-            exportAction.setEnabled(true);
-            KTableModel model = KTableModel.getModel(r);
-            if (model != null) {
-                boolean dictModel = model instanceof DictModel;
-                boolean listModel = model instanceof ListModel;
-                boolean tableModel = ! (dictModel || listModel);
-                QGrid grid = new QGrid(model);
-                table = grid.getTable();
-                openInExcel.setEnabled(true);
-                chartAction.setEnabled(tableModel);
-                String title = tableModel ? "Table" : (dictModel ? "Dict" : "List");
-                TabPanel frame = new TabPanel( title + " [" + grid.getRowCount() + " rows] ",
-                        Util.TABLE_ICON,
-                        grid);
-//                frame.setTitle(I18n.getString("Table")+" [" + grid.getRowCount() + " "+I18n.getString("rows")+"] ");
-                tabbedPane.addTab(frame.getTitle(),frame.getIcon(),frame.getComponent());
-            } else {
-                chartAction.setEnabled(false);
-                openInExcel.setEnabled(false);
-                String text;
-                if ((r instanceof K.UnaryPrimitive&&0==((K.UnaryPrimitive)r).getPrimitiveAsInt())) text = "";
-                else {
-                    text = Util.limitString(r.toString(), Config.getInstance().getMaxCharsInResult());
-                }
-                JEditorPane textArea = new JEditorPane("text/q", text);
-                textArea.setEditable(false);
-
-                TabPanel frame = new TabPanel("Console View ",
-                        Util.CONSOLE_ICON,
-                        Utilities.getEditorUI(textArea).getExtComponent());
-
-
-                frame.setTitle(I18n.getString("ConsoleView"));
-
-                tabbedPane.addTab(frame.getTitle(),frame.getIcon(),frame.getComponent());
-            }
-        }
-        else {
-            // Log that execute was successful
-        }
-        tabbedPane.setSelectedIndex(tabbedPane.getTabCount()-1);
+    private JTable getSelectedTable() {
+        TabPanel tab = (TabPanel) tabbedPane.getSelectedComponent();
+        if (tab == null) return null;
+        return tab.getTable();
     }
+
+    private void processK4Results(K.KBase r) {
+        if (r == null) return;
+        TabPanel tab = new TabPanel(r);
+        tab.addInto(tabbedPane);
+
+        exportAction.setEnabled(true);
+        KTableModel model = null;
+        if (tab.getTable() != null) {
+            model = (KTableModel) tab.getTable().getModel();
+        }
+        if (model != null) {
+            boolean dictModel = model instanceof DictModel;
+            boolean listModel = model instanceof ListModel;
+            boolean tableModel = ! (dictModel || listModel);
+            openInExcel.setEnabled(true);
+            chartAction.setEnabled(tableModel);
+        } else {
+            chartAction.setEnabled(false);
+            openInExcel.setEnabled(false);
+        }
+    }
+
     Server server = null;
 
       public void executeK4Query(final String text) {
@@ -2234,13 +2233,10 @@ public class StudioPanel extends JPanel implements Observer,WindowListener {
 
                             JScrollPane scrollpane = new JScrollPane(pane);
 
-                            TabPanel frame = new TabPanel("Error Details ",
+                            TabPanel tab = new TabPanel("Error Details ",
                                                           Util.ERROR_SMALL_ICON,
                                                           scrollpane);
-                            frame.setTitle("Error Details ");
-
-                            tabbedPane.addTab(frame.getTitle(),frame.getIcon(),frame.getComponent());
-                            tabbedPane.setSelectedIndex(tabbedPane.getTabCount()-1);
+                            tab.addInto(tabbedPane);
                         }
                         catch (java.lang.OutOfMemoryError ex) {
                             JOptionPane.showMessageDialog(frame,
