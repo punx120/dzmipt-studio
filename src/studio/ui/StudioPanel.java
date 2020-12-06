@@ -109,7 +109,7 @@ public class StudioPanel extends JPanel implements Observer,WindowListener {
         if (s == null)
             s = "Script" + myScriptNumber;
         String title = s.replace('\\','/');
-        frame.setTitle(title + (getModified() ? " (not saved) " : "") + (server!=null?" @"+server.toString():"") +" Studio for kdb+ " + Lm.getVersionString());
+        frame.setTitle(title + (getModified() ? " (not saved) " : "") + (server!=null?" @"+server.toString():"") +" Studio for kdb+ " + Lm.version);
     }
 
     public static class WindowListChangedEvent extends EventObject {

@@ -1,38 +1,46 @@
 package studio.kdb;
 
-import java.text.ParseException;
-import java.text.SimpleDateFormat;
-import java.text.NumberFormat;
-import java.text.DecimalFormat;
-import java.util.Date;
-import java.util.TimeZone;
+import java.io.*;
+import java.util.regex.Matcher;
+import java.util.regex.Pattern;
 
 public class Lm {
-    private static int majorVersion = 3;
-    private static int minorVersion = 35;
-    public static Date buildDate;
-    
+    public static String version = "unknown";
+    public static String build = "unknown";
+    public static String date = "unknown";
+
+    private final static Pattern versionPattern = Pattern.compile("\\s*`(?<version>.*)`\\s*(?<date>.*)");
+    private final static String notesFileName = "notes.md";
+    private final static String buildFileName = "build.txt";
+
     static {
         try {
-            SimpleDateFormat f = new SimpleDateFormat("yyyyMMdd");
-            f.setTimeZone(TimeZone.getTimeZone("GMT"));
-            buildDate = f.parse("20190409");
+            InputStream inputStream = Lm.class.getClassLoader().getResourceAsStream(notesFileName);
+            BufferedReader reader = new BufferedReader(new InputStreamReader(inputStream));
+            String line;
+            while ( (line = reader.readLine())!=null) {
+                Matcher matcher = versionPattern.matcher(line);
+                if (matcher.matches()) {
+                    version = matcher.group("version");
+                    date = matcher.group("date");
+                    break;
+                }
+            }
+            inputStream.close();
+        } catch (IOException|NullPointerException|IllegalStateException|IllegalArgumentException e) {
+            System.err.println("Can't read version and build date");
+            e.printStackTrace();
         }
-        catch (ParseException e) {
+
+        try {
+            InputStream inputStream = Lm.class.getClassLoader().getResourceAsStream(buildFileName);
+            BufferedReader reader = new BufferedReader(new InputStreamReader(inputStream));
+            build = reader.readLine();
+            inputStream.close();
+        } catch (IOException|NullPointerException e) {
+            System.err.println("Can't read build hash");
+            e.printStackTrace();
         }
     }
 
-    public static int getMajorVersion() {
-        return majorVersion;
-    }
-
-    public static int getMinorVersion() {
-        return minorVersion;
-    }
-
-    public static String getVersionString() {
-        NumberFormat numberFormatter = new DecimalFormat("##.00");
-        double d = getMajorVersion() + getMinorVersion() / 100.0;
-        return numberFormatter.format(d);
-    }
 }

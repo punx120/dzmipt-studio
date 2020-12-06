@@ -15,18 +15,18 @@ import java.util.TimeZone;
 public class HelpDialog extends JDialog {
     public HelpDialog(JFrame parent) {
         super(parent, "Studio for kdb+");
-        SimpleDateFormat f = new SimpleDateFormat("yyyy-MM-dd");
-        f.setTimeZone(TimeZone.getTimeZone("GMT"));
         final JEditorPane jep = new JEditorPane("text/html",
                 "<html><head><title>Studio for kdb+</title></head><body><h1>Studio for kdb+</h1>"
-                        + "<br>Version: " + Lm.getVersionString()
-                        + "<br>Build date: " + f.format(Lm.buildDate)
+                        + "<p>Version: " + Lm.version
+                        + "<br>Build date: " + Lm.date
+                        + "<br>Build hash: " + Lm.build
                         + "<br>JVM Version: " + System.getProperty("java.version")
-                        + "<br>License: <a href=\"http://github.com/CharlesSkelton/studio/blob/master/license.md\">Apache 2</a>"
+                        + "</p><p>License: <a href=\"http://github.com/CharlesSkelton/studio/blob/master/license.md\">Apache 2</a>"
                         + "<br>N.B. Some components have their own license terms, see this project on github for details."
-                        + "<br>Source available from <a href=\"http://github.com/CharlesSkelton/studio\">Github</a>"
+                        + "<br>Source available from <a href=\"http://github.com/dzmipt/kdbStudio\">Github</a>"
+                        + "<br>The repository was forked from <a href=\"http://github.com/CharlesSkelton/studio\">Github</a>"
                         + "<br>Contributions and corrections welcome."
-                        + "</body></html>");
+                        + "</p></body></html>");
         jep.setEditable(false);
         jep.setOpaque(true);
         jep.addHyperlinkListener(new HyperlinkListener() {
@@ -36,6 +36,7 @@ public class HelpDialog extends JDialog {
                     BrowserLaunch.openURL(hle.getURL().toString());
             }
         });
+        jep.setBorder(BorderFactory.createEmptyBorder(10,20,10,20));
         getContentPane().add(jep);
         JPanel buttonPane = new JPanel();
         JButton button = new JButton("Close");

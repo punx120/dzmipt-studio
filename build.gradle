@@ -9,8 +9,6 @@ compileJava {
 }
 
 repositories {
-//    maven { url 'http://mvnrepository.com/maven2' }
-//    maven { url 'https://repo1.maven.org/maven2' }
     mavenCentral()
 }
 
@@ -32,6 +30,8 @@ sourceSets {
             include 'studio*.properties'
             include 'org/netbeans/editor/Bundle*.properties'
             include '*.png'
+            include 'notes.md'
+            include 'build.txt'
         }
     }
     test {
@@ -48,3 +48,16 @@ test {
 application {
     mainClassName = 'studio.core.Studio'
 }
+
+task getBuildHash {
+    def stdout = new ByteArrayOutputStream()
+    exec{
+        commandLine 'git'
+        args 'rev-parse', '--short', 'HEAD'
+        standardOutput = stdout
+        ignoreExitValue = true
+    }
+    file('src/build.txt').text = stdout.size() == 0 ? "unknown" : stdout;
+}
+
+processResources.dependsOn('getBuildHash')
