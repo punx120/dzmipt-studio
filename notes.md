@@ -1,3 +1,4 @@
+* Rework q syntax highlighting
 * Update versioning and About Dialog. Added release notes into notes.md 
 
 `dz1.5` 2020.12.04

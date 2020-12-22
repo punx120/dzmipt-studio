@@ -48,6 +48,7 @@ public class QTokenContext extends TokenContext
     public static final int TIMESTAMP_ID   = 25;
     public static final int TIMESPAN_ID    = 26;
     //    public static final int TEMPORAL_ID    = 10;
+    public static final int BRACKET_ID    = 10;
 
     //public static final BaseTokenID TEXT=    new BaseTokenID("text",    TEXT_ID);
    // public static final BaseTokenID KEYWORD= new BaseTokenID("keyword", KEYWORD_ID);
@@ -60,6 +61,7 @@ public class QTokenContext extends TokenContext
     public static final BaseTokenID CHAR_VECTOR= new BaseTokenID("charvector", CHARVECTOR_ID);
     public static final BaseTokenID IDENTIFIER=  new BaseTokenID("identifier", IDENTIFIER_ID);
     public static final BaseTokenID OPERATOR=    new BaseTokenID("operator",   OPERATOR_ID);
+    public static final BaseTokenID BRACKET =    new BaseTokenID("bracket",   BRACKET_ID);
     public static final BaseTokenID EOL_COMMENT= new BaseTokenID("eolComment", EOL_COMMENT_ID);
     public static final BaseTokenID KEYWORD=     new BaseTokenID("keyword",    KEYWORD_ID);
     public static final BaseTokenID WHITESPACE=  new BaseTokenID("whitespace", WHITESPACE_ID);
@@ -79,8 +81,8 @@ public class QTokenContext extends TokenContext
     public static final BaseTokenID DATETIME=    new BaseTokenID("datetime" ,  DATETIME_ID);
     public static final BaseTokenID TIMESTAMP=   new BaseTokenID("timestamp",  TIMESTAMP_ID);
     public static final BaseTokenID TIMESPAN=    new BaseTokenID("timespan",   TIMESPAN_ID);
-    public static final BaseTokenID SYSTEM=      new BaseTokenID("system",     SYSTEM_ID);
-    public static final BaseTokenID COMMAND=     new BaseTokenID("command",    COMMAND_ID);
+    public static final BaseTokenID SYSTEM=      new BaseTokenID("system",     SYSTEM_ID); //OS command like \ls
+    public static final BaseTokenID COMMAND=     new BaseTokenID("command",    COMMAND_ID); //Q command like \p
 
 //    public static final BaseImageTokenID EOL= new BaseImageTokenID("EOL", EOL_ID, "\n");
 

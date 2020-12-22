@@ -42,7 +42,8 @@ class QTokenColoringInitializer extends SettingsUtil.TokenColoringInitializer
     private Coloring SYSTEM_Coloring;
     private Coloring WHITESPACE_Coloring;
     private Coloring DEFAULT_Coloring;
-    
+    private Coloring BRACKET_Coloring;
+
     private Coloring buildColoring(String name, Font font, Color defaultColor)
     {
         return new Coloring(font,
@@ -79,6 +80,7 @@ class QTokenColoringInitializer extends SettingsUtil.TokenColoringInitializer
         SYSTEM_Coloring=buildColoring("SYSTEM", SettingsDefaults.defaultFont,new Color(240,180,0));
         WHITESPACE_Coloring=buildColoring("WHITESPACE", SettingsDefaults.defaultFont,Color.black);
         DEFAULT_Coloring=buildColoring("DEFAULT", SettingsDefaults.defaultFont,Color.black);
+        BRACKET_Coloring=buildColoring("BRACKET", SettingsDefaults.defaultFont,Color.BLACK);
     }
 
     public Object getTokenColoring(TokenContextPath tokenContextPath,
@@ -97,6 +99,8 @@ class QTokenColoringInitializer extends SettingsUtil.TokenColoringInitializer
                     return IDENTIFIER_Coloring;
                 case QTokenContext.OPERATOR_ID:
                     return OPERATOR_Coloring;
+                case QTokenContext.BRACKET_ID:
+                    return BRACKET_Coloring;
                 case QTokenContext.BOOLEAN_ID:
                     return BOOLEAN_Coloring;
                 case QTokenContext.BYTE_ID:

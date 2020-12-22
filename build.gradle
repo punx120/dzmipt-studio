@@ -38,6 +38,10 @@ sourceSets {
         java {
             srcDirs 'test'
         }
+        resources {
+            srcDirs 'test'
+            include 'syntax.csv'
+        }
     }
 }
 

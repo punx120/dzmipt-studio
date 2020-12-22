@@ -27,7 +27,7 @@ public class QSettingsInitializer
             colorInitializer.updateSettingsMap(kitClass,settingsMap);
         }
 
-        if(kitClass==QKit.class)
+        if(kitClass==QKit.class || kitClass==QKitNew.class)
         {
             settingsMap.put(SettingsNames.LINE_NUMBER_VISIBLE,Boolean.TRUE);
 

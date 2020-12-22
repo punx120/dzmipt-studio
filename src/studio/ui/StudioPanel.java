@@ -32,6 +32,7 @@ import studio.kdb.ListModel;
 import studio.qeditor.QKit;
 import org.netbeans.editor.ext.ExtKit;
 import org.netbeans.editor.ext.ExtSettingsInitializer;
+import studio.qeditor.QKitNew;
 import studio.qeditor.QSettingsInitializer;
 import studio.kdb.*;
 import studio.utils.BrowserLaunch;
@@ -47,6 +48,8 @@ public class StudioPanel extends JPanel implements Observer,WindowListener {
         Settings.addInitializer(new ExtSettingsInitializer(),Settings.CORE_LEVEL);
 
         JEditorPane.registerEditorKitForContentType(QKit.CONTENT_TYPE,QKit.class.getName());
+
+        JEditorPane.registerEditorKitForContentType(QKitNew.CONTENT_TYPE, QKitNew.class.getName());
 
         Settings.addInitializer(new QSettingsInitializer());
         Settings.reset();
@@ -95,9 +98,13 @@ public class StudioPanel extends JPanel implements Observer,WindowListener {
     private UserAction addServerAction;
     private UserAction removeServerAction;
     private UserAction toggleCommaFormatAction;
+    private UserAction toggleSyntaxHighlighting;
     private static int scriptNumber = 0;
     private static int myScriptNumber;
     private JFrame frame;
+
+    private String contentType = QKitNew.CONTENT_TYPE;
+
     public static java.util.List windowList = Collections.synchronizedList(new LinkedList());
 
     public final static int menuShortcutKeyMask = java.awt.Toolkit.getDefaultToolkit().getMenuShortcutKeyMask();
@@ -166,7 +173,7 @@ public class StudioPanel extends JPanel implements Observer,WindowListener {
 
         Document doc = null;
         if (textArea == null) {
-            textArea = new JEditorPane("text/q","");
+            textArea = new JEditorPane(contentType,"");
 
             textArea.getInputMap().put(toggleCommaFormatAction.getKeyStroke(), toggleCommaFormatAction.getText());
             textArea.getActionMap().put(toggleCommaFormatAction.getText(), toggleCommaFormatAction);
@@ -1367,6 +1374,31 @@ public class StudioPanel extends JPanel implements Observer,WindowListener {
                     }
             }
         };
+
+        toggleSyntaxHighlighting = new UserAction("Change contentType",
+                                                    Util.BLANK_ICON,
+                                                        "Change syntax highlighting - experimental",
+                                                            null,
+                                                            null) {
+            @Override
+            public void actionPerformed(ActionEvent e) {
+                if (textArea == null) return;
+                contentType = contentType.equals(QKit.CONTENT_TYPE) ? QKitNew.CONTENT_TYPE : QKit.CONTENT_TYPE;
+                System.out.println("Changing synta to " + contentType);
+
+                String text = textArea.getText();
+                int start = textArea.getSelectionStart();
+                int end = textArea.getSelectionEnd();
+                int pos = textArea.getCaretPosition();
+
+                textArea = null;
+                initDocument();
+                textArea.setText(text);
+                textArea.setSelectionStart(start);
+                textArea.setSelectionEnd(end);
+                textArea.setCaretPosition(pos);
+            }
+        };
     }
 
     public void settings() {
@@ -1538,6 +1570,11 @@ public class StudioPanel extends JPanel implements Observer,WindowListener {
         menu.add(new JMenuItem(replaceAction));
 //        menu.addSeparator();
 //        menu.add(new JMenuItem(editFontAction));
+        menu.addSeparator();
+        JMenuItem contentTypeMenuItem = new JMenuItem(toggleSyntaxHighlighting);
+        String text = "Change syntax highlighting to " + (contentType.equals(QKit.CONTENT_TYPE) ? "new":"old") + " mode";
+        contentTypeMenuItem.setText(text);
+        menu.add(contentTypeMenuItem);
         menubar.add(menu);
 
         menu = new JMenu(I18n.getString("Server"));
