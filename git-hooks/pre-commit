@@ -15,6 +15,11 @@
 #         push = +refs/heads/*
 #         push = +refs/tags/*
 
+BRANCH_NAME=$(git rev-parse --abbrev-ref HEAD)
+if [[ ! BRANCH_NAME == master ]]
+then
+  exit 0
+fi
 
 LINE=$(head -n 1 notes.md)
 REGEX='`(.*)`.*'
