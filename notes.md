@@ -1,3 +1,5 @@
+`dz1.6` 2020.12.22
+-----
 * Rework q syntax highlighting
 * Update versioning and About Dialog. Added release notes into notes.md 
 
