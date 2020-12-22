@@ -99,9 +99,11 @@ public class StudioPanel extends JPanel implements Observer,WindowListener {
     private UserAction removeServerAction;
     private UserAction toggleCommaFormatAction;
     private UserAction toggleSyntaxHighlighting;
+    private UserAction debugSyntaxHighlighting;
     private static int scriptNumber = 0;
     private static int myScriptNumber;
     private JFrame frame;
+    private DebugSyntaxHighlightingFrame debugSyntaxHighlightingFrame = null;
 
     private String contentType = QKitNew.CONTENT_TYPE;
 
@@ -243,6 +245,10 @@ public class StudioPanel extends JPanel implements Observer,WindowListener {
         }
         else
             doc = textArea.getDocument();
+
+        if (debugSyntaxHighlightingFrame != null) {
+            debugSyntaxHighlightingFrame.setEditor(textArea);
+        }
 
         JComponent c = (textArea.getUI() instanceof BaseTextUI) ? Utilities.getEditorUI(textArea).getExtComponent() : new JScrollPane(textArea);
 
@@ -1399,6 +1405,19 @@ public class StudioPanel extends JPanel implements Observer,WindowListener {
                 textArea.setCaretPosition(pos);
             }
         };
+
+        debugSyntaxHighlighting = new UserAction("Debugging of Syntax Highlighting",
+                Util.BLANK_ICON,
+                "Debug - required for development",
+                null,
+                null) {
+            @Override
+            public void actionPerformed(ActionEvent e) {
+                debugSyntaxHighlightingFrame = new DebugSyntaxHighlightingFrame();
+                debugSyntaxHighlightingFrame.setEditor(textArea);
+            }
+        };
+
     }
 
     public void settings() {
@@ -1575,6 +1594,7 @@ public class StudioPanel extends JPanel implements Observer,WindowListener {
         String text = "Change syntax highlighting to " + (contentType.equals(QKit.CONTENT_TYPE) ? "new":"old") + " mode";
         contentTypeMenuItem.setText(text);
         menu.add(contentTypeMenuItem);
+        menu.add(new JMenuItem(debugSyntaxHighlighting));
         menubar.add(menu);
 
         menu = new JMenu(I18n.getString("Server"));
