@@ -1,3 +1,5 @@
+* Set new syntax highlighting in Console result pane
+
 `dz1.6` 2020.12.22
 -----
 * Rework q syntax highlighting
