@@ -1429,7 +1429,12 @@ public class K {
 
         @Override
         protected StringBuilder formatVector(StringBuilder builder, KFormatContext context) {
-            if (getLength() == 1) builder.append(enlist);
+            if (getLength() == 1) {
+                char ch = Array.getChar(array, 0);
+                if (ch<=255) {
+                    builder.append(enlist);
+                }
+            }
 
             if (context.showType()) builder.append("\"");
             for (int i = 0; i < getLength(); i++)
