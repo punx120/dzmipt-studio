@@ -35,9 +35,9 @@ import org.netbeans.editor.ext.ExtSettingsInitializer;
 import studio.qeditor.QKitNew;
 import studio.qeditor.QSettingsInitializer;
 import studio.kdb.*;
+import studio.ui.action.QueryExecutor;
 import studio.utils.BrowserLaunch;
 import studio.utils.OSXAdapter;
-import studio.utils.SwingWorker;
 
 public class StudioPanel extends JPanel implements Observer,WindowListener {
     static {
@@ -104,6 +104,8 @@ public class StudioPanel extends JPanel implements Observer,WindowListener {
     private static int myScriptNumber;
     private JFrame frame;
     private DebugSyntaxHighlightingFrame debugSyntaxHighlightingFrame = null;
+
+    private QueryExecutor queryExecutor = new QueryExecutor();
 
     private String contentType = QKitNew.CONTENT_TYPE;
 
@@ -1260,11 +1262,8 @@ public class StudioPanel extends JPanel implements Observer,WindowListener {
                                     new Integer(KeyEvent.VK_S),
                                     null) {
             public void actionPerformed(ActionEvent e) {
-                if (worker != null) {
-                    worker.interrupt();
-                    stopAction.setEnabled(false);
-                    textArea.setCursor(new Cursor(Cursor.DEFAULT_CURSOR));
-                }
+                queryExecutor.cancel();
+                stopAction.setEnabled(false);
             }
         };
 
@@ -2128,6 +2127,14 @@ public class StudioPanel extends JPanel implements Observer,WindowListener {
         lastQuery = text;
     }
 
+    public JEditorPane getTextArea() {
+        return textArea;
+    }
+
+    public Server getServer() {
+        return server;
+    }
+
     private String getEditorText(JEditorPane editor) {
         String text = editor.getSelectedText();
 
@@ -2195,167 +2202,69 @@ public class StudioPanel extends JPanel implements Observer,WindowListener {
         return tab.getTable();
     }
 
-    private void processK4Results(K.KBase r) {
-        if (r == null) return;
-        TabPanel tab = new TabPanel(r);
-        tab.addInto(tabbedPane);
+    private Server server = null;
 
-        exportAction.setEnabled(true);
-        KTableModel model = null;
-        if (tab.getTable() != null) {
-            model = (KTableModel) tab.getTable().getModel();
-        }
-        if (model != null) {
-            boolean dictModel = model instanceof DictModel;
-            boolean listModel = model instanceof ListModel;
-            boolean tableModel = ! (dictModel || listModel);
-            openInExcel.setEnabled(true);
-            chartAction.setEnabled(tableModel);
+    public void executeK4Query(final String text) {
+        queryExecutor.execute(this, text);
+    }
+
+    public void queryExecutionComplete(K.KBase result, Throwable error) {
+        TabPanel tab = null;
+        if (result != null) {
+            tab = new TabPanel(result);
+
+            exportAction.setEnabled(true);
+            KTableModel model = null;
+            if (tab.getTable() != null) {
+                model = (KTableModel) tab.getTable().getModel();
+            }
+            if (model != null) {
+                boolean dictModel = model instanceof DictModel;
+                boolean listModel = model instanceof ListModel;
+                boolean tableModel = ! (dictModel || listModel);
+                openInExcel.setEnabled(true);
+                chartAction.setEnabled(tableModel);
+            } else {
+                chartAction.setEnabled(false);
+                openInExcel.setEnabled(false);
+            }
+        } else if (error instanceof c.K4Exception ) {
+            JTextPane pane = new JTextPane();
+            String hint = QErrors.lookup(error.getMessage());
+            hint = hint == null ? "" : "\nStudio Hint: Possibly this error refers to " + hint;
+            pane.setText("An error occurred during execution of the query.\nThe server sent the response:\n" + error.getMessage() + hint);
+            pane.setForeground(Color.RED);
+
+            JScrollPane scrollpane = new JScrollPane(pane);
+
+            tab = new TabPanel("Error Details ",
+                    Util.ERROR_SMALL_ICON,
+                    scrollpane);
         } else {
-            chartAction.setEnabled(false);
-            openInExcel.setEnabled(false);
+            String message = error.getMessage();
+
+            if ((message == null) || (message.length() == 0))
+                message = "No message with exception. Exception is " + error.toString();
+
+            JOptionPane.showMessageDialog(textArea,
+                    "\nAn unexpected error occurred whilst communicating with " + server.getHost() + ":" + server.getPort() + "\n\nError detail is\n\n" + message + "\n\n",
+                    "Studio for kdb+",
+                    JOptionPane.ERROR_MESSAGE,
+                    Util.ERROR_ICON);
         }
+
+        if (tab != null) {
+            if(tabbedPane.getTabCount()>= Config.getInstance().getResultTabsCount()) {
+                tabbedPane.remove(0);
+            }
+            tab.addInto(tabbedPane);
+        }
+        stopAction.setEnabled(false);
+        executeAction.setEnabled(true);
+        executeCurrentLineAction.setEnabled(true);
+        refreshAction.setEnabled(true);
     }
 
-    Server server = null;
-
-      public void executeK4Query(final String text) {
-        final Cursor cursor = textArea.getCursor();
-
-        textArea.setCursor(new java.awt.Cursor(java.awt.Cursor.WAIT_CURSOR));
-
-          if(tabbedPane.getTabCount()>=Config.getInstance().getResultTabsCount()) {
-              tabbedPane.remove(0);
-          }
-
-        worker = new SwingWorker() {
-            Server s = null;
-            c c = null;
-            K.KBase r = null;
-            Throwable exception;
-            boolean cancelled = false;
-            long execTime=0;
-            public void interrupt() {
-                super.interrupt();
-
-                cancelled = true;
-
-                if (c != null)
-                    c.close();
-                cleanup();
-            }
-
-            public Object construct() {
-                try {
-                    this.s = server;
-                    c = ConnectionPool.getInstance().leaseConnection(s);
-                    ConnectionPool.getInstance().checkConnected(c);
-                    c.setFrame(frame);
-                    long startTime=System.currentTimeMillis();
-                    c.k(new K.KCharacterVector(text));
-                    r = c.getResponse();
-                    execTime=System.currentTimeMillis()-startTime;
-                }
-                catch (Throwable e) {
-                    System.err.println("Error occurred during query execution: " + e);
-                    e.printStackTrace(System.err);
-                    exception = e;
-                }
-
-                return null;
-            }
-
-            public void finished() {
-                if (!cancelled) {
-                    if (exception != null)
-                        try {
-                            throw exception;
-                        }
-                        catch (IOException ex) {
-                            JOptionPane.showMessageDialog(frame,
-                                                          "\nA communications error occurred whilst sending the query.\n\nPlease check that the server is running on " + server.getHost() + ":" + server.getPort() + "\n\nError detail is\n\n" + ex.getMessage() + "\n\n",
-                                                          "Studio for kdb+",
-                                                          JOptionPane.ERROR_MESSAGE,
-                                                          Util.ERROR_ICON);
-                        }
-                        catch (c.K4Exception ex) {
-                            JTextPane pane = new JTextPane();
-                            String hint = QErrors.lookup(ex.getMessage());
-                            if (hint != null)
-                                hint = "\nStudio Hint: Possibly this error refers to " + hint;
-                            else
-                                hint = "";
-                            pane.setText("An error occurred during execution of the query.\nThe server sent the response:\n" + ex.getMessage() + hint);
-                            pane.setForeground(Color.RED);
-
-                            JScrollPane scrollpane = new JScrollPane(pane);
-
-                            TabPanel tab = new TabPanel("Error Details ",
-                                                          Util.ERROR_SMALL_ICON,
-                                                          scrollpane);
-                            tab.addInto(tabbedPane);
-                        }
-                        catch (java.lang.OutOfMemoryError ex) {
-                            JOptionPane.showMessageDialog(frame,
-                                                          "\nOut of memory whilst communicating with " + server.getHost() + ":" + server.getPort() + "\n\nThe result set is probably too large.\n\nTry increasing the memory available to studio through the command line option -J -Xmx512m\n\n",
-                                                          "Studio for kdb+",
-                                                          JOptionPane.ERROR_MESSAGE,
-                                                          Util.ERROR_ICON);
-                        }
-                        catch (Throwable ex) {
-                            String message = ex.getMessage();
-
-                            if ((message == null) || (message.length() == 0))
-                                message = "No message with exception. Exception is " + ex.toString();
-
-                            JOptionPane.showMessageDialog(frame,
-                                                          "\nAn unexpected error occurred whilst communicating with " + server.getHost() + ":" + server.getPort() + "\n\nError detail is\n\n" + message + "\n\n",
-                                                          "Studio for kdb+",
-                                                          JOptionPane.ERROR_MESSAGE,
-                                                          Util.ERROR_ICON);
-                        }
-                    else
-                        try {
-                            Utilities.setStatusText(textArea, "Last execution time:"+(execTime>0?""+execTime:"<1")+" mS");
-                            processK4Results(r);
-                        }
-                        catch (Exception e) {
-                            e.printStackTrace(System.err);
-                            JOptionPane.showMessageDialog(frame,
-                                                          "\nAn unexpected error occurred whilst communicating with " + server.getHost() + ":" + server.getPort() + "\n\nError detail is\n\n" + e.getMessage() + "\n\n",
-                                                          "Studio for kdb+",
-                                                          JOptionPane.ERROR_MESSAGE,
-                                                          Util.ERROR_ICON);
-                        }
-
-                    cleanup();
-                }
-            }
-
-            private void cleanup() {
-                if (c != null)
-                    ConnectionPool.getInstance().freeConnection(s,c);
-                //if( c != null)
-                //    c.close();
-                c = null;
-
-                textArea.setCursor(cursor);
-
-                stopAction.setEnabled(false);
-                executeAction.setEnabled(true);
-                executeCurrentLineAction.setEnabled(true);
-                refreshAction.setEnabled(true);
-
-                System.gc();
-
-                worker = null;
-            }
-        };
-
-        worker.start();
-    }
-    private SwingWorker worker;
-    
     public void windowClosing(WindowEvent e) {
         if (quitWindow())
             if (windowList.size() == 0)

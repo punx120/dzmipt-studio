@@ -38,13 +38,13 @@ public class c {
     OutputStream outputStream;
     byte[] b, B;
     int j;
-    private JFrame frame;
+    private JComponent parent;
     int J;
     boolean a;
     int rxBufferSize;
 
-    public void setFrame(JFrame frame) {
-        this.frame = frame;
+    public void setParent(JComponent parent) {
+        this.parent = parent;
     }
   
     void io(Socket s) throws IOException {
@@ -77,7 +77,7 @@ public class c {
                 }
         }        // synchronized(this)
         finally {
-            frame = null;
+            parent = null;
             closed = true;
         }
     }
@@ -638,7 +638,7 @@ public class c {
 
                 final int min = 0;
                 final int max = msgLength;
-                ProgressMonitor pm = new ProgressMonitor(frame,message,note,min,max);
+                ProgressMonitor pm = new ProgressMonitor(parent,message,note,min,max);
 
                 try {
                     pm.setMillisToDecideToPopup(300);
