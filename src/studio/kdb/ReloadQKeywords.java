@@ -10,8 +10,7 @@ public class ReloadQKeywords {
                 try {
                     c = ConnectionPool.getInstance().leaseConnection(server);
                     ConnectionPool.getInstance().checkConnected(c);
-                    c.k(new K.KCharacterVector("key`.q"));
-                    r = c.getResponse();
+                    r = c.k(new K.KCharacterVector("key`.q"));
                 }
                 catch (Throwable t) {
                     System.err.println("Error in getting connection to " + server.getConnectionString(true) + ": " + t);

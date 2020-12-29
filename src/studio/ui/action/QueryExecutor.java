@@ -1,94 +1,125 @@
 package studio.ui.action;
 
-import org.netbeans.editor.Utilities;
+import kx.ProgressCallback;
 import studio.kdb.*;
 import studio.ui.StudioPanel;
-import studio.utils.SwingWorker;
 
 import javax.swing.*;
-import java.awt.*;
 
-public class QueryExecutor {
+public class QueryExecutor implements ProgressCallback {
 
-    private SwingWorker worker;
-    private JEditorPane textArea;
-    private Cursor defaultCursor;
-    private Server server;
+    private Worker worker = null;
+    private final StudioPanel studioPanel;
 
+    private volatile ProgressMonitor pm;
+    private boolean compressed;
+    private int msgLength;
+
+    public QueryExecutor(StudioPanel studioPanel) {
+        this.studioPanel = studioPanel;
+    }
+
+    public void execute(String query) {
+        worker = new Worker(studioPanel.getServer(), query);
+        worker.execute();
+    }
 
     public void cancel() {
-        if (worker != null) {
-            worker.interrupt();
-            textArea.setCursor(defaultCursor);
-        }
+        if (worker == null) return;
+        if (worker.isDone()) return;
+        worker.closeConnection();
+        worker.cancel(true);
         worker = null;
     }
 
-    public void execute(StudioPanel panel, String query) {
-        textArea = panel.getTextArea();
-        server = panel.getServer();
-        defaultCursor = textArea.getCursor();
-        textArea.setCursor(new java.awt.Cursor(java.awt.Cursor.WAIT_CURSOR));
-
-
-        worker = new SwingWorker() {
-            Server s = null;
-            kx.c c = null;
-            K.KBase r = null;
-            Throwable exception;
-            boolean cancelled = false;
-            long execTime=0;
-            public void interrupt() {
-                super.interrupt();
-
-                cancelled = true;
-
-                if (c != null)
-                    c.close();
-                cleanup();
-            }
-
-            public Object construct() {
-                long startTime=System.currentTimeMillis();
-                try {
-                    this.s = server;
-                    c = ConnectionPool.getInstance().leaseConnection(s);
-                    ConnectionPool.getInstance().checkConnected(c);
-                    c.setParent(textArea);
-                    c.k(new K.KCharacterVector(query));
-                    r = c.getResponse();
-                }
-                catch (Throwable e) {
-                    System.err.println("Error occurred during query execution: " + e);
-                    e.printStackTrace(System.err);
-                    exception = e;
-                }
-                execTime=System.currentTimeMillis()-startTime;
-                return null;
-            }
-
-            public void finished() {
-                if (!cancelled) {
-                    panel.queryExecutionComplete(r, exception);
-                    Utilities.setStatusText(textArea, "Last execution time:"+(execTime>0?""+execTime:"<1")+" mS");
-                    if (c != null)
-                        ConnectionPool.getInstance().freeConnection(s,c);
-                    //if( c != null)
-                    //    c.close();
-                    c = null;
-
-                    textArea.setCursor(defaultCursor);
-                    System.gc();
-                    worker = null;
-                }
-            }
-
-            private void cleanup() {
-            }
-        };
-
-        worker.start();
-
+    @Override
+    public void setCompressed(boolean compressed) {
+        this.compressed = compressed;
     }
 
+    @Override
+    public void setMsgLength(int msgLength) {
+        this.msgLength = msgLength;
+
+        final String message = "Receiving " + (compressed ? "compressed " : "") + "data ...";
+        final String note = "0 of " + (msgLength / 1024) + " kB";
+        final String title = "Studio for kdb+";
+        UIManager.put("ProgressMonitor.progressText", title);
+        pm = new ProgressMonitor(studioPanel, message, note, 0, msgLength);
+        SwingUtilities.invokeLater( () -> {
+            pm.setMillisToDecideToPopup(300);
+            pm.setMillisToPopup(100);
+            pm.setProgress(0);
+        });
+    }
+
+    @Override
+    public void setCurrentProgress(int total) {
+        SwingUtilities.invokeLater( () -> {
+            pm.setProgress(total);
+            pm.setNote((total / 1024) + " of " + (msgLength / 1024) + " kB");
+        });
+
+        if (pm.isCanceled()) {
+            cancel();
+        }
+    }
+
+    private class Worker extends SwingWorker<QueryResult, Integer> {
+
+        private volatile Server server;
+        private volatile String query;
+        private volatile kx.c c = null;
+
+        public Worker (Server server, String query) {
+            this.server = server;
+            this.query = query;
+        }
+
+        void closeConnection() {
+            if (c!=null) {
+                c.close();
+            }
+        }
+
+        @Override
+        protected QueryResult doInBackground() {
+            QueryResult result = new QueryResult(server, query);
+            long startTime = System.currentTimeMillis();
+            try {
+                c = ConnectionPool.getInstance().leaseConnection(server);
+                ConnectionPool.getInstance().checkConnected(c);
+                K.KBase response = c.k(new K.KCharacterVector(query), QueryExecutor.this);
+                result.setResult(response);
+            } catch (Throwable e) {
+                System.err.println("Error occurred during query execution: " + e);
+                e.printStackTrace(System.err);
+                result.setError(e);
+            } finally {
+                if (c!=null) {
+                    ConnectionPool.getInstance().freeConnection(server, c);
+                }
+            }
+            result.setExecutionTime(System.currentTimeMillis() - startTime);
+            return result;
+        }
+
+        @Override
+        protected void done() {
+            if (pm != null) {
+                pm.close();
+            }
+            try {
+                if (isCancelled()) {
+                    studioPanel.queryExecutionComplete(-1, null, null);
+                } else {
+                    QueryResult result = get();
+                    studioPanel.queryExecutionComplete(result.getExecutionTime(), result.getResult(), result.getError());
+                }
+            } catch (Exception e) {
+                System.err.println("Ops... It wasn't expected: " + e);
+                e.printStackTrace(System.err);
+            }
+        }
+    }
 }

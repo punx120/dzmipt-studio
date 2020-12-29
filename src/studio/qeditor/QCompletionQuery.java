@@ -56,8 +56,7 @@ public class QCompletionQuery implements CompletionQuery
 
                          if(text.endsWith("."))
                          {
-                             c.k(new K.KCharacterVector("cols "+text.substring(0,text.length()-1)));
-                             Object res = c.getResponse();
+                             K.KBase res = c.k(new K.KCharacterVector("cols "+text.substring(0,text.length()-1)));
                              if( res instanceof K.KSymbolVector)
                              {
                                   K.KSymbolVector tables= (K.KSymbolVector)res;
@@ -74,8 +73,7 @@ public class QCompletionQuery implements CompletionQuery
                          }
                          else
                          {
-                             c.k(new K.KCharacterVector("tables[]"));
-                             Object res = c.getResponse();
+                             K.KBase res = c.k(new K.KCharacterVector("tables[]"));
                              if( res instanceof K.KSymbolVector)
                              {
                                   K.KSymbolVector tables= (K.KSymbolVector)res;

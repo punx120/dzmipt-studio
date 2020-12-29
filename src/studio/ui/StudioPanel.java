@@ -105,13 +105,15 @@ public class StudioPanel extends JPanel implements Observer,WindowListener {
     private JFrame frame;
     private DebugSyntaxHighlightingFrame debugSyntaxHighlightingFrame = null;
 
-    private QueryExecutor queryExecutor = new QueryExecutor();
+    private QueryExecutor queryExecutor;
 
     private String contentType = QKitNew.CONTENT_TYPE;
 
     public static java.util.List windowList = Collections.synchronizedList(new LinkedList());
 
     public final static int menuShortcutKeyMask = java.awt.Toolkit.getDefaultToolkit().getMenuShortcutKeyMask();
+    private final static Cursor textCursor = Cursor.getPredefinedCursor(Cursor.TEXT_CURSOR);
+    private final static Cursor waitCursor = Cursor.getPredefinedCursor(Cursor.WAIT_CURSOR);
 
     private final static int MAX_SERVERS_TO_CLONE = 20;
 
@@ -1263,7 +1265,6 @@ public class StudioPanel extends JPanel implements Observer,WindowListener {
                                     null) {
             public void actionPerformed(ActionEvent e) {
                 queryExecutor.cancel();
-                stopAction.setEnabled(false);
             }
         };
 
@@ -2037,6 +2038,7 @@ public class StudioPanel extends JPanel implements Observer,WindowListener {
           }
         });
         dividerLastPosition=splitpane.getDividerLocation();
+        queryExecutor = new QueryExecutor(this);
     }
 
     public void update(Observable obs,Object obj) {
@@ -2205,10 +2207,17 @@ public class StudioPanel extends JPanel implements Observer,WindowListener {
     private Server server = null;
 
     public void executeK4Query(final String text) {
-        queryExecutor.execute(this, text);
+        textArea.setCursor(waitCursor);
+        queryExecutor.execute(text);
     }
 
-    public void queryExecutionComplete(K.KBase result, Throwable error) {
+    // if the query is canceld execTime=-1, result and error are null's
+    public void queryExecutionComplete(long execTime, K.KBase result, Throwable error) {
+        textArea.setCursor(textCursor);
+        if (execTime >=0) {
+            Utilities.setStatusText(textArea, "Last execution time:" + (execTime > 0 ? "" + execTime : "<1") + " mS");
+        }
+
         TabPanel tab = null;
         if (result != null) {
             tab = new TabPanel(result);
@@ -2240,7 +2249,7 @@ public class StudioPanel extends JPanel implements Observer,WindowListener {
             tab = new TabPanel("Error Details ",
                     Util.ERROR_SMALL_ICON,
                     scrollpane);
-        } else {
+        } else if (error != null){
             String message = error.getMessage();
 
             if ((message == null) || (message.length() == 0))
