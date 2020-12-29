@@ -15,6 +15,10 @@ public class QueryExecutor implements ProgressCallback {
     private boolean compressed;
     private int msgLength;
 
+    private static final String[] suffix = {"B", "K", "M"};
+    private static final double[] factor = {1, 1024, 1024*1024};
+    private int progressNoteIndex = 0;
+
     public QueryExecutor(StudioPanel studioPanel) {
         this.studioPanel = studioPanel;
     }
@@ -37,15 +41,25 @@ public class QueryExecutor implements ProgressCallback {
         this.compressed = compressed;
     }
 
+    private String formatProgressNote(int total) {
+        if (progressNoteIndex == 0) {
+            return String.format("%,d of %,d B", total, msgLength);
+        } else {
+            return String.format("%,.1f of %,.1f %s", total / factor[progressNoteIndex], msgLength / factor[progressNoteIndex], suffix[progressNoteIndex]);
+        }
+    }
+
     @Override
     public void setMsgLength(int msgLength) {
         this.msgLength = msgLength;
 
-        final String message = "Receiving " + (compressed ? "compressed " : "") + "data ...";
-        final String note = "0 of " + (msgLength / 1024) + " kB";
-        final String title = "Studio for kdb+";
-        UIManager.put("ProgressMonitor.progressText", title);
-        pm = new ProgressMonitor(studioPanel, message, note, 0, msgLength);
+        if (msgLength < 2*1024) progressNoteIndex = 0;
+        else if (msgLength < 2*1024*1024) progressNoteIndex = 1;
+        else progressNoteIndex = 2;
+
+        UIManager.put("ProgressMonitor.progressText", "Studio for kdb+");
+        pm = new ProgressMonitor(studioPanel, "Receiving " + (compressed ? "compressed " : "") + "data ...",
+                                    formatProgressNote(0), 0, msgLength);
         SwingUtilities.invokeLater( () -> {
             pm.setMillisToDecideToPopup(300);
             pm.setMillisToPopup(100);
@@ -57,7 +71,7 @@ public class QueryExecutor implements ProgressCallback {
     public void setCurrentProgress(int total) {
         SwingUtilities.invokeLater( () -> {
             pm.setProgress(total);
-            pm.setNote((total / 1024) + " of " + (msgLength / 1024) + " kB");
+            pm.setNote(formatProgressNote(total));
         });
 
         if (pm.isCanceled()) {
