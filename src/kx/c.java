@@ -585,7 +585,9 @@ public class c {
                     if (remainder < packetSize)
                         packetSize = remainder;
 
-                    total += inputStream.read(b, total, packetSize);
+                    int count = inputStream.read(b, total, packetSize);
+                    if (count < 0) throw new EOFException("Connection is broken");
+                    total += count;
                     if (progress != null) progress.setCurrentProgress(total);
                 }
             }
