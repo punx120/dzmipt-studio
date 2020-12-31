@@ -106,8 +106,10 @@ public class QueryExecutor implements ProgressCallback {
                 K.KBase response = c.k(new K.KCharacterVector(query), QueryExecutor.this);
                 result.setResult(response);
             } catch (Throwable e) {
-                System.err.println("Error occurred during query execution: " + e);
-                e.printStackTrace(System.err);
+                if (! (e instanceof kx.c.K4Exception)) {
+                    System.err.println("Error occurred during query execution: " + e);
+                    e.printStackTrace(System.err);
+                }
                 result.setError(e);
             } finally {
                 if (c!=null) {
