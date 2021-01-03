@@ -1,7 +1,11 @@
 package studio.core;
 
-import java.awt.Font;
+import java.awt.*;
+import java.util.Arrays;
 import java.util.Locale;
+
+import org.apache.logging.log4j.LogManager;
+import org.apache.logging.log4j.Logger;
 import studio.kdb.Config;
 import studio.ui.ExceptionGroup;
 import studio.ui.StudioPanel;
@@ -10,6 +14,9 @@ import java.util.TimeZone;
 import javax.swing.UIManager;
 
 public class Studio {
+
+    private static final Logger log = LogManager.getLogger();
+
     public static void main(final String[] args) {
         TimeZone.setDefault(TimeZone.getTimeZone("GMT"));
 
@@ -63,6 +70,7 @@ public class Studio {
 
         new Thread(exceptionThreadGroup,"Init thread") {
             public void run() {
+                log.info("Start Studio with args {}", Arrays.asList(args));
                 StudioPanel.init(args);
             }
         }.start();

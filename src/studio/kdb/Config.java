@@ -15,6 +15,7 @@ import java.util.stream.Collectors;
 import java.util.stream.Stream;
 
 public class Config {
+    // The folder is also referenced in lon4j2.xml config
     private final static String PATH = System.getProperties().getProperty("user.home") + "/.studioforkdb/";
     private final static String FILENAME = PATH + "studio.properties";
     private final static String VERSION = "1.2";

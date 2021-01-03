@@ -13,6 +13,8 @@ repositories {
 }
 
 dependencies {
+    compile group: 'org.apache.logging.log4j', name: 'log4j-api', version: '2.14.0'
+    compile group: 'org.apache.logging.log4j', name: 'log4j-core', version: '2.14.0'
     compile group: 'org.netbeans.api', name: 'org-openide-awt', version: 'RELEASE113'
     compile group: 'org.jfree', name: 'jfreechart', version: '1.0.14'
     runtime files ('lib/images.jar')
@@ -27,6 +29,7 @@ sourceSets {
         }
         resources {
             srcDirs 'src','images'
+            include 'log4j2.xml'
             include 'studio*.properties'
             include 'org/netbeans/editor/Bundle*.properties'
             include '*.png'
