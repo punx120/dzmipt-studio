@@ -51,10 +51,11 @@ public class ConnectionPool {
                 Credentials credentials = authenticationMechanism.getCredentials();
                 if (credentials.getUsername().length() > 0) {
                     String p = credentials.getPassword();
-
                     c = new kx.c(s.getHost(), s.getPort(), credentials.getUsername() + ((p.length() == 0) ? "" : ":" + p), s.getUseTLS());
-                } else
+                } else {
                     c = new kx.c(s.getHost(), s.getPort(), "", s.getUseTLS());
+                }
+                c.setEncoding(Config.getInstance().getEncoding());
             } catch (InstantiationException | IllegalAccessException | IllegalArgumentException ex) {
                 System.err.println("Failed to initialize connection: " + ex);
                 ex.printStackTrace(System.err);

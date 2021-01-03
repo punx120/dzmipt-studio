@@ -23,14 +23,9 @@ types
 import java.io.*;
 import java.net.InetSocketAddress;
 import java.net.Socket;
-import java.util.LinkedList;
 import java.util.UUID;
-import java.util.logging.Level;
-import java.util.logging.Logger;
 import javax.net.ssl.SSLSocket;
 import javax.net.ssl.SSLSocketFactory;
-import javax.swing.*;
-import studio.kdb.Config;
 import studio.kdb.K;
 
 public class c {
@@ -41,6 +36,7 @@ public class c {
     int J;
     boolean a;
     int rxBufferSize;
+    private String encoding = "UTF-8";
 
     void io(Socket s) throws IOException {
         s.setTcpNoDelay(true);
@@ -63,6 +59,10 @@ public class c {
     }
 
     public c() {
+    }
+
+    public void setEncoding(String encoding) {
+        this.encoding = encoding;
     }
 
     /*    public c(Socket s) throws IOException {
@@ -168,16 +168,11 @@ public class c {
         return (char) (b[j++] & 0xff);
     }
 
-    K.KSymbol rs() {
+    K.KSymbol rs() throws UnsupportedEncodingException {
         int n = j;
         for (; b[n] != 0; )
             ++n;
-        String s = null;
-        try {
-            s = new String(b, j, n - j, Config.getInstance().getEncoding());
-        } catch (UnsupportedEncodingException ex) {
-            Logger.getLogger(c.class.getName()).log(Level.WARNING, null, ex);
-        }
+        String s = new String(b, j, n - j, encoding);
         j = n;
         ++j;
         return new K.KSymbol(s);
@@ -195,24 +190,24 @@ public class c {
         return new K.TernaryOperator(b[j++]);
     }
 
-    K.Function rfn() {
+    K.Function rfn() throws UnsupportedEncodingException {
         K.KSymbol s = rs();
         return new K.Function((K.KCharacterVector) r());
     }
 
-    K.Feach rfeach() {
+    K.Feach rfeach() throws UnsupportedEncodingException {
         return new K.Feach(r());
     }
 
-    K.Fover rfover() {
+    K.Fover rfover() throws UnsupportedEncodingException {
         return new K.Fover(r());
     }
 
-    K.Fscan rfscan() {
+    K.Fscan rfscan() throws UnsupportedEncodingException {
         return new K.Fscan(r());
     }
 
-    K.FComposition rcomposition() {
+    K.FComposition rcomposition() throws UnsupportedEncodingException {
         int n = ri();
         Object[] objs = new Object[n];
         for (int i = 0; i < n; i++)
@@ -221,19 +216,19 @@ public class c {
         return new K.FComposition(objs);
     }
 
-    K.FPrior rfPrior() {
+    K.FPrior rfPrior() throws UnsupportedEncodingException {
         return new K.FPrior(r());
     }
 
-    K.FEachRight rfEachRight() {
+    K.FEachRight rfEachRight() throws UnsupportedEncodingException {
         return new K.FEachRight(r());
     }
 
-    K.FEachLeft rfEachLeft() {
+    K.FEachLeft rfEachLeft() throws UnsupportedEncodingException {
         return new K.FEachLeft(r());
     }
 
-    K.Projection rproj() {
+    K.Projection rproj() throws UnsupportedEncodingException {
         int n = ri();
         K.KList list = new K.KList(n);
         K.KBase[] array = (K.KBase[]) list.getArray();
@@ -275,7 +270,7 @@ public class c {
         return new K.KTimestamp(rj());
     }
 
-    K.KBase r() {
+    K.KBase r() throws UnsupportedEncodingException {
         int i = 0, n, t = b[j++];
         if (t < 0)
             switch (t) {
@@ -437,13 +432,9 @@ public class c {
             }
             case 10: {
                 K.KCharacterVector C = null;
-                try {
-                    char[] array = new String(b, j, n, Config.getInstance().getEncoding()).toCharArray();
-                    C = new K.KCharacterVector(array);
-                    C.setAttr(attr);
-                } catch (UnsupportedEncodingException e) {
-                    Logger.getLogger(c.class.getName()).log(Level.WARNING, null, e);
-                }
+                char[] array = new String(b, j, n, encoding).toCharArray();
+                C = new K.KCharacterVector(array);
+                C.setAttr(attr);
                 j += n;
                 return C;
             }
