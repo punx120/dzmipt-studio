@@ -1208,7 +1208,9 @@ public class StudioPanel extends JPanel implements Observer,WindowListener {
                     new ExcelExporter().exportTableX(frame,getSelectedTable(),file,true);
                 }
                 catch (IOException ex) {
-                    ex.printStackTrace();
+                    log.error("Failed to create temporary file", ex);
+                    JOptionPane.showMessageDialog(frame, "Failed to Open in Excel " + ex.getMessage(),
+                                                    "Error", JOptionPane.ERROR_MESSAGE);
                 }
             }
         };
@@ -1986,38 +1988,32 @@ public class StudioPanel extends JPanel implements Observer,WindowListener {
                 registeredForMaxOSXEvents = true;
             }
             catch (Exception e) {
-                System.err.println("Error while loading the OSXAdapter:");
-                e.printStackTrace();
+                log.error("Failed to set MacOS handlers", e);
             }
     }
 
     public static void init(String[] args) {
-        try {
-            String filename = null;
+        String filename = null;
 
-            String[] mruFiles = Config.getInstance().getMRUFiles();
-            if(args.length>0){
-                File f=new File(args[0]);
-                if(f.exists())
-                    filename=args[0];
-            } else if (mruFiles.length > 0) {
-                File f = new File(mruFiles[0]);
-                if (f.exists())
-                    filename = mruFiles[0];
-            }
-
-            Locale.setDefault(Locale.US);
-
-            Server s = null;
-            String lruServer = Config.getInstance().getLRUServer();
-            if (Config.getInstance().getServerNames().contains(lruServer)){
-                s = Config.getInstance().getServer(lruServer);
-            }
-            new StudioPanel(s,filename);
+        String[] mruFiles = Config.getInstance().getMRUFiles();
+        if(args.length>0){
+            File f=new File(args[0]);
+            if(f.exists())
+                filename=args[0];
+        } else if (mruFiles.length > 0) {
+            File f = new File(mruFiles[0]);
+            if (f.exists())
+                filename = mruFiles[0];
         }
-        catch (Exception e) {
-            e.printStackTrace();
+
+        Locale.setDefault(Locale.US);
+
+        Server s = null;
+        String lruServer = Config.getInstance().getLRUServer();
+        if (Config.getInstance().getServerNames().contains(lruServer)){
+            s = Config.getInstance().getServer(lruServer);
         }
+        new StudioPanel(s,filename);
     }
 
     public void refreshQuery() {
