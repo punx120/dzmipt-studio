@@ -1982,9 +1982,9 @@ public class StudioPanel extends JPanel implements Observer,WindowListener {
             try {
                 // Generate and register the OSXAdapter, passing it a hash of all the methods we wish to
                 // use as delegates for various com.apple.eawt.ApplicationListener methods
-                OSXAdapter.setQuitHandler(this, StudioPanel.class.getDeclaredMethod("quit",(Class[]) null));
-                OSXAdapter.setAboutHandler(this, StudioPanel.class.getDeclaredMethod("about",(Class[]) null));
-                OSXAdapter.setPreferencesHandler(this, StudioPanel.class.getDeclaredMethod("settings",(Class[]) null));
+                OSXAdapter.setQuitHandler(this, StudioPanel.class.getDeclaredMethod("quit"));
+                OSXAdapter.setAboutHandler(this, StudioPanel.class.getDeclaredMethod("about"));
+                OSXAdapter.setPreferencesHandler(this, StudioPanel.class.getDeclaredMethod("settings"));
                 registeredForMaxOSXEvents = true;
             }
             catch (Exception e) {
