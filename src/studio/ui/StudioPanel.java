@@ -770,9 +770,9 @@ public class StudioPanel extends JPanel implements Observer,WindowListener {
         catch (BadLocationException e) {
             log.error("Unexpected exception", e);
         } catch (IOException e) {
-            log.error("Failed to load file ()", filename, e);
+            log.error("Failed to load file {}", filename, e);
             JOptionPane.showMessageDialog(frame, "Failed to load file "+filename + ".\n" + e.getMessage(),
-                            "Error in file load", JOptionPane.OK_OPTION);
+                            "Error in file load", JOptionPane.ERROR_MESSAGE);
         }
         return false;
     }
