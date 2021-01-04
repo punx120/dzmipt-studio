@@ -1,5 +1,7 @@
 package studio.kdb;
 
+import org.apache.logging.log4j.LogManager;
+import org.apache.logging.log4j.Logger;
 import studio.core.AuthenticationManager;
 import studio.core.Credentials;
 import studio.core.IAuthenticationMechanism;
@@ -8,6 +10,9 @@ import java.io.IOException;
 import kx.c.K4Exception;
 
 public class ConnectionPool {
+
+    private static final Logger log = LogManager.getLogger();
+
     private final static ConnectionPool instance = new ConnectionPool();
     private final Map<Server,List<kx.c>> freeMap = new HashMap<>();
     private final Map<Server,List<kx.c>> busyMap = new HashMap<>();
@@ -57,8 +62,7 @@ public class ConnectionPool {
                 }
                 c.setEncoding(Config.getInstance().getEncoding());
             } catch (InstantiationException | IllegalAccessException | IllegalArgumentException ex) {
-                System.err.println("Failed to initialize connection: " + ex);
-                ex.printStackTrace(System.err);
+                log.error("Failed to initialize connection", ex);
                 return null;
             }
         } else {

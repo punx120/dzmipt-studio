@@ -1,5 +1,7 @@
 package studio.ui;
 
+import org.apache.logging.log4j.LogManager;
+import org.apache.logging.log4j.Logger;
 import studio.kdb.Config;
 import studio.kdb.Server;
 import studio.kdb.ServerTreeNode;
@@ -21,6 +23,8 @@ import java.util.HashSet;
 import java.util.StringTokenizer;
 
 public class ServerList extends EscapeDialog implements TreeExpansionListener  {
+
+    private static final Logger log = LogManager.getLogger();
 
     private JPanel contentPane;
     private JTree tree;
@@ -423,8 +427,7 @@ public class ServerList extends EscapeDialog implements TreeExpansionListener  {
             Config.getInstance().setServerTree(serverTree);
         } catch (IllegalArgumentException exception) {
             serverTree = Config.getInstance().getServerTree();
-            System.err.println("Error adding new node: " + exception);
-            exception.printStackTrace(System.err);
+            log.error("Error adding new node", exception);
             JOptionPane.showMessageDialog(this, "Error adding new node:\n" + exception.toString(), "Error", JOptionPane.ERROR_MESSAGE);
 
         }

@@ -1,12 +1,16 @@
 package studio.ui.action;
 
 import kx.ProgressCallback;
+import org.apache.logging.log4j.LogManager;
+import org.apache.logging.log4j.Logger;
 import studio.kdb.*;
 import studio.ui.StudioPanel;
 
 import javax.swing.*;
 
 public class QueryExecutor implements ProgressCallback {
+
+    private static final Logger log = LogManager.getLogger();
 
     private Worker worker = null;
     private final StudioPanel studioPanel;
@@ -107,8 +111,7 @@ public class QueryExecutor implements ProgressCallback {
                 result.setResult(response);
             } catch (Throwable e) {
                 if (! (e instanceof kx.c.K4Exception)) {
-                    System.err.println("Error occurred during query execution: " + e);
-                    e.printStackTrace(System.err);
+                    log.error("Error occurred during query execution",e);
                 }
                 result.setError(e);
             } finally {
@@ -133,8 +136,7 @@ public class QueryExecutor implements ProgressCallback {
                     studioPanel.queryExecutionComplete(result.getExecutionTime(), result.getResult(), result.getError());
                 }
             } catch (Exception e) {
-                System.err.println("Ops... It wasn't expected: " + e);
-                e.printStackTrace(System.err);
+                log.error("Ops... It wasn't expected", e);
             }
         }
     }

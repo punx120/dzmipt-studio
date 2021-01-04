@@ -1,5 +1,7 @@
 package studio.ui;
 
+import org.apache.logging.log4j.LogManager;
+import org.apache.logging.log4j.Logger;
 import org.netbeans.editor.*;
 
 import javax.swing.*;
@@ -11,6 +13,8 @@ import javax.swing.text.Document;
 import java.awt.*;
 
 public class DebugSyntaxHighlightingFrame extends JFrame {
+
+    private static final Logger log = LogManager.getLogger();
 
     private JTextArea textArea;
     private JEditorPane editor;
@@ -60,8 +64,7 @@ public class DebugSyntaxHighlightingFrame extends JFrame {
                         .append(")");
             }
         } catch (BadLocationException e) {
-            e.printStackTrace(System.err);
-            builder.append("Something went wrong:\n").append(e);
+            log.error("Unexpected exception", e);
         }
         textArea.setText(builder.toString());
     }

@@ -1,5 +1,7 @@
 package studio.utils;
 
+import org.apache.logging.log4j.LogManager;
+import org.apache.logging.log4j.Logger;
 import org.netbeans.editor.*;
 import studio.ui.Util;
 
@@ -12,6 +14,8 @@ import java.awt.*;
 import java.awt.event.ActionEvent;
 
 public class CopyCutWithSyntaxAction extends BaseAction {
+
+    private static final Logger log = LogManager.getLogger();
 
     public enum Mode {COPY, CUT};
     private Mode mode;
@@ -118,8 +122,7 @@ public class CopyCutWithSyntaxAction extends BaseAction {
                 document.remove(start, end-start);
             }
         } catch (BadLocationException e) {
-            System.err.println("Exception is not expected " + e);
-            e.printStackTrace(System.err);
+            log.error("Exception is not expected", e);
         }
     }
 }

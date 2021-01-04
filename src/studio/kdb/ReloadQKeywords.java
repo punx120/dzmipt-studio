@@ -1,6 +1,12 @@
 package studio.kdb;
 
+import org.apache.logging.log4j.LogManager;
+import org.apache.logging.log4j.Logger;
+
 public class ReloadQKeywords {
+
+    private static final Logger log = LogManager.getLogger();
+
     public ReloadQKeywords(final Server server) {
         if (server != null) {
             Runnable runner = () -> {
@@ -13,8 +19,7 @@ public class ReloadQKeywords {
                     r = c.k(new K.KCharacterVector("key`.q"));
                 }
                 catch (Throwable t) {
-                    System.err.println("Error in getting connection to " + server.getConnectionString(true) + ": " + t);
-                    t.printStackTrace(System.err);
+                    log.error("Error in getting connection to {}", server.getConnectionString(true), t);
                     ConnectionPool.getInstance().purge(server);
                     c = null;
                 }
