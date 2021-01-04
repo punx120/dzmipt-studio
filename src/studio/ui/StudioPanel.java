@@ -667,8 +667,8 @@ public class StudioPanel extends JPanel implements Observer,WindowListener {
             initDocument();
             refreshFrameTitle();
         }
-        catch (BadLocationException ex) {
-            ex.printStackTrace();
+        catch (BadLocationException e) {
+            log.error("Unexpected exception", e);
         }
     }
 
@@ -680,7 +680,7 @@ public class StudioPanel extends JPanel implements Observer,WindowListener {
         filename = getFilename();
 
         if (filename != null) {
-            loadFile(filename);
+            if (! loadFile(filename)) return;
             addToMruFiles(filename);
         }
     }
@@ -717,7 +717,7 @@ public class StudioPanel extends JPanel implements Observer,WindowListener {
         if (!saveIfModified(oldFilename))
             return;
 
-        loadFile(filename);
+        if (!loadFile(filename)) return;
         addToMruFiles(filename);
         setServer(server);
     }
@@ -736,35 +736,27 @@ public class StudioPanel extends JPanel implements Observer,WindowListener {
         rebuildMenuBar();
     }
 
-    static public String getContents(File aFile) {
-        StringBuffer contents = new StringBuffer();
+    static public String getContents(String filename) throws IOException {
 
-        try {
-            InputStreamReader isr = new InputStreamReader(new FileInputStream(aFile),
-						          "UTF-8");
-            BufferedReader input = new BufferedReader(isr);
-            try {
+        try (BufferedReader input = new BufferedReader(
+                            new InputStreamReader(
+                                    new FileInputStream(filename),"UTF-8"))) {
 
-                String line = null;
-                while ((line = input.readLine()) != null) {
-                    contents.append(line);
-                    contents.append(System.getProperty("line.separator"));
-                }
+            StringBuilder contents = new StringBuilder();
+            String line;
+            while ((line = input.readLine()) != null) {
+                contents.append(line);
+                contents.append(System.getProperty("line.separator"));
             }
-            finally {
-                input.close();
-            }
-        }
-        catch (IOException ex) {
-            ex.printStackTrace();
+            return contents.toString();
+
         }
 
-        return contents.toString();
     }
 
-    public void loadFile(String filename) {
+    public boolean loadFile(String filename) {
         try {
-            String s = getContents(new File(filename));
+            String s = getContents(filename);
 
             textArea.getDocument().remove(0,textArea.getDocument().getLength());
             textArea.getDocument().insertString(0,s,null);
@@ -773,10 +765,16 @@ public class StudioPanel extends JPanel implements Observer,WindowListener {
             initDocument();
             textArea.setCaretPosition(0);
             refreshFrameTitle();
+            return true;
         }
-        catch (BadLocationException ex) {
-            ex.printStackTrace();
+        catch (BadLocationException e) {
+            log.error("Unexpected exception", e);
+        } catch (IOException e) {
+            log.error("Failed to load file ()", filename, e);
+            JOptionPane.showMessageDialog(frame, "Failed to load file "+filename + ".\n" + e.getMessage(),
+                            "Error in file load", JOptionPane.OK_OPTION);
         }
+        return false;
     }
 
     public boolean saveAsFile() {
