@@ -1,11 +1,15 @@
 package studio.core;
 
 import java.awt.*;
+import java.io.PrintStream;
+import java.io.UnsupportedEncodingException;
 import java.util.Arrays;
 import java.util.Locale;
 
+import org.apache.logging.log4j.Level;
 import org.apache.logging.log4j.LogManager;
 import org.apache.logging.log4j.Logger;
+import org.apache.logging.log4j.io.IoBuilder;
 import studio.kdb.Config;
 import studio.ui.ExceptionGroup;
 import studio.ui.StudioPanel;
@@ -17,7 +21,15 @@ public class Studio {
 
     private static final Logger log = LogManager.getLogger();
 
+    private static void initStdLoggers() {
+        PrintStream stdoutStream = IoBuilder.forLogger("stdout").setLevel(Level.INFO).buildPrintStream();
+        PrintStream stderrStream = IoBuilder.forLogger("stderr").setLevel(Level.ERROR).buildPrintStream();
+        System.setOut(stdoutStream);
+        System.setErr(stderrStream);
+    }
+
     public static void main(final String[] args) {
+        initStdLoggers();
         TimeZone.setDefault(TimeZone.getTimeZone("GMT"));
 
         if(System.getProperty("os.name","").contains("OS X")){ 
