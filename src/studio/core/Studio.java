@@ -45,9 +45,9 @@ public class Studio {
         if(Config.getInstance().getLookAndFeel()!=null){
             try {
                 UIManager.setLookAndFeel(Config.getInstance().getLookAndFeel());
-            } catch (Exception ex) {
+            } catch (Exception e) {
                 // go on with default one
-                ex.printStackTrace();
+                log.warn("Can't set LookAndFeel from Config {}", Config.getInstance().getLookAndFeel(), e);
             }
         }
 
