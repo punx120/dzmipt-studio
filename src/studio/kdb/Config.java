@@ -87,7 +87,7 @@ public class Config {
             try {
                 Files.createDirectories(dir);
             } catch (IOException e) {
-                System.err.println("Can't create configuration folder: " + PATH);
+                log.error("Can't create configuration folder {}", PATH, e);
             }
             return;
         }

@@ -1319,7 +1319,7 @@ public class StudioPanel extends JPanel implements Observer,WindowListener {
             public void actionPerformed(ActionEvent e) {
                 if (textArea == null) return;
                 contentType = contentType.equals(QKit.CONTENT_TYPE) ? QKitNew.CONTENT_TYPE : QKit.CONTENT_TYPE;
-                System.out.println("Changing synta to " + contentType);
+                log.info("Changing syntax highlighting to {}", contentType);
 
                 String text = textArea.getText();
                 int start = textArea.getSelectionStart();

@@ -1,10 +1,15 @@
 package studio.utils;
 
+import org.apache.logging.log4j.LogManager;
+import org.apache.logging.log4j.Logger;
+
 import java.awt.*;
 import javax.swing.*;
 import java.awt.print.*;
 
 public class PrintUtilities implements Printable {
+
+    private static final Logger log = LogManager.getLogger();
     private Component componentToBePrinted;
     
     public static void printComponent(Component c) {
@@ -22,7 +27,7 @@ public class PrintUtilities implements Printable {
             try {
                 printJob.print();
             } catch (PrinterException pe) {
-                System.err.println("Printing error: " + pe);
+                log.error("Printing error", pe);
         }
     }
     

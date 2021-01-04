@@ -1,5 +1,7 @@
 package studio.ui;
 
+import org.apache.logging.log4j.LogManager;
+import org.apache.logging.log4j.Logger;
 import org.jfree.chart.*;
 import org.jfree.chart.entity.ChartEntity;
 import org.jfree.chart.entity.LegendItemEntity;
@@ -11,7 +13,6 @@ import org.jfree.data.time.*;
 import org.jfree.data.xy.XYDataset;
 import org.jfree.data.xy.XYSeries;
 import org.jfree.data.xy.XYSeriesCollection;
-import studio.kdb.Config;
 import studio.kdb.K;
 import studio.kdb.KTableModel;
 import studio.kdb.ToDouble;
@@ -20,6 +21,9 @@ import javax.swing.*;
 import java.util.TimeZone;
 
 public class LineChart {
+
+    private static final Logger log = LogManager.getLogger();
+
     public ChartPanel chartPanel;
     JFrame frame = null;
 
@@ -163,7 +167,7 @@ public class LineChart {
                             }
                         }
                     } catch (SeriesException e) {
-                        System.err.println("Error adding to series");
+                        log.error("Error adding to series", e);
                     }
 
 
@@ -187,7 +191,7 @@ public class LineChart {
                             series.add(x, y);
                         }
                     } catch (SeriesException e) {
-                        System.err.println("Error adding to series");
+                        log.error("Error adding to series", e);
                     }
 
                     if (series.getItemCount() > 0)

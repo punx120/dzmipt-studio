@@ -369,7 +369,7 @@ public class ServerList extends EscapeDialog implements TreeExpansionListener  {
         if (selNode == null) return;
         ServerTreeNode node = serverTree.findPath(selNode.getPath());
         if (node == null) {
-            System.err.println("Ups... Something goes wrong");
+            log.error("Ups... Something goes wrong");
             return;
         }
 
@@ -395,7 +395,7 @@ public class ServerList extends EscapeDialog implements TreeExpansionListener  {
 
         ServerTreeNode node = serverTree.findPath(selNode.getPath());
         if (node == null) {
-            System.err.println("Ups... Something goes wrong");
+            log.error("Ups... Something goes wrong");
             return;
         }
         ServerTreeNode parent = location == AddNodeLocation.INSERT ? node : (ServerTreeNode)node.getParent();
