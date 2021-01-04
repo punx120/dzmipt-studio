@@ -25,6 +25,8 @@ import javax.swing.undo.CannotRedoException;
 import javax.swing.undo.CannotUndoException;
 import javax.swing.undo.UndoManager;
 import kx.c;
+import org.apache.logging.log4j.LogManager;
+import org.apache.logging.log4j.Logger;
 import org.netbeans.editor.*;
 import org.netbeans.editor.Utilities;
 import studio.core.Credentials;
@@ -40,7 +42,10 @@ import studio.utils.BrowserLaunch;
 import studio.utils.OSXAdapter;
 
 public class StudioPanel extends JPanel implements Observer,WindowListener {
+
+    private static final Logger log = LogManager.getLogger();
     static {
+
         // Register us
         LocaleSupport.addLocalizer(new Impl("org.netbeans.editor.Bundle"));
 
@@ -375,189 +380,113 @@ public class StudioPanel extends JPanel implements Observer,WindowListener {
     }
 
     private void exportAsDelimited(final TableModel model,final String filename,final char delimiter) {
-        final String message = "Exporting data to " + filename;
-
-        final String note = "0% complete";
-
-        String title = "Studio for kdb+";
-        UIManager.put("ProgressMonitor.progressText",title);
-
-        final int min = 0;
-        final int max = 100;
-        final ProgressMonitor pm = new ProgressMonitor(frame,message,note,min,max);
+        UIManager.put("ProgressMonitor.progressText","Studio for kdb+");
+        final ProgressMonitor pm = new ProgressMonitor(frame,"Exporting data to " + filename,
+                                                    "0% complete",0,100);
         pm.setMillisToDecideToPopup(100);
         pm.setMillisToPopup(100);
         pm.setProgress(0);
 
-        Runnable runner = new Runnable() {
-            public void run() {
-                if (filename != null) {
-                    String lineSeparator = System.getProperty("line.separator");;
+        Runnable runner = () -> {
+            if (filename != null) {
+                String lineSeparator = System.getProperty("line.separator");;
 
-                    BufferedWriter fw;
-
-                    try {
-                        fw = new BufferedWriter(new FileWriter(filename));
-
+                try (BufferedWriter fw = new BufferedWriter(new FileWriter(filename))) {
+                    for(int col = 0; col < model.getColumnCount(); col++) {
+                        if (col > 0)
+                            fw.write(delimiter);
+                        fw.write(model.getColumnName(col));
+                    }
+                    fw.write(lineSeparator);
+                    int maxRow = model.getRowCount();
+                    for(int r = 1; r <= maxRow; r++) {
                         for (int col = 0;col < model.getColumnCount();col++) {
-                            if (col > 0)
-                                fw.write(delimiter);
+                            if (col > 0) fw.write(delimiter);
 
-                            fw.write(model.getColumnName(col));
+                            K.KBase o = (K.KBase) model.getValueAt(r - 1,col);
+                            if (!o.isNull())
+                                fw.write(o.toString(KFormatContext.NO_TYPE));
                         }
                         fw.write(lineSeparator);
-
-                        int maxRow = model.getRowCount();
-                        int lastProgress = 0;
-
-                        for (int r = 1;r <= maxRow;r++) {
-                            for (int col = 0;col < model.getColumnCount();col++) {
-                                if (col > 0)
-                                    fw.write(delimiter);
-
-                                K.KBase o = (K.KBase) model.getValueAt(r - 1,col);
-                                if (!o.isNull())
-                                    fw.write(o.toString(KFormatContext.NO_TYPE));
-                            }
-                            fw.write(lineSeparator);
-
-                            boolean cancelled = pm.isCanceled();
-
-                            if (cancelled)
-                                break;
-                            else {
-                                final int progress = (100 * r) / maxRow;
-                                if (progress > lastProgress) {
-                                    final String note = "" + progress + "% complete";
-                                    SwingUtilities.invokeLater(new Runnable() {
-
-                                        public void run() {
-                                            pm.setProgress(progress);
-                                            pm.setNote(note);
-                                        }
-                                    });
-
-                                    Thread.yield();
-                                }
-                            }
-                        }
-
-                        fw.close();
+                        if (pm.isCanceled()) break;
+                        int progress = (100 * r) / maxRow;
+                        String note = "" + progress + "% complete";
+                        SwingUtilities.invokeLater( () -> {
+                                    pm.setProgress(progress);
+                                    pm.setNote(note);
+                                } );
                     }
-                    catch (FileNotFoundException ex) {
-                        ex.printStackTrace();  //To change body of catch statement use Options | File Templates.
-                    }
-                    catch (IOException ex) {
-                        ex.printStackTrace();  //To change body of catch statement use Options | File Templates.
-                    }
-                    catch (Exception ex) {
-                        ex.printStackTrace();  //To change body of catch statement use Options | File Templates.
-                    }
-                    finally {
-                        pm.close();
-                    }
+
+                }
+                catch (IOException e) {
+                    log.error("Error in writing to file {}", filename, e);
+                }
+                finally {
+                    pm.close();
                 }
             }
         };
 
-        Thread t = new Thread(runner);
-        t.setName("export");
+        Thread t = new Thread(runner,"Exporter");
         t.setPriority(Thread.MIN_PRIORITY);
         t.start();
     }
 
     private void exportAsXml(final TableModel model,final String filename) {
-        final String message = "Exporting data to " + filename;
-
-        final String note = "0% complete";
-
-        String title = "Studio for kdb+";
-        UIManager.put("ProgressMonitor.progressText",title);
-
-        final int min = 0;
-        final int max = 100;
-        final ProgressMonitor pm = new ProgressMonitor(frame,message,note,min,max);
+        UIManager.put("ProgressMonitor.progressText","Studio for kdb+");
+        final ProgressMonitor pm = new ProgressMonitor(frame,"Exporting data to " + filename,
+                                                        "0% complete",0,100);
         pm.setMillisToDecideToPopup(100);
         pm.setMillisToPopup(100);
         pm.setProgress(0);
 
-        Runnable runner = new Runnable() {
-            public void run() {
-                if (filename != null) {
-                    String lineSeparator = System.getProperty("line.separator");;
+        Runnable runner = () -> {
+            if (filename != null) {
+                String lineSeparator = System.getProperty("line.separator");;
 
-                    BufferedWriter fw = null;
+                try (BufferedWriter fw = new BufferedWriter(new FileWriter(filename))) {
+                    fw.write("<R>");
+                    int maxRow = model.getRowCount();
+                    fw.write(lineSeparator);
 
-                    try {
-                        fw = new BufferedWriter(new FileWriter(filename));
+                    String[] columns = new String[model.getColumnCount()];
+                    for (int col = 0; col < model.getColumnCount(); col++)
+                        columns[col] = model.getColumnName(col);
 
-                        fw.write("<R>");
+                    for (int r = 1; r <= maxRow; r++) {
+                        fw.write("<r>");
+                        for (int col = 0; col < columns.length; col++) {
+                            fw.write("<" + columns[col] + ">");
 
-                        int maxRow = model.getRowCount();
-                        int lastProgress = 0;
+                            K.KBase o = (K.KBase) model.getValueAt(r - 1,col);
+                            if (!o.isNull())
+                                fw.write(o.toString(KFormatContext.NO_TYPE));
 
+                            fw.write("</" + columns[col] + ">");
+                        }
+                        fw.write("</r>");
                         fw.write(lineSeparator);
 
-                        String[] columns = new String[model.getColumnCount()];
-                        for (int col = 0;col < model.getColumnCount();col++)
-                            columns[col] = model.getColumnName(col);
-
-                        for (int r = 1;r <= maxRow;r++) {
-                            fw.write("<r>");
-                            for (int col = 0;col < columns.length;col++) {
-                                fw.write("<" + columns[col] + ">");
-
-                                K.KBase o = (K.KBase) model.getValueAt(r - 1,col);
-                                if (!o.isNull())
-                                    fw.write(o.toString(KFormatContext.NO_TYPE));
-
-                                fw.write("</" + columns[col] + ">");
-                            }
-                            fw.write("</r>");
-                            fw.write(lineSeparator);
-
-                            boolean cancelled = pm.isCanceled();
-
-                            if (cancelled)
-                                break;
-                            else {
-                                final int progress = (100 * r) / maxRow;
-                                if (progress > lastProgress) {
-                                    final String note = "" + progress + "% complete";
-                                    SwingUtilities.invokeLater(new Runnable() {
-
-                                        public void run() {
-                                            pm.setProgress(progress);
-                                            pm.setNote(note);
-                                        }
-                                    });
-
-                                    Thread.yield();
-                                }
-                            }
-                        }
-                        fw.write("</R>");
-
-                        fw.close();
+                        if (pm.isCanceled()) break;
+                        int progress = (100 * r) / maxRow;
+                        String note = "" + progress + "% complete";
+                        SwingUtilities.invokeLater(() -> {
+                            pm.setProgress(progress);
+                            pm.setNote(note);
+                        });
                     }
-                    catch (FileNotFoundException ex) {
-                        ex.printStackTrace();  //To change body of catch statement use Options | File Templates.
-                    }
-                    catch (IOException ex) {
-                        ex.printStackTrace();  //To change body of catch statement use Options | File Templates.
-                    }
-                    catch (Exception ex) {
-                        ex.printStackTrace();  //To change body of catch statement use Options | File Templates.
-                    }
-                    finally {
-                        pm.close();
-                    }
+                    fw.write("</R>");
+                }
+                catch (IOException e) {
+                    log.error("Error in writing to file {}", filename, e);
+                }
+                finally {
+                    pm.close();
                 }
             }
         };
 
-        Thread t = new Thread(runner);
-        t.setName("export");
+        Thread t = new Thread(runner, "Exporter");
         t.setPriority(Thread.MIN_PRIORITY);
         t.start();
     }
