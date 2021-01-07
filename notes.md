@@ -1,3 +1,4 @@
+* Adding Log4j 2 and logging to $HOME/.studioforkdb/log folder
 * Set new syntax highlighting in Console result pane
 
 `dz1.6` 2020.12.22
