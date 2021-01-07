@@ -7,22 +7,24 @@
 
     <Appenders>
         <Console name="Console" target="SYSTEM_OUT">
-            <PatternLayout pattern="%d{HH:mm:ss.SSS} [%t] %-5level %logger{36} - %msg%n"/>
+            <PatternLayout pattern="%d{yyyy.MM.dd HH:mm:ss.SSS} [%t] %-5level %logger{36} - %msg%n"/>
         </Console>
         <RollingFile name="StudioLog" fileName="${baseFolder}/studio.log"
-                     filePattern="${baseFolder}/studio-%d{yyyy-MM-dd}.log"
+                     filePattern="${baseFolder}/studio-%i.log"
                      createOnDemand="true">
-            <PatternLayout pattern="%d{HH:mm:ss.SSS} [%t] %-5level %logger{36} - %msg%n"/>
-            <TimeBasedTriggeringPolicy />
+            <PatternLayout pattern="%d{yyyy.MM.dd HH:mm:ss.SSS} [%t] %-5level %logger{36} - %msg%n"/>
+            <SizeBasedTriggeringPolicy size="10 MB"/>
+            <DefaultRolloverStrategy max="10" fileIndex="min"/>
         </RollingFile>
         <Async name="AsyncStudioLog">
             <AppenderRef ref="StudioLog"/>
         </Async>
         <RollingFile name="QueryLog" fileName="${baseFolder}/query.log"
-                     filePattern="${baseFolder}/query-%d{yyyy-MM-dd}.log"
+                     filePattern="${baseFolder}/query-%i.log"
                      createOnDemand="true">
-            <PatternLayout pattern="%d{HH:mm:ss.SSS} %msg%n"/>
-            <TimeBasedTriggeringPolicy />
+            <PatternLayout pattern="%d{yyyy.MM.dd HH:mm:ss.SSS} %msg%n"/>
+            <SizeBasedTriggeringPolicy size="10 MB"/>
+            <DefaultRolloverStrategy max="10" fileIndex="min"/>
         </RollingFile>
 
     </Appenders>
