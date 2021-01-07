@@ -12,8 +12,8 @@ import java.util.Date;
 import java.util.UUID;
 
 public class K {
-    private static SimpleDateFormat formatter = new SimpleDateFormat();
-    private static DecimalFormat nsFormatter = new DecimalFormat("000000000");
+    private final static SimpleDateFormat formatter = new SimpleDateFormat();
+    private final static DecimalFormat nsFormatter = new DecimalFormat("000000000");
 
     static {
         formatter.setTimeZone(java.util.TimeZone.getTimeZone("GMT"));
@@ -49,7 +49,15 @@ public class K {
     public abstract static class KBase {
         public abstract String getDataType();
 
-        public int type;
+        private final int type;
+
+        protected KBase(int type) {
+            this.type = type;
+        }
+
+        public int getType() {
+            return type;
+        }
 
         public void serialise(OutputStream o) throws IOException {
             write(o, (byte) type);
@@ -72,6 +80,10 @@ public class K {
             return builder;
         }
 
+        public int count() {
+            return 1;
+        }
+
     }
 
     public abstract static class Adverb extends KBase {
@@ -81,7 +93,8 @@ public class K {
 
         protected K.KBase o;
 
-        public Adverb(K.KBase o) {
+        public Adverb(int type, K.KBase o) {
+            super(type);
             this.o = o;
         }
 
@@ -103,8 +116,7 @@ public class K {
         }
 
         public BinaryPrimitive(int i) {
-            super(ops, i);
-            type = 102;
+            super(102, ops, i);
         }
 
         @Override
@@ -115,15 +127,15 @@ public class K {
     }
 
     public static class FComposition extends KBase {
-        Object[] objs;
+        private final Object[] objs;
 
         public String getDataType() {
             return "Function Composition";
         }
 
         public FComposition(Object[] objs) {
+            super(105);
             this.objs = objs;
-            type = 105;
         }
 
         //@TODO: implement
@@ -135,8 +147,7 @@ public class K {
 
     public static class FEachLeft extends Adverb {
         public FEachLeft(K.KBase o) {
-            super(o);
-            type = 111;
+            super(111, o);
         }
 
         @Override
@@ -147,8 +158,7 @@ public class K {
 
     public static class FEachRight extends Adverb {
         public FEachRight(K.KBase o) {
-            super(o);
-            type = 110;
+            super(110, o);
         }
 
         @Override
@@ -159,8 +169,7 @@ public class K {
 
     public static class FPrior extends Adverb {
         public FPrior(K.KBase o) {
-            super(o);
-            type = 109;
+            super(109, o);
         }
 
         @Override
@@ -171,8 +180,7 @@ public class K {
 
     public static class Feach extends Adverb {
         public Feach(K.KBase o) {
-            super(o);
-            type = 106;
+            super(106, o);
         }
 
         @Override
@@ -183,8 +191,7 @@ public class K {
 
     public static class Fover extends Adverb {
         public Fover(K.KBase o) {
-            super(o);
-            type = 107;
+            super(107, o);
         }
 
         @Override
@@ -195,8 +202,7 @@ public class K {
 
     public static class Fscan extends Adverb {
         public Fscan(KBase o) {
-            super(o);
-            type = 108;
+            super(108, o);
             this.o = o;
         }
 
@@ -211,10 +217,10 @@ public class K {
             return "Function";
         }
 
-        private String body;
+        private final String body;
 
         public Function(KCharacterVector body) {
-            type = 100;
+            super(100);
             this.body = new String((char[]) body.getArray(), 0, body.getLength());
         }
 
@@ -229,10 +235,11 @@ public class K {
             return "Primitive";
         }
 
-        private int primitive;
+        private final int primitive;
         private String s = " ";
 
-        public Primitive(String[] ops, int i) {
+        public Primitive(int type, String[] ops, int i) {
+            super(type);
             primitive = i;
             if (i >= 0 && i < ops.length)
                 s = ops[i];
@@ -252,10 +259,10 @@ public class K {
             return "Projection";
         }
 
-        private K.KList objs;
+        private final K.KList objs;
 
         public Projection(K.KList objs) {
-            type = 104;
+            super(104);
             this.objs = objs;
         }
 
@@ -282,7 +289,7 @@ public class K {
         private char charVal = ' ';
 
         public TernaryOperator(int i) {
-            type = 103;
+            super(103);
             if (i>=0 && i<=2) charVal = "'/\\".charAt(i);
         }
 
@@ -293,11 +300,10 @@ public class K {
     }
 
     public static class UnaryPrimitive extends Primitive {
-        private static String[] ops = {"::", "+:", "-:", "*:", "%:", "&:", "|:", "^:", "=:", "<:", ">:", "$:", ",:", "#:", "_:", "~:", "!:", "?:", "@:", ".:", "0::", "1::", "2::", "avg", "last", "sum", "prd", "min", "max", "exit", "getenv", "abs", "sqrt", "log", "exp", "sin", "asin", "cos", "acos", "tan", "atan", "enlist", "var", "dev", "hopen"};
+        private static final String[] ops = {"::", "+:", "-:", "*:", "%:", "&:", "|:", "^:", "=:", "<:", ">:", "$:", ",:", "#:", "_:", "~:", "!:", "?:", "@:", ".:", "0::", "1::", "2::", "avg", "last", "sum", "prd", "min", "max", "exit", "getenv", "abs", "sqrt", "log", "exp", "sin", "asin", "cos", "acos", "tan", "atan", "enlist", "var", "dev", "hopen"};
 
         public UnaryPrimitive(int i) {
-            super(ops, i);
-            type = 101;
+            super(101, ops, i);
         }
 
         @Override
@@ -316,8 +322,8 @@ public class K {
         public boolean b;
 
         public KBoolean(boolean b) {
+            super(-1);
             this.b = b;
-            type = -1;
         }
 
         @Override
@@ -348,8 +354,8 @@ public class K {
         }
 
         public KByte(byte b) {
+            super(-4);
             this.b = b;
-            type = -4;
         }
 
         @Override
@@ -373,8 +379,8 @@ public class K {
         }
 
         public KShort(short s) {
+            super(-5);
             this.s = s;
-            type = -5;
         }
 
         public boolean isNull() {
@@ -405,8 +411,8 @@ public class K {
         }
 
         public KInteger(int i) {
+            super(-6);
             this.i = i;
-            type = -6;
         }
 
         public boolean isNull() {
@@ -433,8 +439,8 @@ public class K {
         public String s;
 
         public KSymbol(String s) {
+            super(-11);
             this.s = s;
-            type = -11;
         }
 
         public boolean isNull() {
@@ -465,8 +471,8 @@ public class K {
         }
 
         public KLong(long j) {
+            super(-7);
             this.j = j;
-            type = -7;
         }
 
         public boolean isNull() {
@@ -497,8 +503,8 @@ public class K {
         public char c;
 
         public KCharacter(char c) {
+            super(-10);
             this.c = c;
-            type = -10;
         }
 
         public boolean isNull() {
@@ -531,7 +537,7 @@ public class K {
         }
 
         public KFloat(float f) {
-            type = -8;
+            super(-8);
             this.f = f;
         }
 
@@ -565,7 +571,7 @@ public class K {
         public double d;
 
         public KDouble(double d) {
-            type = -9;
+            super(-9);
             this.d = d;
         }
 
@@ -603,7 +609,7 @@ public class K {
         int date;
 
         public KDate(int date) {
-            type = -14;
+            super(-14);
             this.date = date;
         }
 
@@ -636,7 +642,7 @@ public class K {
         UUID uuid;
 
         public KGuid(UUID uuid) {
-            type = -2;
+            super(-2);
             this.uuid = uuid;
         }
 
@@ -658,7 +664,7 @@ public class K {
         int time;
 
         public KTime(int time) {
-            type = -19;
+            super(-19);
             this.time = time;
         }
 
@@ -689,7 +695,7 @@ public class K {
         double time;
 
         public KDatetime(double time) {
-            type = -15;
+            super(-15);
             this.time = time;
         }
 
@@ -722,7 +728,7 @@ public class K {
         long time;
 
         public KTimestamp(long time) {
-            type = -12;
+            super(-12);
             this.time = time;
         }
 
@@ -767,13 +773,18 @@ public class K {
         public K.KBase y;
 
         public Dict(K.KBase X, K.KBase Y) {
-            type = 99;
+            super(99);
             x = X;
             y = Y;
         }
 
         public void setAttr(byte attr) {
             this.attr = attr;
+        }
+
+        @Override
+        public int count() {
+            return x.count();
         }
 
         @Override
@@ -798,9 +809,14 @@ public class K {
         public K.KBaseVector y;
 
         public Flip(Dict X) {
-            type = 98;
+            super(98);
             x = (K.KSymbolVector) X.x;
             y = (K.KBaseVector) X.y;
+        }
+
+        @Override
+        public int count() {
+            return y.at(0).count();
         }
 
         @Override
@@ -825,7 +841,7 @@ public class K {
         public int i;
 
         public Month(int x) {
-            type = -13;
+            super(-13);
             i = x;
         }
 
@@ -852,7 +868,8 @@ public class K {
         public Date toDate() {
             int m = i + 24000, y = m / 12;
             Calendar cal = Calendar.getInstance();
-            cal.set(y, m, 01);
+            //@TODO: check that below code works. It looks m could be greater than 11.
+            cal.set(y, m, 1);
             return cal.getTime();
         }
     }
@@ -865,7 +882,7 @@ public class K {
         public int i;
 
         public Minute(int x) {
-            type = -17;
+            super(-17);
             i = x;
         }
 
@@ -898,7 +915,7 @@ public class K {
         public int i;
 
         public Second(int x) {
-            type = -18;
+            super(-18);
             i = x;
         }
 
@@ -924,7 +941,7 @@ public class K {
         public Date toDate() {
             Calendar cal = Calendar.getInstance();
             cal.set(Calendar.HOUR, i / (60 * 60));
-            cal.set(Calendar.MINUTE, (int) ((i % (60 * 60)) / 60));
+            cal.set(Calendar.MINUTE,  (i % (60 * 60)) / 60);
             cal.set(Calendar.SECOND, i % 60);
             return cal.getTime();
         }
@@ -934,8 +951,8 @@ public class K {
         public long j;
 
         public KTimespan(long x) {
+            super(-16);
             j = x;
-            type = -16;
         }
 
         public String getDataType() {
@@ -988,7 +1005,8 @@ public class K {
         private final String typeChar;
 
 
-        protected KBaseVector(Class klass, int length, String typeName, String typeChar) {
+        protected KBaseVector(Class klass, int length, int type, String typeName, String typeChar) {
+            super(type);
             array = Array.newInstance(klass, length);
             this.length = length;
             this.typeName = typeName;
@@ -1003,6 +1021,11 @@ public class K {
 
         public void setAttr(byte attr) {
             this.attr = attr;
+        }
+
+        @Override
+        public int count() {
+            return getLength();
         }
 
         public int getLength() {
@@ -1052,8 +1075,7 @@ public class K {
         }
 
         public KShortVector(int length) {
-            super(short.class, length, "short", "h");
-            type = 5;
+            super(short.class, length, 5, "short", "h");
         }
 
         public KBase at(int i) {
@@ -1067,8 +1089,7 @@ public class K {
         }
 
         public KIntVector(int length) {
-            super(int.class, length, "int", "i");
-            type = 6;
+            super(int.class, length, 6, "int", "i");
         }
 
         public KBase at(int i) {
@@ -1082,8 +1103,7 @@ public class K {
         }
 
         public KList(int length) {
-            super(KBase.class, length, "", "");
-            type = 0;
+            super(KBase.class, length, 0, "", "");
         }
 
         public KBase at(int i) {
@@ -1109,8 +1129,7 @@ public class K {
         }
 
         public KDoubleVector(int length) {
-            super(double.class, length, "float", "f");
-            type = 9;
+            super(double.class, length, 9, "float", "f");
         }
 
         public KBase at(int i) {
@@ -1124,8 +1143,7 @@ public class K {
         }
 
         public KFloatVector(int length) {
-            super(float.class, length, "real", "e");
-            type = 8;
+            super(float.class, length, 8, "real", "e");
         }
 
         public KBase at(int i) {
@@ -1140,8 +1158,7 @@ public class K {
         }
 
         public KLongVector(int length) {
-            super(long.class, length, "long", "");
-            type = 7;
+            super(long.class, length, 7, "long", "");
         }
 
         public KBase at(int i) {
@@ -1155,8 +1172,7 @@ public class K {
         }
 
         public KMonthVector(int length) {
-            super(int.class, length, "month", "m");
-            type = 13;
+            super(int.class, length, 13, "month", "m");
         }
 
         public KBase at(int i) {
@@ -1170,8 +1186,7 @@ public class K {
         }
 
         public KDateVector(int length) {
-            super(int.class, length, "date", "");
-            type = 14;
+            super(int.class, length, 14, "date", "");
         }
 
         public KBase at(int i) {
@@ -1185,8 +1200,7 @@ public class K {
         }
 
         public KGuidVector(int length) {
-            super(UUID.class, length, "guid", "");
-            type = 2;
+            super(UUID.class, length, 2, "guid", "");
         }
 
         public KBase at(int i) {
@@ -1200,8 +1214,7 @@ public class K {
         }
 
         public KMinuteVector(int length) {
-            super(int.class, length, "minute", "");
-            type = 17;
+            super(int.class, length, 17, "minute", "");
         }
 
         public KBase at(int i) {
@@ -1215,8 +1228,7 @@ public class K {
         }
 
         public KDatetimeVector(int length) {
-            super(double.class, length, "datetime", "z");
-            type = 15;
+            super(double.class, length, 15, "datetime", "z");
         }
 
         public KBase at(int i) {
@@ -1230,8 +1242,7 @@ public class K {
         }
 
         public KTimestampVector(int length) {
-            super(long.class, length, "timestamp", "");
-            type = 12;
+            super(long.class, length, 12, "timestamp", "");
         }
 
         public KBase at(int i) {
@@ -1245,8 +1256,7 @@ public class K {
         }
 
         public KTimespanVector(int length) {
-            super(long.class, length, "timespan", "");
-            type = 16;
+            super(long.class, length, 16, "timespan", "");
         }
 
         public KBase at(int i) {
@@ -1260,8 +1270,7 @@ public class K {
         }
 
         public KSecondVector(int length) {
-            super(int.class, length, "second", "");
-            type = 18;
+            super(int.class, length, 18, "second", "");
         }
 
         public KBase at(int i) {
@@ -1283,8 +1292,7 @@ public class K {
         }
 
         public KTimeVector(int length) {
-            super(int.class, length, "time", "");
-            type = 19;
+            super(int.class, length, 19, "time", "");
         }
 
         public KBase at(int i) {
@@ -1306,8 +1314,7 @@ public class K {
         }
 
         public KBooleanVector(int length) {
-            super(boolean.class, length, "boolean", "b");
-            type = 1;
+            super(boolean.class, length, 1, "boolean", "b");
         }
 
         public KBase at(int i) {
@@ -1341,8 +1348,7 @@ public class K {
         }
 
         public KByteVector(int length) {
-            super(byte.class, length, "byte", "x");
-            type = 4;
+            super(byte.class, length, 4, "byte", "x");
         }
 
         public KBase at(int i) {
@@ -1379,8 +1385,7 @@ public class K {
         }
 
         public KSymbolVector(int length) {
-            super(String.class, length, "symbol", "s");
-            type = 11;
+            super(String.class, length, 11, "symbol", "s");
         }
 
         public KBase at(int i) {
@@ -1406,9 +1411,8 @@ public class K {
 
 
         public KCharacterVector(char[] ca) {
-            super(char.class, ca.length, "char", "c");
+            super(char.class, ca.length, 10, "char", "c");
             System.arraycopy(ca, 0, array, 0, ca.length);
-            type = 10;
         }
 
         public KCharacterVector(String s) {
