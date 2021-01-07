@@ -1,16 +1,20 @@
 package studio.ui.action;
 
 import kx.ProgressCallback;
+import kx.c;
 import org.apache.logging.log4j.LogManager;
 import org.apache.logging.log4j.Logger;
 import studio.kdb.*;
 import studio.ui.StudioPanel;
 
 import javax.swing.*;
+import java.util.concurrent.atomic.AtomicInteger;
 
 public class QueryExecutor implements ProgressCallback {
 
     private static final Logger log = LogManager.getLogger();
+    private static final Logger queryLog = LogManager.getLogger("Query");
+    private static final AtomicInteger queryIndex = new AtomicInteger(1);
 
     private Worker worker = null;
     private final StudioPanel studioPanel;
@@ -103,6 +107,7 @@ public class QueryExecutor implements ProgressCallback {
         @Override
         protected QueryResult doInBackground() {
             QueryResult result = new QueryResult(server, query);
+            queryLog.info("#{}: query {}({})\n{}",queryIndex, server.getFullName(), server.getConnectionString(false), query);
             long startTime = System.currentTimeMillis();
             try {
                 c = ConnectionPool.getInstance().leaseConnection(server);
@@ -120,6 +125,16 @@ public class QueryExecutor implements ProgressCallback {
                 }
             }
             result.setExecutionTime(System.currentTimeMillis() - startTime);
+            if (result.getError() != null) {
+                if (result.getError() instanceof kx.c.K4Exception) {
+                    queryLog.info("#{}: server returns error {}", queryIndex, result.getError().getMessage());
+                } else {
+                    queryLog.info("#{}: error during execution {}", queryIndex, result.getError().getMessage());
+                }
+            } else {
+                queryLog.info("#{}: type={}, count={}, time={}", queryIndex, result.getResult().getType(), result.getResult().count(), result.getExecutionTime());
+            }
+            queryIndex.getAndIncrement();
             return result;
         }
 
