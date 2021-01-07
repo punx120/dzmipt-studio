@@ -123,11 +123,6 @@ public class Config {
         return str.split(",");
     }
 
-    public String[] getQKeywords() {
-        String key = p.getProperty("qkeywords", "");
-        return split(key);
-    }
-
     public String getLRUServer() {
         return p.getProperty("lruServer", "");
     }
@@ -136,12 +131,6 @@ public class Config {
         if (s == null) return; // May be it should be an exception ?
 
         p.put("lruServer", s.getFullName());
-        save();
-    }
-
-
-    public void saveQKeywords(String[] keywords) {
-        p.put("qkeywords", String.join(",",keywords));
         save();
     }
 

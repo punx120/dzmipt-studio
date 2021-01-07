@@ -942,7 +942,6 @@ public class StudioPanel extends JPanel implements Observer,WindowListener {
             Utilities.getEditorUI(textArea).getComponent().setBackground(server.getBackgroundColor());
         }
 
-        new ReloadQKeywords(server);
         Config.getInstance().setLRUServer(server);
 
         refreshFrameTitle();
