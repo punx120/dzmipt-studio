@@ -47,6 +47,7 @@ public class c {
 
     public void close() {
         // this will force k() to break out i hope
+        closed = true;
         if (inputStream != null)
             try {
                 inputStream.close();
@@ -55,7 +56,6 @@ public class c {
             try {
                 outputStream.close();
             } catch (IOException e) {}
-        closed = true;
     }
 
     public c() {
@@ -635,7 +635,12 @@ public class c {
 
     public K.KBase k(K.KBase x, ProgressCallback progress) throws K4Exception, IOException {
         w(1, x);
-        return k(progress);
+        try {
+            return k(progress);
+        } catch (IOException e) {
+            close();
+            throw e;
+        }
     }
 
     public K.KBase k(K.KBase x) throws K4Exception, IOException {
