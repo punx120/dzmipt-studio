@@ -32,7 +32,7 @@ public class QueryExecutor implements ProgressCallback {
     }
 
     public void execute(String query) {
-        worker = new Worker(studioPanel.getServer(), query);
+        worker = new Worker(queryIndex.getAndIncrement(), studioPanel.getServer(), query);
         worker.execute();
     }
 
@@ -92,8 +92,10 @@ public class QueryExecutor implements ProgressCallback {
         private volatile Server server;
         private volatile String query;
         private volatile kx.c c = null;
+        private final int queryIndex;
 
-        public Worker (Server server, String query) {
+        public Worker (int queryIndex, Server server, String query) {
+            this.queryIndex = queryIndex;
             this.server = server;
             this.query = query;
         }
@@ -134,7 +136,6 @@ public class QueryExecutor implements ProgressCallback {
             } else {
                 queryLog.info("#{}: type={}, count={}, time={}", queryIndex, result.getResult().getType(), result.getResult().count(), result.getExecutionTime());
             }
-            queryIndex.getAndIncrement();
             return result;
         }
 
