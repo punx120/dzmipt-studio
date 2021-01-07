@@ -344,6 +344,11 @@ public class ServerList extends EscapeDialog implements TreeExpansionListener  {
             boolean isFolder = ((ServerTreeNode) path.getLastPathComponent()).isFolder();
             insertServerAction.setEnabled(isFolder);
             insertFolderAction.setEnabled(isFolder);
+            addFolderBeforeAction.setEnabled(true);
+            addFolderAfterAction.setEnabled(true);
+            addServerBeforeAction.setEnabled(true);
+            addServerAfterAction.setEnabled(true);
+            removeAction.setEnabled(true);
         }
 
         popupMenu.show(tree, x, y);
