@@ -129,7 +129,7 @@ public class QueryExecutor implements ProgressCallback {
                 if (result.getError() instanceof kx.c.K4Exception) {
                     queryLog.info("#{}: server returns error {}", queryIndex, result.getError().getMessage());
                 } else {
-                    queryLog.info("#{}: error during execution {}", queryIndex, result.getError().getMessage());
+                    queryLog.info("#{}: error during execution {} {}", queryIndex, result.getError().getClass().getName(), result.getError().getMessage());
                 }
             } else {
                 queryLog.info("#{}: type={}, count={}, time={}", queryIndex, result.getResult().getType(), result.getResult().count(), result.getExecutionTime());
