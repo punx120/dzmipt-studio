@@ -192,8 +192,13 @@
 `,symbol
 ``,symbol
 `abc,symbol
+`0`a,symbol
 `a.b_,symbol
 `a-,symbol,operator
+`a:b,symbol
+`a:/b,symbol
+`a/:b,symbol,operator,operator,identifier
+`a:b`a/c,symbol,operator,identifier
 
 dzmipt,identifier
 D0_,identifier

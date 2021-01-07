@@ -25,7 +25,7 @@ public class QSyntaxNew extends Syntax {
             DateT1,DateT2,DateT3,DateT4,DateT5,DateT6,DateT7,DateT8,
             DigitsD1,DigitsD2,DigitsD3,DigitsD4,DigitsD5,DigitsD6,DigitsD7,DigitsD8,
         MinusZero,
-        MinusForAtom, String, StringEscape, StringEscapeD, StringEscapeDD, Symbol,
+        MinusForAtom, String, StringEscape, StringEscapeD, StringEscapeDD, Symbol, SymbolColon,
         Identifier,IdentifierDot,
         CommentEOL,
         CommentMLFirstLine, CommentMLInit, CommentML, CommentMLLastLine,
@@ -356,7 +356,12 @@ public class QSyntaxNew extends Syntax {
         add(State.StringEscapeDD, "", State.String, QTokenContext.UNKNOWN, Match);
 
         add(State.Symbol, alphaNumeric + "`_.", State.Symbol, QTokenContext.SYMBOL, LooksLike);
+        add(State.Symbol, ":", State.SymbolColon, QTokenContext.SYMBOL, LooksLike);
         add(State.Symbol, "", State.AfterAtom, QTokenContext.SYMBOL, MatchPrev);
+
+        add(State.SymbolColon, alphaNumeric + "_.:/", State.SymbolColon, QTokenContext.SYMBOL, LooksLike);
+        add(State.SymbolColon, "`", State.Symbol, QTokenContext.SYMBOL, LooksLike);
+        add(State.SymbolColon, "", State.AfterAtom, QTokenContext.SYMBOL, MatchPrev);
 
         add(State.Identifier, alphaNumeric +"_", State.Identifier, QTokenContext.IDENTIFIER, LooksLike);
         add(State.Identifier, ".", State.IdentifierDot, QTokenContext.IDENTIFIER, LooksLike);

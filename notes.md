@@ -1,3 +1,4 @@
+* Fix syntax highlighting for communication handle symbol
 * Adding Log4j 2 for logging application and queries to $HOME/.studioforkdb/log folder
 * Set new syntax highlighting in Console result pane
 
