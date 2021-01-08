@@ -2007,11 +2007,7 @@ public class StudioPanel extends JPanel implements Observer,WindowListener {
 
         Locale.setDefault(Locale.US);
 
-        Server s = null;
-        String lruServer = Config.getInstance().getLRUServer();
-        if (Config.getInstance().getServerNames().contains(lruServer)){
-            s = Config.getInstance().getServer(lruServer);
-        }
+        Server s = Config.getInstance().getLRUServer();
         new StudioPanel(s,filename);
     }
 
