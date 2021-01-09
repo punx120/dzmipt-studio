@@ -5,6 +5,7 @@ import org.apache.logging.log4j.Logger;
 import studio.core.Credentials;
 import studio.core.DefaultAuthenticationMechanism;
 import studio.ui.ServerList;
+import studio.utils.HistoricalList;
 
 import java.io.*;
 import java.nio.file.Files;
@@ -24,14 +25,19 @@ public class Config {
     // The folder is also referenced in lon4j2.xml config
     private static final String PATH = System.getProperties().getProperty("user.home") + "/.studioforkdb/";
     private static final String FILENAME = PATH + "studio.properties";
-    private static final String VERSION = "1.2";
+    private static final String VERSION13 = "1.3";
+    private static final String VERSION12 = "1.2";
     private static final String OLD_VERSION = "1.1";
+
+    private static final String VERSION = VERSION13;
+
 
     private String filename;
     private Properties p = new Properties();
     private final Map<String, Server> servers = new HashMap<>();
     private Collection<String> serverNames;
     private ServerTreeNode serverTree;
+    private HistoricalList<Server> serverHistory;
 
     private final static Map<String, Config> instances = new ConcurrentHashMap<>();
 
@@ -96,7 +102,6 @@ public class Config {
             } catch (IOException e) {
                 log.error("Can't create configuration folder {}", dir, e);
             }
-            return;
         }
 
         if (Files.exists(file)) {
@@ -108,7 +113,57 @@ public class Config {
                 log.error("Can't read configuration from file {}", filename, e);
             }
         }
+        checkForUpgrade();
         initServers();
+        initServerHistory();
+    }
+
+    private void upgradeTo12() {
+        try {
+            log.info("Found old config. Converting...");
+            String[] names = p.getProperty("Servers", "").split(",");
+            List<Server> list = new ArrayList<>();
+            for (String name : names) {
+                name = name.trim();
+                if (name.equals("")) continue;
+                Server server = initServerFromKey(name);
+                server.setName(name);
+                list.add(server);
+            }
+            p.remove("Servers");
+            p.entrySet().removeIf(e -> e.getKey().toString().startsWith("server."));
+            p.setProperty("version", VERSION12);
+            initServers();
+            addServers(list.toArray(new Server[0]));
+            log.info("Done");
+        } catch (IllegalArgumentException e) {
+            log.error("Ups... Can't convert", e);
+        }
+    }
+
+    private void upgradeTo13() {
+        String fullName = p.getProperty("lruServer", "");
+        p.remove("lruServer");
+        if (! fullName.equals("")) {
+            Server server = getServer(fullName);
+            if (server != null) addServerToHistory(server);
+        }
+        save();
+    }
+
+    private void checkForUpgrade() {
+        if (p.getProperty("version", OLD_VERSION).equals(OLD_VERSION)) {
+            upgradeTo12();
+            p.setProperty("version", VERSION12);
+        }
+
+        initServers();
+        if (p.getProperty("version").equals(VERSION12)) {
+            initServerHistory();
+            upgradeTo13();
+            p.setProperty("version", VERSION13);
+        }
+        initServerHistory();
     }
 
     public void save() {
@@ -129,15 +184,38 @@ public class Config {
         return str.split(",");
     }
 
-    public Server getLRUServer() {
-        String fullName = p.getProperty("lruServer", "");
-        return servers.getOrDefault(fullName, null);
+    public int getServerHistoryDepth() {
+        return Integer.parseInt(p.getProperty("serverHistoryDepth", "20"));
     }
 
-    public void setLRUServer(Server s) {
-        if (s == null) return; // May be it should be an exception ?
+    public void setServerHistoryDepth(int depth) {
+        serverHistory.setDepth(depth);
+        p.setProperty("serverHistoryDepth", "" + depth);
+        save();
+    }
 
-        p.put("lruServer", s.getFullName());
+    private void initServerHistory() {
+        int depth = getServerHistoryDepth();
+        serverHistory = new HistoricalList<>(depth);
+        for (int i=depth-1; i>=0; i--) {
+            String key = "serverHistory." + i;
+            if (! p.containsKey(key)) continue;
+            Server server = getServer(p.getProperty(key));
+            if (server == null) continue;
+            serverHistory.add(server);
+        }
+    }
+
+    public List<Server> getServerHistory() {
+        return Collections.unmodifiableList(serverHistory);
+    }
+
+    public void addServerToHistory(Server server) {
+        serverHistory.add(server);
+        for (int i=serverHistory.size()-1; i>=0; i--) {
+            String key = "serverHistory." + i;
+            p.setProperty(key, serverHistory.get(i).getFullName());
+        }
         save();
     }
 
@@ -328,31 +406,7 @@ public class Config {
         return initServerFromKey("" + number);
     }
 
-    private void convertFromOldVerion() {
-        try {
-            log.info("Found old config. Converting...");
-            String[] names = p.getProperty("Servers").split(",");
-            List<Server> list = new ArrayList<>();
-            for (String name : names) {
-                Server server = initServerFromKey(name);
-                server.setName(name);
-                list.add(server);
-            }
-            p.remove("Servers");
-            p.entrySet().removeIf(e -> e.getKey().toString().startsWith("server."));
-            p.setProperty("version", VERSION);
-            initServers();
-            addServers(list.toArray(new Server[0]));
-            log.info("Done");
-        } catch (IllegalArgumentException e) {
-            log.error("Ups... Can't convert", e);
-        }
-    }
-
     private void initServers() {
-        if (p.contains("version") && p.getProperty("version").equals(OLD_VERSION)) {
-            convertFromOldVerion();
-        }
         serverNames = new ArrayList<>();
         serverTree = new ServerTreeNode();
         initServerTree("serverTree.", serverTree, 0);

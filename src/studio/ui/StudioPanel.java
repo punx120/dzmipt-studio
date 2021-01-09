@@ -942,7 +942,7 @@ public class StudioPanel extends JPanel implements Observer,WindowListener {
             Utilities.getEditorUI(textArea).getComponent().setBackground(server.getBackgroundColor());
         }
 
-        Config.getInstance().setLRUServer(server);
+        Config.getInstance().addServerToHistory(server);
 
         refreshFrameTitle();
         windowListMonitor.fireMyEvent(new WindowListChangedEvent(this));
@@ -2007,7 +2007,8 @@ public class StudioPanel extends JPanel implements Observer,WindowListener {
 
         Locale.setDefault(Locale.US);
 
-        Server s = Config.getInstance().getLRUServer();
+        List<Server> serverHistory = Config.getInstance().getServerHistory();
+        Server s = serverHistory.size() == 0 ? null : serverHistory.get(0);
         new StudioPanel(s,filename);
     }
 

@@ -5,8 +5,9 @@ import org.junit.jupiter.api.Test;
 import studio.core.DefaultAuthenticationMechanism;
 
 import java.awt.*;
-import java.io.File;
-import java.io.IOException;
+import java.io.*;
+import java.util.Properties;
+import java.util.function.Consumer;
 
 import static org.junit.jupiter.api.Assertions.assertEquals;
 
@@ -43,11 +44,95 @@ public class ConfigTest {
         assertEquals(value+1, Config.getInstance(tmpFile.getPath()).getResultTabsCount());
     }
 
-    @Test void testLRUServer() {
-        assertEquals(null, config.getLRUServer());
+    @Test
+    public void testServerHistoryDepth() {
+        int depth = config.getServerHistoryDepth();
+        config.setServerHistoryDepth(depth+1);
+        assertEquals(depth+1, config.getServerHistoryDepth());
+    }
+
+    @Test
+    public void testServerHistory() {
+        assertEquals(0, config.getServerHistory().size());
 
         config.addServer(server);
-        config.setLRUServer(server);
-        assertEquals(server, config.getLRUServer());
+        assertEquals(0, config.getServerHistory().size());
+        config.addServerToHistory(server);
+        assertEquals(1, config.getServerHistory().size());
+        assertEquals(server, config.getServerHistory().get(0));
+        config.addServerToHistory(server);
+        assertEquals(1, config.getServerHistory().size());
+
+
+        Server server1 = new Server(server);
+        server1.setName("testServer1");
+        Server server2 = new Server(server);
+        server2.setName("testServer2");
+        Server server3 = new Server(server);
+        server3.setName("testServer3");
+
+        config.addServers(server1, server2, server3);
+        config.addServerToHistory(server1);
+        config.addServerToHistory(server2);
+        assertEquals(3, config.getServerHistory().size());
+        assertEquals(server2, config.getServerHistory().get(0));
+        assertEquals(server1, config.getServerHistory().get(1));
+        assertEquals(server, config.getServerHistory().get(2));
+
+        config.addServerToHistory(server1);
+        assertEquals(3, config.getServerHistory().size());
+        assertEquals(server1, config.getServerHistory().get(0));
+        assertEquals(server2, config.getServerHistory().get(1));
+        assertEquals(server, config.getServerHistory().get(2));
+
+        config.addServerToHistory(server);
+        assertEquals(3, config.getServerHistory().size());
+        assertEquals(server, config.getServerHistory().get(0));
+        assertEquals(server1, config.getServerHistory().get(1));
+        assertEquals(server2, config.getServerHistory().get(2));
+
+        config.addServerToHistory(server);
+        assertEquals(3, config.getServerHistory().size());
+        assertEquals(server, config.getServerHistory().get(0));
+        assertEquals(server1, config.getServerHistory().get(1));
+        assertEquals(server2, config.getServerHistory().get(2));
+
+        config.setServerHistoryDepth(3);
+        config.addServerToHistory(server3);
+        assertEquals(3, config.getServerHistory().size());
+        assertEquals(server3, config.getServerHistory().get(0));
+        assertEquals(server, config.getServerHistory().get(1));
+        assertEquals(server1, config.getServerHistory().get(2));
+    }
+
+    private Config copyConfigFromFile(File file, Consumer<Properties> propsModification) throws IOException {
+        Properties p = new Properties();
+        p.load(new FileInputStream(file));
+        propsModification.accept(p);
+
+        File newFile = File.createTempFile("studioforkdb", ".tmp");
+        newFile.deleteOnExit();
+        OutputStream out = new FileOutputStream(newFile);
+        p.store(out, null);
+        out.close();
+
+        return Config.getInstance(newFile.getPath());
+    }
+
+    @Test
+    public void upgrade13Test() throws IOException {
+        config.addServer(server);
+
+        Config newConfig = copyConfigFromFile(tmpFile, p -> {
+            p.setProperty("version", "1.2");
+        });
+        assertEquals(0, newConfig.getServerHistory().size());
+
+        newConfig = copyConfigFromFile(tmpFile, p -> {
+            p.setProperty("version", "1.2");
+            p.setProperty("lruServer", server.getFullName());
+        });
+        assertEquals(1, newConfig.getServerHistory().size());
+        assertEquals(server, newConfig.getServerHistory().get(0));
     }
 }
