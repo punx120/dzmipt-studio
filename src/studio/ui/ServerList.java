@@ -3,6 +3,7 @@ package studio.ui;
 import org.apache.logging.log4j.LogManager;
 import org.apache.logging.log4j.Logger;
 import studio.kdb.Config;
+import studio.kdb.K;
 import studio.kdb.Server;
 import studio.kdb.ServerTreeNode;
 
@@ -21,16 +22,21 @@ import java.util.ArrayList;
 import java.util.Enumeration;
 import java.util.HashSet;
 import java.util.StringTokenizer;
+import java.util.List;
 
 public class ServerList extends EscapeDialog implements TreeExpansionListener  {
 
     private static final Logger log = LogManager.getLogger();
 
     private JPanel contentPane;
+    private JTabbedPane tabbedPane;
+    private JList<String> serverHistoryList;
+    private List<Server> serverHistory;
     private JTree tree;
     private DefaultTreeModel treeModel;
     private JTextField filter;
     private JToggleButton tglBtnBoxTree;
+
     private boolean ignoreExpansionListener = false;
     private java.util.Set<TreePath> expandedPath = new HashSet<>();
     private java.util.Set<TreePath> collapsedPath = new HashSet<>();
@@ -45,10 +51,13 @@ public class ServerList extends EscapeDialog implements TreeExpansionListener  {
                         addServerBeforeAction, addServerAfterAction,
                         addFolderBeforeAction, addFolderAfterAction;
 
-    public final static int DEFAULT_WIDTH = 300;
-    public final static int DEFAULT_HEIGHT = 400;
+    public static final int DEFAULT_WIDTH = 300;
+    public static final int DEFAULT_HEIGHT = 400;
 
-    private final static int menuShortcutKeyMask = java.awt.Toolkit.getDefaultToolkit().getMenuShortcutKeyMask();
+    private static final String JTABBED_TREE_LABEL = "Servers - tree";
+    private static final String JTABBED_LIST_LABEL = "Servers - list";
+
+    private static final int menuShortcutKeyMask = java.awt.Toolkit.getDefaultToolkit().getMenuShortcutKeyMask();
     private final KeyStroke TREE_VIEW_KEYSTROKE = KeyStroke.getKeyStroke(KeyEvent.VK_T, menuShortcutKeyMask);
 
     public ServerList(JFrame parent) {
@@ -63,9 +72,28 @@ public class ServerList extends EscapeDialog implements TreeExpansionListener  {
         refreshServers();
     }
 
+    public void updateServerHistory(final List<Server> list) {
+        this.serverHistory = list;
+        serverHistoryList.setModel(new AbstractListModel<String>() {
+                                       @Override
+                                       public int getSize() {
+                                           return list.size();
+                                       }
+                                       @Override
+                                       public String getElementAt(int index) {
+                                           return list.get(index).getDescription(true);
+                                       }
+                                   }
+        );
+    }
+
+    public void selectHistoryTab(boolean value) {
+        tabbedPane.setSelectedIndex(value ? 1 : 0);
+    }
+
     //Split filter text by spaces
-    private java.util.List<String> getFilters() {
-        java.util.List<String> filters = new ArrayList<>();
+    private List<String> getFilters() {
+        List<String> filters = new ArrayList<>();
         filters.clear();
         StringTokenizer st = new StringTokenizer(filter.getText()," \t");
         while (st.hasMoreTokens()) {
@@ -203,13 +231,25 @@ public class ServerList extends EscapeDialog implements TreeExpansionListener  {
         accept();
     }
 
+    private void selectServerFromHistory() {
+        int index = serverHistoryList.getSelectedIndex();
+        if (index == -1) return;
+        selectedServer = serverHistory.get(index);
+        accept();
+    }
+
     private boolean isListView() {
         return tglBtnBoxTree.isSelected();
     }
 
     private void toggleTreeListView() {
         tglBtnBoxTree.setSelected(!tglBtnBoxTree.isSelected());
+        actionToggleButton();
+    }
+
+    private void actionToggleButton() {
         refreshServers();
+        tabbedPane.setTitleAt(0, isListView() ? JTABBED_LIST_LABEL : JTABBED_TREE_LABEL);
     }
 
     private void initComponents() {
@@ -267,7 +307,7 @@ public class ServerList extends EscapeDialog implements TreeExpansionListener  {
         tglBtnBoxTree.setToolTipText("<html>Toggle tree/list <small>" + Util.getAcceleratorString(TREE_VIEW_KEYSTROKE) +"</small></html>");
         tglBtnBoxTree.setSelectedIcon(Util.TEXT_ICON);
         tglBtnBoxTree.setFocusable(false);
-        tglBtnBoxTree.addActionListener(e->refreshServers());
+        tglBtnBoxTree.addActionListener(e->actionToggleButton());
         JToolBar toolbar = new JToolBar();
         toolbar.setLayout(new BoxLayout(toolbar, BoxLayout.X_AXIS));
         toolbar.setFloatable(false);
@@ -277,9 +317,30 @@ public class ServerList extends EscapeDialog implements TreeExpansionListener  {
         toolbar.add(filter);
         filter.requestFocus();
 
+        serverHistoryList = new JList();
+        serverHistoryList.setSelectionMode(ListSelectionModel.SINGLE_SELECTION);
+        serverHistoryList.addMouseListener(new MouseAdapter() {
+            @Override
+            public void mouseClicked(MouseEvent e) {
+                if (e.getClickCount() == 2) {
+                    selectServerFromHistory();
+                }
+            }
+        });
+
+        //An extra panel to avoid selecting last item when clicking below the list
+        JPanel panel = new JPanel(new BorderLayout());
+        panel.add(serverHistoryList, BorderLayout.NORTH);
+        panel.setBackground(serverHistoryList.getBackground());
+
+        tabbedPane = new JTabbedPane();
+        tabbedPane.add(JTABBED_TREE_LABEL, new JScrollPane(tree));
+        tabbedPane.add("Recent", new JScrollPane(panel));
+        tabbedPane.setFocusable(false);
+
         contentPane = new JPanel(new BorderLayout());
         contentPane.add(toolbar, BorderLayout.NORTH);
-        contentPane.add(new JScrollPane(tree), BorderLayout.CENTER);
+        contentPane.add(tabbedPane, BorderLayout.CENTER);
         setContentPane(contentPane);
 
         setPreferredSize(new Dimension(DEFAULT_WIDTH, DEFAULT_HEIGHT));
@@ -308,10 +369,12 @@ public class ServerList extends EscapeDialog implements TreeExpansionListener  {
 
         UserAction toggleAction = UserAction.create("toggle", e-> toggleTreeListView());
         UserAction focusTreeAction = UserAction.create("focus tree", e-> tree.requestFocusInWindow());
+        UserAction selectServerFromHistory = UserAction.create("select from history", e -> selectServerFromHistory());
 
         contentPane.getActionMap().put(toggleAction.getText(), toggleAction);
         tree.getActionMap().put(selectAction.getText(), selectAction);
         filter.getActionMap().put(focusTreeAction.getText(), focusTreeAction);
+        serverHistoryList.getActionMap().put(selectServerFromHistory.getText(), selectServerFromHistory);
 
         contentPane.getInputMap(JComponent.WHEN_ANCESTOR_OF_FOCUSED_COMPONENT)
                 .put(TREE_VIEW_KEYSTROKE, toggleAction.getText());
@@ -320,6 +383,7 @@ public class ServerList extends EscapeDialog implements TreeExpansionListener  {
         filter.getInputMap().put(KeyStroke.getKeyStroke(KeyEvent.VK_UP, 0), focusTreeAction.getText());
         filter.getInputMap().put(KeyStroke.getKeyStroke(KeyEvent.VK_PAGE_DOWN, 0), focusTreeAction.getText());
         filter.getInputMap().put(KeyStroke.getKeyStroke(KeyEvent.VK_PAGE_UP, 0), focusTreeAction.getText());
+        serverHistoryList.getInputMap().put(KeyStroke.getKeyStroke(KeyEvent.VK_ENTER, 0), selectServerFromHistory.getText());
     }
 
     private void handlePopup(MouseEvent e) {

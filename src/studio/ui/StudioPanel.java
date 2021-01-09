@@ -39,6 +39,7 @@ import studio.qeditor.QSettingsInitializer;
 import studio.kdb.*;
 import studio.ui.action.QueryExecutor;
 import studio.utils.BrowserLaunch;
+import studio.utils.HistoricalList;
 import studio.utils.OSXAdapter;
 
 public class StudioPanel extends JPanel implements Observer,WindowListener {
@@ -77,6 +78,7 @@ public class StudioPanel extends JPanel implements Observer,WindowListener {
     private UserAction openInExcel;
     private UserAction codeKxComAction;
     private UserAction serverListAction;
+    private UserAction serverHistoryAction;
     private UserAction openFileInNewWindowAction;
     private UserAction saveFileAction;
     private UserAction saveAsFileAction;
@@ -115,6 +117,8 @@ public class StudioPanel extends JPanel implements Observer,WindowListener {
     private String contentType = QKitNew.CONTENT_TYPE;
 
     public static java.util.List windowList = Collections.synchronizedList(new LinkedList());
+
+    private List<Server> serverHistory = new HistoricalList<>();
 
     public final static int menuShortcutKeyMask = java.awt.Toolkit.getDefaultToolkit().getMenuShortcutKeyMask();
     private final static Cursor textCursor = Cursor.getPredefinedCursor(Cursor.TEXT_CURSOR);
@@ -943,6 +947,7 @@ public class StudioPanel extends JPanel implements Observer,WindowListener {
         }
 
         Config.getInstance().addServerToHistory(server);
+        serverHistory.add(server);
 
         refreshFrameTitle();
         windowListMonitor.fireMyEvent(new WindowListChangedEvent(this));
@@ -1022,45 +1027,18 @@ public class StudioPanel extends JPanel implements Observer,WindowListener {
             }
         };
 
-        serverListAction = new UserAction(I18n.getString("ServerList"),
+        serverListAction = UserAction.create(I18n.getString("ServerList"),
                 Util.TEXT_TREE_ICON,
                 "Show sever list",
                 new Integer(KeyEvent.VK_L),
-                KeyStroke.getKeyStroke(KeyEvent.VK_L, menuShortcutKeyMask | Event.SHIFT_MASK) ) {
-                        public void actionPerformed(ActionEvent e) {
-                            if (serverList == null) {
-
-                                Point location = frame.getLocation();
-                                GraphicsDevice devices[] = GraphicsEnvironment.getLocalGraphicsEnvironment().getScreenDevices();
-                                Rectangle screenBounds = Stream.of(devices)
-                                                                    .map(d -> d.getDefaultConfiguration().getBounds())
-                                                                    .filter(b -> b.contains(location))
-                                                                    .findFirst().orElse(null);
-
-                                Rectangle bounds = Config.getInstance().getServerListBounds();
-                                bounds.translate(frame.getX(), frame.getY());
-
-                                serverList = new ServerList(frame);
-                                if (screenBounds != null && screenBounds.contains(bounds)) {
-                                    serverList.setBounds(bounds);
-                                } else {
-                                    serverList.align();
-                                }
-                            }
-                            serverList.updateServerTree(Config.getInstance().getServerTree(), server);
-                            serverList.setVisible(true);
-
-                            Rectangle bounds = serverList.getBounds();
-                            bounds.translate( -frame.getX(), -frame.getY());
-                            Config.getInstance().setServerListBounds(bounds);
-
-                            Server selectedServer = serverList.getSelectedServer();
-                            if (selectedServer == null || selectedServer.equals(server)) return;
-
-                            setServer(selectedServer);
-                            rebuildToolbar();
-                        }
-        };
+                KeyStroke.getKeyStroke(KeyEvent.VK_L, menuShortcutKeyMask | Event.SHIFT_MASK),
+                e-> showServerList(false) );
+        serverHistoryAction = UserAction.create("Server History",
+                null,
+                "Recent selected servers",
+                new Integer(KeyEvent.VK_R),
+                KeyStroke.getKeyStroke(KeyEvent.VK_R, menuShortcutKeyMask | Event.SHIFT_MASK),
+                e-> showServerList(true) );
 
         editServerAction = new UserAction(I18n.getString("Edit"),
                                           Util.SERVER_INFORMATION_ICON,
@@ -1568,6 +1546,10 @@ public class StudioPanel extends JPanel implements Observer,WindowListener {
             menu.add(subMenu);
         }
 
+        menu.addSeparator();
+        menu.add(new JMenuItem(serverListAction));
+        menu.add(new JMenuItem(serverHistoryAction));
+
         menubar.add(menu);
 
         menu = new JMenu(I18n.getString("Query"));
@@ -1586,7 +1568,6 @@ public class StudioPanel extends JPanel implements Observer,WindowListener {
         menu.add(new JMenuItem(toggleDividerOrientationAction));
         menu.add(new JMenuItem(openFileInNewWindowAction));
         menu.add(new JMenuItem(arrangeAllAction));
-        menu.add(new JMenuItem(serverListAction));
 
         if (windowList.size() > 0) {
             menu.addSeparator();
@@ -1670,6 +1651,43 @@ public class StudioPanel extends JPanel implements Observer,WindowListener {
             refreshConnection();
         }
     }
+
+    private void showServerList(boolean selectHistory) {
+        if (serverList == null) {
+
+            Point location = frame.getLocation();
+            GraphicsDevice devices[] = GraphicsEnvironment.getLocalGraphicsEnvironment().getScreenDevices();
+            Rectangle screenBounds = Stream.of(devices)
+                    .map(d -> d.getDefaultConfiguration().getBounds())
+                    .filter(b -> b.contains(location))
+                    .findFirst().orElse(null);
+
+            Rectangle bounds = Config.getInstance().getServerListBounds();
+            bounds.translate(frame.getX(), frame.getY());
+
+            serverList = new ServerList(frame);
+            if (screenBounds != null && screenBounds.contains(bounds)) {
+                serverList.setBounds(bounds);
+            } else {
+                serverList.align();
+            }
+        }
+        serverList.updateServerTree(Config.getInstance().getServerTree(), server);
+        serverList.updateServerHistory(serverHistory);
+        serverList.selectHistoryTab(selectHistory);
+        serverList.setVisible(true);
+
+        Rectangle bounds = serverList.getBounds();
+        bounds.translate( -frame.getX(), -frame.getY());
+        Config.getInstance().setServerListBounds(bounds);
+
+        Server selectedServer = serverList.getSelectedServer();
+        if (selectedServer == null || selectedServer.equals(server)) return;
+
+        setServer(selectedServer);
+        rebuildToolbar();
+    }
+
 
     private void selectServerName() {
         String selection = comboServer.getSelectedItem().toString();
