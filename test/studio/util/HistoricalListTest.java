@@ -3,6 +3,7 @@ package studio.util;
 import org.junit.jupiter.api.Test;
 import studio.utils.HistoricalList;
 
+import java.util.ArrayList;
 import java.util.List;
 
 import static org.junit.jupiter.api.Assertions.assertEquals;
@@ -83,5 +84,31 @@ public class HistoricalListTest {
         assertThrows(UnsupportedOperationException.class, ()-> list.add(0,"test"));
         list.clear();
         assertEquals(0, list.size());
+    }
+
+    @Test
+    public void testInitialArray() {
+        List<Integer> initial = new ArrayList<>();
+        for (int i=0; i<20; i++) {
+            initial.add(i);
+        }
+
+        HistoricalList<Integer> list = new HistoricalList<>(5, initial);
+        assertEquals(5, list.getDepth());
+        assertEquals(5, list.size());
+        assertEquals(0, list.get(0).intValue());
+        assertEquals(4, list.get(4).intValue());
+
+        list = new HistoricalList<>(25, initial);
+        assertEquals(25, list.getDepth());
+        assertEquals(20, list.size());
+        assertEquals(0, list.get(0).intValue());
+        assertEquals(19, list.get(19).intValue());
+
+        list = new HistoricalList<>(initial);
+        assertEquals(Integer.MAX_VALUE, list.getDepth());
+        assertEquals(20, list.size());
+        assertEquals(0, list.get(0).intValue());
+        assertEquals(19, list.get(19).intValue());
     }
 }

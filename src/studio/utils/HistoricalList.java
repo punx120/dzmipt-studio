@@ -1,21 +1,31 @@
 package studio.utils;
 
-import java.util.AbstractList;
-import java.util.ArrayList;
-import java.util.List;
+import java.util.*;
 
 public class HistoricalList<E> extends AbstractList<E> {
 
     private int depth;
-    private List<E> list;
+    private final List<E> list;
 
     public HistoricalList() {
         this(Integer.MAX_VALUE);
     }
 
     public HistoricalList(int depth) {
+        this(depth, Collections.emptyList());
+    }
+
+    public HistoricalList(Collection<E> initial) {
+        this(Integer.MAX_VALUE, initial);
+    }
+
+    public HistoricalList(int depth, Collection<E> initial) {
         this.depth = depth;
         list = new ArrayList<>(depth<Integer.MAX_VALUE ? depth : 0);
+        for(E item: initial) {
+            list.add(item);
+            if (list.size() == depth) break;
+        }
     }
 
     private void ensureCapacity() {

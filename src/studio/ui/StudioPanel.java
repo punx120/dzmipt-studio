@@ -118,7 +118,7 @@ public class StudioPanel extends JPanel implements Observer,WindowListener {
 
     public static java.util.List windowList = Collections.synchronizedList(new LinkedList());
 
-    private List<Server> serverHistory = new HistoricalList<>();
+    private final List<Server> serverHistory;
 
     public final static int menuShortcutKeyMask = java.awt.Toolkit.getDefaultToolkit().getMenuShortcutKeyMask();
     private final static Cursor textCursor = Cursor.getPredefinedCursor(Cursor.TEXT_CURSOR);
@@ -1920,6 +1920,8 @@ public class StudioPanel extends JPanel implements Observer,WindowListener {
         windowList.add(this);
 
         initDocument();
+        serverHistory = new HistoricalList<>(Config.getInstance().getServerHistoryDepth(),
+                                                Config.getInstance().getServerHistory());
         setServer(server);
 
         menubar = createMenuBar();
