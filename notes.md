@@ -1,3 +1,5 @@
+`dz1.7` 2021.01.19
+-----
 * Adding history of servers opened in StudioPanel
 * Fix syntax highlighting for communication handle symbol (like `:server:port )
 * Adding Log4j 2 for logging application and queries to $HOME/.studioforkdb/log folder
