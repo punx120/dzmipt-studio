@@ -3,6 +3,9 @@ apply plugin: 'idea'
 apply plugin: 'java'
 apply plugin: 'application'
 
+apply plugin: 'maven'
+apply plugin: 'signing'
+
 compileJava {
     sourceCompatibility = JavaVersion.VERSION_1_8
     targetCompatibility = JavaVersion.VERSION_1_8
@@ -69,3 +72,74 @@ task getBuildHash {
 }
 
 processResources.dependsOn('getBuildHash')
+
+task sourcesJar(type: Jar) {
+    classifier = 'sources'
+    from sourceSets.main.allSource
+}
+
+javadoc {
+    failOnError = false
+}
+
+task javadocJar(type: Jar) {
+    classifier = 'javadoc'
+    from javadoc
+}
+
+artifacts {
+    archives javadocJar, sourcesJar
+}
+
+signing {
+    sign configurations.archives
+}
+
+group = "com.github.dzmipt"
+archivesBaseName = "kdbStudio"
+version = "dz1.7"
+
+uploadArchives {
+    repositories {
+        mavenDeployer {
+            beforeDeployment { MavenDeployment deployment -> signing.signPom(deployment) }
+
+            repository(url: "https://oss.sonatype.org/service/local/staging/deploy/maven2/") {
+                authentication(userName: ossrhUsername, password: ossrhPassword)
+            }
+
+            snapshotRepository(url: "https://oss.sonatype.org/content/repositories/snapshots/") {
+                authentication(userName: ossrhUsername, password: ossrhPassword)
+            }
+
+            pom.project {
+                name 'Studio for kdb+'
+                packaging 'jar'
+                // optionally artifactId can be defined here
+                description 'Studio for kdb+ is a rapid development environment for the ultra-fast database kdb+ from Kx Systems: http://www.kx.com.'
+                url 'https://github.com/dzmipt/kdbStudio'
+
+                scm {
+                    connection 'git@github.com:dzmipt/kdbStudio.git'
+                    developerConnection 'git@github.com:dzmipt/kdbStudio.git'
+                    url 'https://github.com/dzmipt/kdbStudio'
+                }
+
+                licenses {
+                    license {
+                        name 'The Apache License, Version 2.0'
+                        url 'http://www.apache.org/licenses/LICENSE-2.0.txt'
+                    }
+                }
+
+                developers {
+                    developer {
+                        id 'dzmipt'
+                        name 'Dmitry Zakharov'
+                        email 'dz.mipt@gmail.com'
+                    }
+                }
+            }
+        }
+    }
+}
