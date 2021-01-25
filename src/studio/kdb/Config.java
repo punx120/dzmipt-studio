@@ -7,6 +7,7 @@ import studio.core.DefaultAuthenticationMechanism;
 import studio.ui.ServerList;
 import studio.utils.HistoricalList;
 
+import javax.swing.tree.TreeNode;
 import java.io.*;
 import java.nio.file.Files;
 import java.nio.file.Path;
@@ -519,6 +520,22 @@ public class Config {
         addServers(server);
     }
 
+    private ServerTreeNode lookupTreeNode(ServerTreeNode folder) {
+        ServerTreeNode head = serverTree;
+
+        TreeNode[] nodes = folder.getPath();
+        for (int index=1; index<nodes.length; index++) {
+            ServerTreeNode node = (ServerTreeNode)nodes[index];
+            ServerTreeNode next = head.getChild(node.getFolder());
+            if (next == null) {
+                head = head.add(node.getFolder());
+            } else {
+                head = next;
+            }
+        }
+        return head;
+    }
+
     public void addServers(Server... newServers) {
         Properties backup = new Properties();
         backup.putAll(p);
@@ -529,7 +546,7 @@ public class Config {
                     server.setFolder(serverTree);
                     serverTree.add(server);
                 } else {
-                    folder.add(server);
+                    lookupTreeNode(folder).add(server);
                 }
                 addServerInternal(server);
             }

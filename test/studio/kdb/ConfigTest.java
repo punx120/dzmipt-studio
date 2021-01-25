@@ -10,6 +10,7 @@ import java.util.Properties;
 import java.util.function.Consumer;
 
 import static org.junit.jupiter.api.Assertions.assertEquals;
+import static org.junit.jupiter.api.Assertions.assertThrows;
 
 public class ConfigTest {
 
@@ -27,6 +28,39 @@ public class ConfigTest {
         server = new Server("testServer", "localhost",1111,
                 "user", "pwd", Color.WHITE, DefaultAuthenticationMechanism.NAME, false);
         server.setFolder(config.getServerTree().add("testFolder"));
+    }
+
+    @Test
+    public void addServerDifferentTreeNode() {
+        Server server1 = new Server("testServer1", "localhost",1112,
+                "user", "pwd", Color.WHITE, DefaultAuthenticationMechanism.NAME, false);
+        server1.setFolder(new ServerTreeNode().add("addServerTestFolder"));
+
+        Server server2 = new Server("testServer2", "localhost",1113,
+                "user", "pwd", Color.WHITE, DefaultAuthenticationMechanism.NAME, false);
+        server2.setFolder(new ServerTreeNode().add("addServerTestFolder"));
+
+        config.addServers(server1, server2);
+        assertEquals(2, config.getServerNames().size());
+        assertEquals(2, config.getServerTree().getChild("addServerTestFolder").getChildCount() );
+    }
+
+    @Test
+    public void addServerSameName() {
+        Server server1 = new Server("testServer1", "localhost",1112,
+                "user", "pwd", Color.WHITE, DefaultAuthenticationMechanism.NAME, false);
+        server1.setFolder(config.getServerTree().add("sameNameTestFolder"));
+
+        Server server2 = new Server("testServer1", "localhost",1113,
+                "user", "pwd", Color.WHITE, DefaultAuthenticationMechanism.NAME, false);
+        server2.setFolder(config.getServerTree().add("sameNameTestFolder"));
+
+        config.addServers(server1);
+        assertThrows(IllegalArgumentException.class, ()->config.addServer(server2) );
+
+        assertEquals(1, config.getServerNames().size());
+        assertEquals(1, config.getServerTree().getChild("sameNameTestFolder").getChildCount() );
+        assertEquals(server1.getPort(), config.getServer("sameNameTestFolder/testServer1").getPort());
     }
 
     @Test
