@@ -134,18 +134,26 @@ public class ServerTreeNode extends DefaultMutableTreeNode {
 
     // Find in current tree the path from potentially a different tree
     public ServerTreeNode findPath(TreeNode[] nodes) {
-        return findPath(nodes, 0);
+        return findPath(nodes, false);
     }
 
-    private ServerTreeNode findPath(TreeNode[] nodes, int head) {
+    public ServerTreeNode findPath(TreeNode[] nodes, boolean create) {
+        return findPath(nodes, 0, create);
+    }
+
+    private ServerTreeNode findPath(TreeNode[] nodes, int head, boolean create) {
         if (! theSame( (ServerTreeNode)nodes[head])) return null;
         if (head == nodes.length-1) return this;
 
         for (ServerTreeNode child: childNodes()) {
-            ServerTreeNode node = child.findPath(nodes, head+1);
+            ServerTreeNode node = child.findPath(nodes, head+1, create);
             if (node != null) return node;
         }
-        return null;
+        if (! create) return null;
+
+        ServerTreeNode childToCreate = (ServerTreeNode) nodes[head+1];
+        ServerTreeNode child = childToCreate.isFolder() ? add(childToCreate.getFolder()) : add(childToCreate.getServer());
+        return child.findPath(nodes, head+1, true);
     }
 
 
