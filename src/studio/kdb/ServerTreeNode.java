@@ -138,6 +138,8 @@ public class ServerTreeNode extends DefaultMutableTreeNode {
     }
 
     public ServerTreeNode findPath(TreeNode[] nodes, boolean create) {
+        if (nodes.length == 0) return this;
+
         return findPath(nodes, 0, create);
     }
 
