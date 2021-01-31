@@ -387,16 +387,20 @@ public class ServerList extends EscapeDialog implements TreeExpansionListener  {
     }
 
     private void handlePopup(MouseEvent e) {
+        boolean empty = serverTree.getChildCount() == 0;
         int x = e.getX();
         int y = e.getY();
-        TreePath path = tree.getPathForLocation(x, y);
+
+        TreePath path = empty ? new TreePath(serverTree) : tree.getPathForLocation(x, y);
         if (path == null) {
             return;
-        };
+        }
 
         tree.setSelectionPath(path);
 
         if (isListView()) {
+            if (empty) return;
+            selectAction.setEnabled(true);
             insertFolderAction.setEnabled(false);
             addFolderBeforeAction.setEnabled(false);
             addFolderAfterAction.setEnabled(false);
@@ -406,13 +410,16 @@ public class ServerList extends EscapeDialog implements TreeExpansionListener  {
             removeAction.setEnabled(false);
         } else {
             boolean isFolder = ((ServerTreeNode) path.getLastPathComponent()).isFolder();
+
+            selectAction.setEnabled(!isFolder);
             insertServerAction.setEnabled(isFolder);
             insertFolderAction.setEnabled(isFolder);
-            addFolderBeforeAction.setEnabled(true);
-            addFolderAfterAction.setEnabled(true);
-            addServerBeforeAction.setEnabled(true);
-            addServerAfterAction.setEnabled(true);
-            removeAction.setEnabled(true);
+
+            addFolderBeforeAction.setEnabled(!empty);
+            addFolderAfterAction.setEnabled(!empty);
+            addServerBeforeAction.setEnabled(!empty);
+            addServerAfterAction.setEnabled(!empty);
+            removeAction.setEnabled(!empty);
         }
 
         popupMenu.show(tree, x, y);
