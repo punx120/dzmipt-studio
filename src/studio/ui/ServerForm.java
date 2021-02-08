@@ -23,7 +23,7 @@ public class ServerForm extends EscapeDialog {
 
     public ServerForm(Window frame, String title, Server server){
         super(frame, title);
-        s=new Server(server);
+        s = server;
 
         initComponents();
 

@@ -98,6 +98,7 @@ public class Server {
         this.backgroundColor = s.backgroundColor;
         this.authenticationMechanism = s.authenticationMechanism;
         this.useTLS = s.useTLS;
+        this.setFolder(s.getFolder());
     }
 
     public Server(String name, String host, int port, String username, String password, Color backgroundColor, String authenticationMechanism, boolean useTLS) {
