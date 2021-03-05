@@ -1,7 +1,6 @@
-package studio.util;
+package studio.utils;
 
 import org.junit.jupiter.api.Test;
-import studio.utils.HistoricalList;
 
 import java.util.ArrayList;
 import java.util.List;

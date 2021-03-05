@@ -1,4 +1,4 @@
-package studio.ui.action;
+package studio.utils;
 
 import studio.core.DefaultAuthenticationMechanism;
 import studio.kdb.Config;
@@ -12,7 +12,7 @@ import java.util.ArrayList;
 import java.util.List;
 import java.util.stream.Stream;
 
-public class QPadImporter {
+public class QPadConverter {
 
     public static List<Server> importFromFiles(File file) throws IOException {
         ServerTreeNode root = new ServerTreeNode();
