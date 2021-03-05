@@ -3,6 +3,7 @@ package studio.ui;
 import javax.swing.*;
 import java.awt.*;
 import java.io.File;
+import javax.swing.filechooser.FileFilter;
 
 public class QPadImportDialog extends EscapeDialog {
 
@@ -110,6 +111,9 @@ public class QPadImportDialog extends EscapeDialog {
         setContentPane(root);
 
         chooser = new JFileChooser();
+        FileFilter serversCfgFF = new ServersCfgFileFilter();
+        chooser.addChoosableFileFilter(serversCfgFF);
+        chooser.setFileFilter(serversCfgFF);
         btnImport.addActionListener(e->checkAndAccept());
         btnCancel.addActionListener(e->cancel());
         btnServers.addActionListener(e->selectServersCfg());
@@ -152,6 +156,18 @@ public class QPadImportDialog extends EscapeDialog {
         }
 
         accept();
+    }
+
+    private static class ServersCfgFileFilter extends FileFilter {
+        @Override
+        public boolean accept(File f) {
+            return f.getName().equals("Servers.cfg");
+        }
+
+        @Override
+        public String getDescription() {
+            return "Servers.cfg";
+        }
     }
 
     public static void main(String[] args) {
