@@ -6,7 +6,7 @@ import java.awt.event.*;
 
 public abstract class EscapeDialog extends JDialog {
 
-    enum DialogResult {ACCEPTED, CANCELLED};
+    public enum DialogResult {ACCEPTED, CANCELLED};
 
     private DialogResult result = DialogResult.CANCELLED;
 

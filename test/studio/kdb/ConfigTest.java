@@ -6,11 +6,11 @@ import studio.core.DefaultAuthenticationMechanism;
 
 import java.awt.*;
 import java.io.*;
+import java.util.Collection;
 import java.util.Properties;
 import java.util.function.Consumer;
 
-import static org.junit.jupiter.api.Assertions.assertEquals;
-import static org.junit.jupiter.api.Assertions.assertThrows;
+import static org.junit.jupiter.api.Assertions.*;
 
 public class ConfigTest {
 
@@ -40,7 +40,7 @@ public class ConfigTest {
                 "user", "pwd", Color.WHITE, DefaultAuthenticationMechanism.NAME, false);
         server2.setFolder(new ServerTreeNode().add("addServerTestFolder"));
 
-        config.addServers(server1, server2);
+        config.addServers(false, server1, server2);
         assertEquals(2, config.getServerNames().size());
         assertEquals(2, config.getServerTree().getChild("addServerTestFolder").getChildCount() );
     }
@@ -55,7 +55,7 @@ public class ConfigTest {
                 "user", "pwd", Color.WHITE, DefaultAuthenticationMechanism.NAME, false);
         server2.setFolder(config.getServerTree().add("sameNameTestFolder"));
 
-        config.addServers(server1);
+        config.addServers(false, server1);
         assertThrows(IllegalArgumentException.class, ()->config.addServer(server2) );
 
         assertEquals(1, config.getServerNames().size());
@@ -105,7 +105,7 @@ public class ConfigTest {
         Server server3 = new Server(server);
         server3.setName("testServer3");
 
-        config.addServers(server1, server2, server3);
+        config.addServers(false, server1, server2, server3);
         config.addServerToHistory(server1);
         config.addServerToHistory(server2);
         assertEquals(3, config.getServerHistory().size());
@@ -168,5 +168,29 @@ public class ConfigTest {
         });
         assertEquals(1, newConfig.getServerHistory().size());
         assertEquals(server, newConfig.getServerHistory().get(0));
+    }
+
+    @Test
+    public void addServersTest() {
+        Server server1 = new Server(server);
+        server1.setName("testServer1");
+        Server server2 = new Server(server);
+        server2.setName("comma,name");
+        Server server3 = new Server(server);
+        server3.setName("testServer1");
+
+        assertThrows(IllegalArgumentException.class, ()->config.addServers(false, server1, server2, server3));
+        assertEquals(0, config.getServers().length);
+
+        String[] errors = config.addServers(true, server1, server2, server3);
+        assertNull(errors[0]);
+        assertNotNull(errors[1]);
+        assertNotNull(errors[2]);
+        Collection<String> names = config.getServerNames();
+        assertEquals(1, names.size());
+        assertTrue(names.contains(server1.getFullName()));
+        ServerTreeNode serverTree = config.getServerTree();
+        assertEquals(1, serverTree.getChildCount());
+        assertEquals(1, serverTree.getChild(0).getChildCount());
     }
 }

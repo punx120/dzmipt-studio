@@ -8,12 +8,12 @@ import javax.swing.filechooser.FileFilter;
 public class QPadImportDialog extends EscapeDialog {
 
     private JTextField txtServers;
-    private JRadioButton btnOverwrite, btnPrepend, btnAppend;
+    private JRadioButton btnOverwrite, btnAppend;
     private JTextField txtRootName;
 
     private JFileChooser chooser;
 
-    public enum Location {Overwrite, Prepend, Append}
+    public enum Location {Overwrite, Append}
 
     public QPadImportDialog(JFrame parent) {
         super(parent, "QPad Server List Import");
@@ -26,7 +26,6 @@ public class QPadImportDialog extends EscapeDialog {
 
     public Location getImportTo() {
         if (btnOverwrite.isSelected()) return Location.Overwrite;
-        if (btnPrepend.isSelected()) return Location.Prepend;
         if (btnAppend.isSelected()) return Location.Append;
 
         return null;
@@ -43,12 +42,10 @@ public class QPadImportDialog extends EscapeDialog {
 
         JLabel lblLocation = new JLabel("Location where servers will be imported in the current Server Tree:     ");
         btnOverwrite = new JRadioButton("Overwrite");
-        btnPrepend = new JRadioButton("Prepend");
         btnAppend = new JRadioButton("Append");
         ButtonGroup buttonGroup = new ButtonGroup();
         buttonGroup.add(btnOverwrite);
         buttonGroup.add(btnAppend);
-        buttonGroup.add(btnPrepend);
 
         JLabel lblRootName = new JLabel("Root name of importer server or leave it empty:     ");
         txtRootName = new JTextField();
@@ -70,7 +67,6 @@ public class QPadImportDialog extends EscapeDialog {
                             layout.createSequentialGroup()
                                 .addComponent(lblLocation)
                                 .addComponent(btnOverwrite)
-                                .addComponent(btnPrepend)
                                 .addComponent(btnAppend)
                     ).addGroup(
                             layout.createSequentialGroup()
@@ -90,7 +86,6 @@ public class QPadImportDialog extends EscapeDialog {
                         layout.createParallelGroup(GroupLayout.Alignment.BASELINE)
                                 .addComponent(lblLocation)
                                 .addComponent(btnOverwrite)
-                                .addComponent(btnPrepend)
                                 .addComponent(btnAppend)
                     ).addGroup(
                         layout.createParallelGroup(GroupLayout.Alignment.BASELINE)
@@ -150,7 +145,7 @@ public class QPadImportDialog extends EscapeDialog {
         }
 
         if (getImportTo() == null) {
-            JOptionPane.showMessageDialog(this, "Select how current Server Tree should be modified: Overwrite/Prepend/Append",
+            JOptionPane.showMessageDialog(this, "Select how current Server Tree should be modified: Overwrite or Append",
                     "Where to Import", JOptionPane.ERROR_MESSAGE);
             return;
         }

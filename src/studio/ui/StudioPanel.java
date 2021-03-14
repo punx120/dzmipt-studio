@@ -37,6 +37,7 @@ import org.netbeans.editor.ext.ExtSettingsInitializer;
 import studio.qeditor.QKitNew;
 import studio.qeditor.QSettingsInitializer;
 import studio.kdb.*;
+import studio.ui.action.QPadImport;
 import studio.ui.action.QueryExecutor;
 import studio.utils.BrowserLaunch;
 import studio.utils.HistoricalList;
@@ -101,6 +102,7 @@ public class StudioPanel extends JPanel implements Observer,WindowListener {
     private UserAction settingsAction;
     private UserAction toggleDividerOrientationAction;
     private UserAction minMaxDividerAction;
+    private UserAction importFromQPadAction;
     private UserAction editServerAction;
     private UserAction addServerAction;
     private UserAction removeServerAction;
@@ -1040,6 +1042,12 @@ public class StudioPanel extends JPanel implements Observer,WindowListener {
                 KeyStroke.getKeyStroke(KeyEvent.VK_R, menuShortcutKeyMask | Event.SHIFT_MASK),
                 e-> showServerList(true) );
 
+
+        importFromQPadAction = UserAction.create("Import Servers from QPad...",
+                null, "Import from Servers.cfg",
+                new Integer(KeyEvent.VK_I), null,
+                e-> QPadImport.doImport(this));
+
         editServerAction = new UserAction(I18n.getString("Edit"),
                                           Util.SERVER_INFORMATION_ICON,
                                           "Edit the server details",
@@ -1549,6 +1557,7 @@ public class StudioPanel extends JPanel implements Observer,WindowListener {
         menu.addSeparator();
         menu.add(new JMenuItem(serverListAction));
         menu.add(new JMenuItem(serverHistoryAction));
+        menu.add(new JMenuItem(importFromQPadAction));
 
         menubar.add(menu);
 
@@ -2070,6 +2079,10 @@ public class StudioPanel extends JPanel implements Observer,WindowListener {
 
     public JEditorPane getTextArea() {
         return textArea;
+    }
+
+    public JFrame getFrame() {
+        return frame;
     }
 
     public Server getServer() {

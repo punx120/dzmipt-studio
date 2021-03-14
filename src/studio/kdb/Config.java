@@ -35,7 +35,7 @@ public class Config {
 
     private String filename;
     private Properties p = new Properties();
-    private final Map<String, Server> servers = new HashMap<>();
+    private Map<String, Server> servers;
     private Collection<String> serverNames;
     private ServerTreeNode serverTree;
     private HistoricalList<Server> serverHistory;
@@ -135,7 +135,7 @@ public class Config {
             p.entrySet().removeIf(e -> e.getKey().toString().startsWith("server."));
             p.setProperty("version", VERSION12);
             initServers();
-            addServers(list.toArray(new Server[0]));
+            addServers(false, list.toArray(new Server[0]));
             log.info("Done");
         } catch (IllegalArgumentException e) {
             log.error("Ups... Can't convert", e);
@@ -410,6 +410,7 @@ public class Config {
     private void initServers() {
         serverNames = new ArrayList<>();
         serverTree = new ServerTreeNode();
+        servers = new HashMap<>();
         initServerTree("serverTree.", serverTree, 0);
     }
 
@@ -517,22 +518,31 @@ public class Config {
 
 
     public void addServer(Server server) {
-        addServers(server);
+        addServers(false, server);
     }
 
-    public void addServers(Server... newServers) {
+    public String[] addServers(boolean tryAll, Server... newServers) {
+        String[] result = tryAll ? new String[newServers.length] : null;
         Properties backup = new Properties();
         backup.putAll(p);
         try {
+            int index = -1;
             for (Server server : newServers) {
-                ServerTreeNode folder = server.getFolder();
-                if (folder == null) {
-                    server.setFolder(serverTree);
-                    serverTree.add(server);
-                } else {
+                index++;
+                try {
+                    ServerTreeNode folder = server.getFolder();
+                    if (folder == null) {
+                        server.setFolder(serverTree);
+                    }
+                    addServerInternal(server);
                     serverTree.findPath(folder.getPath(), true).add(server);
+                } catch (IllegalArgumentException e) {
+                    if (tryAll) {
+                        result[index] = e.getMessage();
+                    } else {
+                        throw e;
+                    }
                 }
-                addServerInternal(server);
             }
 
             saveAllServers();
@@ -541,7 +551,7 @@ public class Config {
             initServers();
             throw e;
         }
-
+        return result;
     }
 
     public void setServerTree(ServerTreeNode serverTree) {

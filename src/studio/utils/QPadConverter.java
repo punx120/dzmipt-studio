@@ -14,8 +14,7 @@ import java.util.stream.Stream;
 
 public class QPadConverter {
 
-    public static List<Server> importFromFiles(File file) throws IOException {
-        ServerTreeNode root = new ServerTreeNode();
+    public static List<Server> importFromFiles(File file, ServerTreeNode root) throws IOException {
         List<String> lines = Files.readAllLines(file.toPath());
         List<Server> servers = new ArrayList<>();
         for(String line:lines) {

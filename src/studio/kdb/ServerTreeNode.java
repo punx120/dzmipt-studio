@@ -144,10 +144,10 @@ public class ServerTreeNode extends DefaultMutableTreeNode {
     }
 
     private ServerTreeNode findPath(TreeNode[] nodes, int head, boolean create) {
-        if (! theSame( (ServerTreeNode)nodes[head])) return null;
         if (head == nodes.length-1) return this;
 
         for (ServerTreeNode child: childNodes()) {
+            if (! child.theSame((ServerTreeNode)nodes[head+1]) ) continue;
             ServerTreeNode node = child.findPath(nodes, head+1, create);
             if (node != null) return node;
         }
