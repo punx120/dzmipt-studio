@@ -150,6 +150,12 @@ public class QPadImportDialog extends EscapeDialog {
             return;
         }
 
+        if (getRootName().contains("/")) {
+            JOptionPane.showMessageDialog(this, "Folder name can't contain /",
+                    "Wrong Folder Name", JOptionPane.ERROR_MESSAGE);
+            return;
+        }
+
         accept();
     }
 
