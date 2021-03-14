@@ -1,3 +1,5 @@
+* Import servers from QPad (http://www.qinsightpad.com/)
+
 `dz1.7` 2021.01.19
 -----
 * Adding history of servers opened in StudioPanel
