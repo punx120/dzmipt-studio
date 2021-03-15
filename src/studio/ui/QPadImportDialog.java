@@ -107,6 +107,7 @@ public class QPadImportDialog extends EscapeDialog {
 
         chooser = new JFileChooser();
         FileFilter serversCfgFF = new ServersCfgFileFilter();
+        chooser.setFileHidingEnabled(true);
         chooser.addChoosableFileFilter(serversCfgFF);
         chooser.setFileFilter(serversCfgFF);
         btnImport.addActionListener(e->checkAndAccept());
@@ -162,6 +163,7 @@ public class QPadImportDialog extends EscapeDialog {
     private static class ServersCfgFileFilter extends FileFilter {
         @Override
         public boolean accept(File f) {
+            if (f.isDirectory()) return true;
             return f.getName().equals("Servers.cfg");
         }
 
