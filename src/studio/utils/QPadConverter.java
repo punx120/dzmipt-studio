@@ -49,7 +49,7 @@ public class QPadConverter {
             auth = password.substring(0, index);
             password = password.substring(index+1);
         } else {
-            auth = DefaultAuthenticationMechanism.NAME;
+            auth = Config.getInstance().getDefaultAuthMechanism();
         }
 
         return new Server("", host, port, user, password, Config.getInstance().getDefaultBackgroundColor(), auth, false);
