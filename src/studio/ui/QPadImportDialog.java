@@ -107,7 +107,7 @@ public class QPadImportDialog extends EscapeDialog {
 
         chooser = new JFileChooser();
         FileFilter serversCfgFF = new ServersCfgFileFilter();
-        chooser.setFileHidingEnabled(true);
+        chooser.setFileHidingEnabled(false);
         chooser.addChoosableFileFilter(serversCfgFF);
         chooser.setFileFilter(serversCfgFF);
         btnImport.addActionListener(e->checkAndAccept());
