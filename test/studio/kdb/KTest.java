@@ -301,7 +301,7 @@ public class KTest {
         check(new K.Fscan(funcBinary), "{x+y}\\", "{x+y}\\");
         check(new K.FPrior(funcBinary), "{x+y}':", "{x+y}':");
 
-        check(new K.FComposition(new Object[] {funcUnary, funcBinary}), "","");
+        check(new K.FComposition(new Object[] {funcUnary, funcBinary}), "{1+x}{x+y}","{1+x}{x+y}");
         check(new K.Projection((K.KList)vector(K.KList.class, funcBinary, new K.KLong(1), new K.UnaryPrimitive(-1))), "{x+y}[1;]", "{x+y}[1;]");
         check(new K.Projection((K.KList)vector(K.KList.class, funcBinary, new K.UnaryPrimitive(-1), new K.KLong(1))), "{x+y}[;1]", "{x+y}[;1]");
 
@@ -319,6 +319,11 @@ public class KTest {
         check(new K.Projection((K.KList)vector(K.KList.class, new K.UnaryPrimitive(41), new K.KLong(1), new K.UnaryPrimitive(-1)  ) ),"enlist[1;]", "enlist[1;]");
     }
 
+    @Test void testComposition() {
+        K.KBase composition = new K.FComposition(new Object[] {new K.Function(new K.KCharacterVector("{2+x}")),
+                new K.Function(new K.KCharacterVector("{x+y}"))});
+        assertEquals("{2+x}{x+y}", composition.toString());
+    }
 
 
 }

@@ -138,10 +138,14 @@ public class K {
             this.objs = objs;
         }
 
-        //@TODO: implement
         @Override
         public StringBuilder format(StringBuilder builder, KFormatContext context) {
-            return super.format(builder, context);
+            builder = super.format(builder, context);
+            for (Object arg: objs) {
+                //@TODO This is wiered that we need to cast while it is always K.KBase
+                ((K.KBase)arg).format(builder, context);
+            }
+            return builder;
         }
     }
 

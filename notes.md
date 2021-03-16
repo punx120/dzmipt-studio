@@ -1,3 +1,4 @@
+* Fix formatting of results with Composition type
 * Import servers from QPad (http://www.qinsightpad.com/)
 
 `dz1.7` 2021.01.19
