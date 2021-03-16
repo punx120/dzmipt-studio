@@ -192,13 +192,13 @@ public class QGrid extends JPanel {
                     if (row > 0)
                         sb.append(newline);
                     for (int col = 0; col < numcols; col++) {
-                        boolean symColumn = table.getColumnClass(col) == K.KSymbolVector.class;
+                        boolean symColumn = table.getColumnClass(colsselected[col]) == K.KSymbolVector.class;
                         if (symColumn)
                             sb.append("\"");
 
                         K.KBase b = (K.KBase) table.getValueAt(rowsselected[row], colsselected[col]);
                         if (!b.isNull())
-                            sb.append(KFormatContext.NO_TYPE);
+                            sb.append(b.toString(KFormatContext.NO_TYPE));
                         if (symColumn)
                             sb.append("\"");
                         if (col < numcols - 1)
@@ -293,11 +293,6 @@ public class QGrid extends JPanel {
     private boolean isTableSelectionValid() {
         int numcols = table.getSelectedColumnCount();
         int numrows = table.getSelectedRowCount();
-        int[] rowsselected = table.getSelectedRows();
-        int[] colsselected = table.getSelectedColumns();
-        return ((numrows - 1 == rowsselected[rowsselected.length - 1] - rowsselected[0] &&
-                numrows == rowsselected.length) &&
-                (numcols - 1 == colsselected[colsselected.length - 1] - colsselected[0] &&
-                        numcols == colsselected.length));
+        return numrows>0 && numcols>0;
     }
 }
