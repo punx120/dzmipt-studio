@@ -62,6 +62,10 @@ public class StudioPanel extends JPanel implements Observer,WindowListener {
         Settings.reset();
     }
 
+    public static final String FILENAME = "filename";
+    public static final String SERVER = "server";
+    public static final String MODIFIED = "modified";
+
     private JComboBox<String> comboServer;
     private JTextField txtServer;
     private String exportFilename;
@@ -129,7 +133,7 @@ public class StudioPanel extends JPanel implements Observer,WindowListener {
     private final static int MAX_SERVERS_TO_CLONE = 20;
 
     public void refreshFrameTitle() {
-        String s = (String) textArea.getDocument().getProperty("filename");
+        String s = (String) textArea.getDocument().getProperty(FILENAME);
         if (s == null)
             s = "Script" + myScriptNumber;
         String title = s.replace('\\','/');
@@ -188,7 +192,7 @@ public class StudioPanel extends JPanel implements Observer,WindowListener {
         initActions();
         refreshActionState();
 
-        Document doc = null;
+        Document doc;
         if (textArea == null) {
             textArea = new JEditorPane(contentType,"");
 
@@ -254,9 +258,9 @@ public class StudioPanel extends JPanel implements Observer,WindowListener {
             redoAction.putValue(Action.ACCELERATOR_KEY,KeyStroke.getKeyStroke(KeyEvent.VK_Y,menuShortcutKeyMask));
 
             doc = textArea.getDocument();
-            doc.putProperty("filename",null);
+            doc.putProperty(FILENAME,null);
+            doc.addDocumentListener(new MarkingDocumentListener());
             windowListMonitor.fireMyEvent(new WindowListChangedEvent(this));
-        //  doc.putProperty("created", Boolean.TRUE);
         }
         else
             doc = textArea.getDocument();
@@ -267,15 +271,8 @@ public class StudioPanel extends JPanel implements Observer,WindowListener {
 
         JComponent c = (textArea.getUI() instanceof BaseTextUI) ? Utilities.getEditorUI(textArea).getExtComponent() : new JScrollPane(textArea);
 
-        doc.putProperty("server",server);
-
-        MarkingDocumentListener mdl = (MarkingDocumentListener) doc.getProperty("MarkingDocumentListener");
-        if (mdl == null) {
-            mdl = new MarkingDocumentListener(c);
-            doc.putProperty("MarkingDocumentListener",mdl);
-            doc.addDocumentListener(mdl);
-        }
-        mdl.setModified(false);
+        doc.putProperty(SERVER,server);
+        doc.putProperty(MODIFIED, false);
 
         UndoManager um = (UndoManager) doc.getProperty(BaseDocument.UNDO_MANAGER_PROP);
         if (um == null) {
@@ -356,7 +353,7 @@ public class StudioPanel extends JPanel implements Observer,WindowListener {
 
         chooser.setFileFilter(ff);
 
-        String filename = (String) textArea.getDocument().getProperty("filename");
+        String filename = (String) textArea.getDocument().getProperty(FILENAME);
         if (filename != null) {
             File file = new File(filename);
             File dir = new File(file.getPath());
@@ -663,12 +660,12 @@ public class StudioPanel extends JPanel implements Observer,WindowListener {
 
     public void newFile() {
         try {
-            String filename = (String) textArea.getDocument().getProperty("filename");
+            String filename = (String) textArea.getDocument().getProperty(FILENAME);
             if (!saveIfModified(filename))
                 return;
 
             textArea.getDocument().remove(0,textArea.getDocument().getLength());
-            textArea.getDocument().putProperty("filename",null);
+            textArea.getDocument().putProperty(FILENAME,null);
             windowListMonitor.fireMyEvent(new WindowListChangedEvent(this));
             initDocument();
             refreshFrameTitle();
@@ -679,7 +676,7 @@ public class StudioPanel extends JPanel implements Observer,WindowListener {
     }
 
     public void openFile() {
-        String filename = (String) textArea.getDocument().getProperty("filename");
+        String filename = (String) textArea.getDocument().getProperty(FILENAME);
         if (!saveIfModified(filename))
             return;
 
@@ -766,7 +763,7 @@ public class StudioPanel extends JPanel implements Observer,WindowListener {
 
             textArea.getDocument().remove(0,textArea.getDocument().getLength());
             textArea.getDocument().insertString(0,s,null);
-            textArea.getDocument().putProperty("filename",filename);
+            textArea.getDocument().putProperty(FILENAME,filename);
             windowListMonitor.fireMyEvent(new WindowListChangedEvent(this));
             initDocument();
             textArea.setCaretPosition(0);
@@ -807,7 +804,7 @@ public class StudioPanel extends JPanel implements Observer,WindowListener {
 
         chooser.setFileFilter(ff);
 
-        String filename = (String) textArea.getDocument().getProperty("filename");
+        String filename = (String) textArea.getDocument().getProperty(FILENAME);
         if (filename != null) {
             File file = new File(filename);
             File dir = new File(file.getPath());
@@ -855,11 +852,11 @@ public class StudioPanel extends JPanel implements Observer,WindowListener {
 
         try {
             if (!force)
-                if (null == textArea.getDocument().getProperty("filename"))
+                if (null == textArea.getDocument().getProperty(FILENAME))
                     return saveAsFile();
 
             textArea.write(new BufferedWriter(new OutputStreamWriter(new FileOutputStream(filename), "UTF-8")));
-            textArea.getDocument().putProperty("filename",filename);
+            textArea.getDocument().putProperty(FILENAME,filename);
             windowListMonitor.fireMyEvent(new WindowListChangedEvent(this));
             setModified(false);
             addToMruFiles(filename);
@@ -911,27 +908,19 @@ public class StudioPanel extends JPanel implements Observer,WindowListener {
     private void setModified(boolean value) {
         if (textArea != null) {
             Document doc = textArea.getDocument();
-
-            if (doc != null) {
-                MarkingDocumentListener mdl = (MarkingDocumentListener) doc.getProperty("MarkingDocumentListener");
-                if (mdl != null)
-                    mdl.setModified(value);
-            }
+            doc.putProperty(MODIFIED, value);
+            refreshFrameTitle();
         }
     }
 
     private boolean getModified() {
+        //@TODO can textArea be null? Likely the "if" is redundant
         if (textArea != null) {
             Document doc = textArea.getDocument();
-
-            if (doc != null) {
-                MarkingDocumentListener mdl = (MarkingDocumentListener) doc.getProperty("MarkingDocumentListener");
-                if (mdl != null)
-                    return mdl.getModified();
-            }
+            return (Boolean)doc.getProperty(MODIFIED);
         }
 
-        return true;
+        return false;
     }
 
     private void setServer(Server server) {
@@ -944,7 +933,7 @@ public class StudioPanel extends JPanel implements Observer,WindowListener {
             Document doc = textArea.getDocument();
 
             if (doc != null)
-                doc.putProperty("server",server);
+                doc.putProperty(SERVER,server);
             Utilities.getEditorUI(textArea).getComponent().setBackground(server.getBackgroundColor());
         }
 
@@ -1134,7 +1123,7 @@ public class StudioPanel extends JPanel implements Observer,WindowListener {
                                         new Integer(KeyEvent.VK_S),
                                         KeyStroke.getKeyStroke(KeyEvent.VK_S,menuShortcutKeyMask)) {
             public void actionPerformed(ActionEvent e) {
-                String filename = (String) textArea.getDocument().getProperty("filename");
+                String filename = (String) textArea.getDocument().getProperty(FILENAME);
                 saveFile(filename,false);
             }
         };
@@ -1401,7 +1390,7 @@ public class StudioPanel extends JPanel implements Observer,WindowListener {
 
             if (choice == 0)
                 try {
-                    String filename = (String) textArea.getDocument().getProperty("filename");
+                    String filename = (String) textArea.getDocument().getProperty(FILENAME);
                     if (!saveFile(filename,false))
                         // was cancelled so return
                         return false;
@@ -1475,7 +1464,7 @@ public class StudioPanel extends JPanel implements Observer,WindowListener {
                 item.addActionListener(new ActionListener() {
                     
                                        public void actionPerformed(ActionEvent e) {
-                                           loadMRUFile(filename,(String) textArea.getDocument().getProperty("filename"));
+                                           loadMRUFile(filename,(String) textArea.getDocument().getProperty(FILENAME));
                                        }
                                    });
                 menu.add(item);
@@ -1591,7 +1580,7 @@ public class StudioPanel extends JPanel implements Observer,WindowListener {
 
                 if (o instanceof StudioPanel) {
                     StudioPanel r = (StudioPanel) o;
-                    String filename = (String) r.textArea.getDocument().getProperty("filename");
+                    String filename = (String) r.textArea.getDocument().getProperty(FILENAME);
 
                     if (filename != null)
                         t = filename.replace('\\','/');
@@ -2259,44 +2248,15 @@ public class StudioPanel extends JPanel implements Observer,WindowListener {
     }
 
     private class MarkingDocumentListener implements DocumentListener {
-        private boolean modified = false;
-
-        private void setModified(boolean b) {
-            modified = b;
-        }
-
-        private boolean getModified() {
-            return modified;
-        }
-        private Component comp;
-
-        public MarkingDocumentListener(Component comp) {
-            this.comp = comp;
-        }
-
-        private void markChanged(DocumentEvent evt) {
+        private void update() {
             setModified(true);
-            refreshFrameTitle();
         }
-
-        
-        public void changedUpdate(DocumentEvent e) {
-        }
-
-        
+        public void changedUpdate(DocumentEvent evt) { update(); }
         public void insertUpdate(DocumentEvent evt) {
-            markChanged(evt);
+            update();
         }
-
-        
         public void removeUpdate(DocumentEvent evt) {
-            markChanged(evt);
+            update();
         }
-        /** Document property holding String name of associated file */
-        private static final String FILE = "file";
-        /** Document property holding Boolean if document was created or opened */
-        private static final String CREATED = "created";
-        /** Document property holding Boolean modified information */
-        private static final String MODIFIED = "modified";
     }
 }
