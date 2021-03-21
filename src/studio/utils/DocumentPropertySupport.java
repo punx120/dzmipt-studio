@@ -50,6 +50,8 @@ public class DocumentPropertySupport {
         }
 
         private void fireEvent(Object key, V oldValue, V newValue) {
+            if (Objects.equals(oldValue, newValue)) return;
+
             PropertyEvent event = new PropertyEvent(source, key, oldValue, newValue);
             PropertyChangeListener[] list = listeners.toArray(new PropertyChangeListener[0]);
             for (PropertyChangeListener aListener: list) {

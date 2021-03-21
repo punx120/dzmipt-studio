@@ -55,6 +55,10 @@ public class DocumentPropertySupportTest {
         assertEquals(value21, doc.getProperty(key2));
         assertPropertyEvent(listener.get(1), doc, key2, value2, value21);
 
+        doc.putProperty(key2,value21);
+        assertEquals(2, listener.size());
+        assertEquals(value21, doc.getProperty(key2));
+
         doc.putProperty(key2, null);
         assertEquals(3, listener.size());
         assertNull(doc.getProperty(key2));
