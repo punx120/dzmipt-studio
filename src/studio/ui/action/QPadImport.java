@@ -51,7 +51,8 @@ public class QPadImport {
         }
 
         try {
-            List<Server> serverList = QPadConverter.importFromFiles(new File(dialog.getServersCfgLocation()), rootToImport);
+            List<Server> serverList = QPadConverter.importFromFiles(new File(dialog.getServersCfgLocation()),
+                    rootToImport, dialog.getDefaultAuthenticationMechanism(), dialog.getCredentials());
             Server[] servers = serverList.toArray(new Server[0]);
             String[] errors = Config.getInstance().addServers(true, servers);
 
