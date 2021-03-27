@@ -537,6 +537,7 @@ public class Config {
                     ServerTreeNode folder = server.getFolder();
                     if (folder == null) {
                         server.setFolder(serverTree);
+                        folder = serverTree;
                     }
                     addServerInternal(server);
                     serverTree.findPath(folder.getPath(), true).add(server);
