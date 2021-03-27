@@ -1,15 +1,25 @@
 package studio.ui;
 
+import studio.core.AuthenticationManager;
+import studio.core.Credentials;
+import studio.kdb.Config;
+
 import javax.swing.*;
 import java.awt.*;
 import java.io.File;
 import javax.swing.filechooser.FileFilter;
+
+import static javax.swing.GroupLayout.PREFERRED_SIZE;
 
 public class QPadImportDialog extends EscapeDialog {
 
     private JTextField txtServers;
     private JRadioButton btnOverwrite, btnAppend;
     private JTextField txtRootName;
+    private JComboBox comboBoxAuthMechanism;
+    private JTextField txtUser;
+    private JPasswordField txtPassword;
+
 
     private JFileChooser chooser;
 
@@ -24,6 +34,14 @@ public class QPadImportDialog extends EscapeDialog {
         return txtServers.getText();
     }
 
+    public String getDefaultAuthenticationMechanism() {
+        return comboBoxAuthMechanism.getModel().getSelectedItem().toString();
+    }
+
+    public Credentials getCredentials() {
+        return new Credentials(txtUser.getText().trim(), new String(txtPassword.getPassword()));
+    }
+
     public Location getImportTo() {
         if (btnOverwrite.isSelected()) return Location.Overwrite;
         if (btnAppend.isSelected()) return Location.Append;
@@ -35,10 +53,27 @@ public class QPadImportDialog extends EscapeDialog {
         return txtRootName.getText();
     }
 
+    private void refreshCredentials() {
+        Credentials credentials = Config.getInstance().getDefaultCredentials(getDefaultAuthenticationMechanism());
+
+        txtUser.setText(credentials.getUsername());
+        txtPassword.setText(credentials.getPassword());
+    }
+
     private void initComponents() {
         JLabel lblServers = new JLabel("Select location of Servers.cfg:     ");
         txtServers = new JTextField();
         JButton btnServers = new JButton("...");
+
+        JLabel lblAuthMechanism = new JLabel("Authentication:");
+        JLabel lblUser = new JLabel("  User:");
+        JLabel lblPassword = new JLabel("  Password:");
+        comboBoxAuthMechanism = new JComboBox(AuthenticationManager.getInstance().getAuthenticationMechanisms());
+        comboBoxAuthMechanism.getModel().setSelectedItem(Config.getInstance().getDefaultAuthMechanism());
+        comboBoxAuthMechanism.addItemListener(e -> refreshCredentials());
+        txtUser = new JTextField();
+        txtPassword = new JPasswordField();
+
 
         JLabel lblLocation = new JLabel("Location where servers will be imported in the current Server Tree:     ");
         btnOverwrite = new JRadioButton("Overwrite");
@@ -65,10 +100,18 @@ public class QPadImportDialog extends EscapeDialog {
                                 .addComponent(btnServers)
                     ).addGroup(
                             layout.createSequentialGroup()
+                                .addComponent(lblAuthMechanism)
+                                .addComponent(comboBoxAuthMechanism, PREFERRED_SIZE, PREFERRED_SIZE, PREFERRED_SIZE)
+                                .addComponent(lblUser)
+                                .addComponent(txtUser, 150, 150,150)
+                                .addComponent(lblPassword)
+                                .addComponent(txtPassword, 150, 150, 150)
+                ).addGroup(
+                            layout.createSequentialGroup()
                                 .addComponent(lblLocation)
                                 .addComponent(btnOverwrite)
                                 .addComponent(btnAppend)
-                    ).addGroup(
+                ).addGroup(
                             layout.createSequentialGroup()
                                 .addComponent(lblRootName)
                                 .addComponent(txtRootName)
@@ -82,6 +125,14 @@ public class QPadImportDialog extends EscapeDialog {
                                 .addComponent(lblServers)
                                 .addComponent(txtServers)
                                 .addComponent(btnServers)
+                    ).addGroup(
+                        layout.createParallelGroup(GroupLayout.Alignment.BASELINE)
+                                .addComponent(lblAuthMechanism)
+                                .addComponent(comboBoxAuthMechanism)
+                                .addComponent(lblUser)
+                                .addComponent(txtUser)
+                                .addComponent(lblPassword)
+                                .addComponent(txtPassword)
                     ).addGroup(
                         layout.createParallelGroup(GroupLayout.Alignment.BASELINE)
                                 .addComponent(lblLocation)
