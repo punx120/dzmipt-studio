@@ -47,7 +47,6 @@ public class QPadConverter {
         if (password.contains("?")) {
             int index = password.indexOf('?');
             auth = password.substring(0, index);
-            password = password.substring(index+1);
         } else {
             auth = Config.getInstance().getDefaultAuthMechanism();
         }
