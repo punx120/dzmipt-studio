@@ -22,6 +22,14 @@ public class TabPanel extends JPanel {
     private QGrid grid = null;
     private KFormatContext formatContext = new KFormatContext(KFormatContext.DEFAULT);
 
+
+    public void cleanUp() {
+        if (component != null) remove(component);
+        result = null;
+        component = null;
+        grid = null;
+    }
+
     public TabPanel(String title,Icon icon,JComponent component) {
         this.title = title;
         this.icon = icon;

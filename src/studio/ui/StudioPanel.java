@@ -2205,6 +2205,7 @@ public class StudioPanel extends JPanel implements Observer,WindowListener {
 
         if (tab != null) {
             if(tabbedPane.getTabCount()>= Config.getInstance().getResultTabsCount()) {
+                ((TabPanel)tabbedPane.getComponent(0)).cleanUp();
                 tabbedPane.remove(0);
             }
             tab.addInto(tabbedPane);
