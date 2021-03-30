@@ -1277,7 +1277,7 @@ public class StudioPanel extends JPanel implements Observer,WindowListener {
             
             public void actionPerformed(ActionEvent e) {
                     try {
-                        BrowserLaunch.openURL("http://code.kx.com/trac/wiki/Reference");
+                        BrowserLaunch.openURL("http://code.kx.com/q/");
                     } catch (Exception ex) {
                        JOptionPane.showMessageDialog(null, "Error attempting to launch web browser:\n" + ex.getLocalizedMessage());
                     }
