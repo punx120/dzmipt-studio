@@ -97,7 +97,7 @@ signing {
 
 group = "com.github.dzmipt"
 archivesBaseName = "kdbStudio"
-version = "dz1.7"
+version = "dz1.8"
 
 uploadArchives {
     repositories {
