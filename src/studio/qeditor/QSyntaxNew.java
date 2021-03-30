@@ -365,7 +365,7 @@ public class QSyntaxNew extends Syntax {
 
         add(State.Identifier, alphaNumeric +"_", State.Identifier, QTokenContext.IDENTIFIER, LooksLike);
         add(State.Identifier, ".", State.IdentifierDot, QTokenContext.IDENTIFIER, LooksLike);
-        add(State.IdentifierDot, alpha, State.IdentifierDot, QTokenContext.IDENTIFIER, LooksLike);
+        add(State.IdentifierDot, alpha, State.Identifier, QTokenContext.IDENTIFIER, LooksLike);
         add(State.Dot, alpha, State.Identifier, QTokenContext.IDENTIFIER, LooksLike);
     }
 
