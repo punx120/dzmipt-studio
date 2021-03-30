@@ -502,7 +502,7 @@ public class Config {
         String name = server.getName();
         String fullName = server.getFullName();
         if (serverNames.contains(fullName)) {
-            throw new IllegalArgumentException("Server with full name " + fullName + " already exist");
+            throw new IllegalArgumentException("Server with full name " + fullName + " already exists");
         }
         if (name.trim().length() == 0) {
             throw new IllegalArgumentException("Server name can't be empty");

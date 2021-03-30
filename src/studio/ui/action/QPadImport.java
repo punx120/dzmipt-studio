@@ -41,8 +41,8 @@ public class QPadImport {
             if (rootName.length() > 0) {
                 serverTree = Config.getInstance().getServerTree();
                 if (serverTree.getChild(rootName) != null) {
-                    JOptionPane.showMessageDialog(panel, "Folder to import already exist (" + rootName + ")",
-                            "Folder Exist", JOptionPane.ERROR_MESSAGE);
+                    JOptionPane.showMessageDialog(panel, "Folder to import already exists (" + rootName + ")",
+                            "Folder Exists", JOptionPane.ERROR_MESSAGE);
                     continue;
                 }
                 rootToImport = rootToImport.add(rootName);

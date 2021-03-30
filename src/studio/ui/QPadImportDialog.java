@@ -191,7 +191,7 @@ public class QPadImportDialog extends EscapeDialog {
         }
 
         if (! new File(location).exists()) {
-            JOptionPane.showMessageDialog(this, "File to import is not exist (" + location + ")",
+            JOptionPane.showMessageDialog(this, "File to import doesn't not exist (" + location + ")",
                                 "Not Found Servers.cfg", JOptionPane.ERROR_MESSAGE);
             return;
         }
