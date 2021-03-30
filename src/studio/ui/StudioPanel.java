@@ -2205,6 +2205,8 @@ public class StudioPanel extends JPanel implements Observer,WindowListener {
 
         if (tab != null) {
             if(tabbedPane.getTabCount()>= Config.getInstance().getResultTabsCount()) {
+                //@TODO: It looks underline component are not freed up after removal. This requires futhur investigation
+                //Meanwhile force to clean up underline potentially large structures
                 ((TabPanel)tabbedPane.getComponent(0)).cleanUp();
                 tabbedPane.remove(0);
             }

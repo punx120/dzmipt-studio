@@ -1,3 +1,6 @@
+`dz1.8` 2021.03.30
+-----
+* Fix for memory leak related to keeping previously loaded results
 * Fix formatting of results with Composition type
 * Import servers from QPad (http://www.qinsightpad.com/)
 
