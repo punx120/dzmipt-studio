@@ -22,14 +22,6 @@ public class TabPanel extends JPanel {
     private QGrid grid = null;
     private KFormatContext formatContext = new KFormatContext(KFormatContext.DEFAULT);
 
-
-    public void cleanUp() {
-        if (component != null) remove(component);
-        result = null;
-        component = null;
-        grid = null;
-    }
-
     public TabPanel(String title,Icon icon,JComponent component) {
         this.title = title;
         this.icon = icon;
@@ -86,13 +78,9 @@ public class TabPanel extends JPanel {
         tabbedPane.addTab(title,icon, this);
         tabbedPane.setSelectedIndex(tabbedPane.getTabCount()-1);
         updateToolbarLocation(tabbedPane);
-
-        tabbedPane.addPropertyChangeListener(
-                event -> updateToolbarLocation((JTabbedPane)event.getSource())
-        );
     }
 
-    private void updateToolbarLocation(JTabbedPane tabbedPane) {
+    public void updateToolbarLocation(JTabbedPane tabbedPane) {
         if (toolbar == null) return;
 
         remove(toolbar);
