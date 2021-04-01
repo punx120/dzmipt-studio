@@ -78,13 +78,13 @@ public class StudioPanel extends JPanel implements Observer,WindowListener {
     private ServerList serverList;
     private UserAction arrangeAllAction;
     private UserAction closeFileAction;
-    private UserAction newFileAction;
+    private UserAction cleanAction;
     private UserAction openFileAction;
     private UserAction openInExcel;
     private UserAction codeKxComAction;
     private UserAction serverListAction;
     private UserAction serverHistoryAction;
-    private UserAction openFileInNewWindowAction;
+    private UserAction newWindowAction;
     private UserAction saveFileAction;
     private UserAction saveAsFileAction;
     private UserAction exportAction;
@@ -310,11 +310,11 @@ public class StudioPanel extends JPanel implements Observer,WindowListener {
     }
 
     private void refreshActionState() {
-        newFileAction.setEnabled(true);
+        cleanAction.setEnabled(true);
         arrangeAllAction.setEnabled(true);
         openFileAction.setEnabled(true);
         serverListAction.setEnabled(true);
-        openFileInNewWindowAction.setEnabled(true);
+        newWindowAction.setEnabled(true);
         saveFileAction.setEnabled(true);
         saveAsFileAction.setEnabled(true);
         exportAction.setEnabled(false);
@@ -945,9 +945,9 @@ public class StudioPanel extends JPanel implements Observer,WindowListener {
     }
 
     private void initActions() {
-        newFileAction = new UserAction(I18n.getString("New"),
+        cleanAction = new UserAction("Clean",
                                         Util.NEW_DOCUMENT_ICON,
-                                       "Create a blank script",
+                                       "Clean editor script",
                                        new Integer(KeyEvent.VK_N),
                                        null) {
             public void actionPerformed(ActionEvent e) {
@@ -1008,7 +1008,7 @@ public class StudioPanel extends JPanel implements Observer,WindowListener {
             }
         };
 
-        openFileInNewWindowAction = new UserAction(I18n.getString("NewWindow"),
+        newWindowAction = new UserAction(I18n.getString("NewWindow"),
                                                    Util.BLANK_ICON,
                                                    "Open a new window",
                                                    new Integer(KeyEvent.VK_N),
@@ -1431,7 +1431,7 @@ public class StudioPanel extends JPanel implements Observer,WindowListener {
         JMenuBar menubar = new JMenuBar();
         JMenu menu = new JMenu(I18n.getString("File"));
         menu.setMnemonic(KeyEvent.VK_F);
-        menu.add(new JMenuItem(newFileAction));
+        menu.add(new JMenuItem(newWindowAction));
         menu.add(new JMenuItem(openFileAction));
         menu.add(new JMenuItem(saveFileAction));
         menu.add(new JMenuItem(saveAsFileAction));
@@ -1486,6 +1486,7 @@ public class StudioPanel extends JPanel implements Observer,WindowListener {
         menu.add(new JMenuItem(copyAction));
         menu.add(new JMenuItem(pasteAction));
         menu.addSeparator();
+        menu.add(new JMenuItem(cleanAction));
         menu.add(new JMenuItem(selectAllAction));
         menu.addSeparator();
         menu.add(new JMenuItem(findAction));
@@ -1564,7 +1565,6 @@ public class StudioPanel extends JPanel implements Observer,WindowListener {
 
         menu.add(new JMenuItem(minMaxDividerAction));
         menu.add(new JMenuItem(toggleDividerOrientationAction));
-        menu.add(new JMenuItem(openFileInNewWindowAction));
         menu.add(new JMenuItem(arrangeAllAction));
 
         if (windowList.size() > 0) {
