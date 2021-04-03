@@ -1,3 +1,5 @@
+* Adding support for multiple tabs in a StudioPanel 
+
 `dz1.8` 2021.03.30
 -----
 * Fix for memory leak related to keeping previously loaded results
