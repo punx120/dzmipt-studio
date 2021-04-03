@@ -1259,7 +1259,7 @@ public class StudioPanel extends JPanel implements Observer,WindowListener {
 
     public boolean quit() {
         boolean okToExit = true;
-        for(StudioPanel panel: allPanels) {
+        for(StudioPanel panel: allPanels.toArray(new StudioPanel[0])) {
             if (!panel.quitWindow())
                 okToExit = false;
         }
