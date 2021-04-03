@@ -372,7 +372,7 @@ public class StudioPanel extends JPanel implements Observer,WindowListener {
             chooser.setCurrentDirectory(dir);
         }
 
-        int option = chooser.showOpenDialog(textArea);
+        int option = chooser.showOpenDialog(this);
 
         if (option == JFileChooser.APPROVE_OPTION) {
             File sf = chooser.getSelectedFile();
@@ -605,7 +605,7 @@ public class StudioPanel extends JPanel implements Observer,WindowListener {
                     chooser.setFileFilter(txtFilter);
         }
 
-        int option = chooser.showSaveDialog(textArea);
+        int option = chooser.showSaveDialog(this);
 
         if (option == JFileChooser.APPROVE_OPTION) {
             File sf = chooser.getSelectedFile();
@@ -824,7 +824,7 @@ public class StudioPanel extends JPanel implements Observer,WindowListener {
         }
 
 //        chooser.setMultiSelectionEnabled(true);
-        int option = chooser.showSaveDialog(textArea);
+        int option = chooser.showSaveDialog(this);
 
         if (option == JFileChooser.APPROVE_OPTION) {
             File sf = chooser.getSelectedFile();
