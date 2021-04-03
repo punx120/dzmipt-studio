@@ -157,10 +157,17 @@ public class StudioPanel extends JPanel implements Observer,WindowListener {
         refreshTitle();
     }
 
+    //@TODO: Should we have a generic code which override or remove all our actions from the netbeans JEditorPane
+    private void overrideDefaultKeymap(JComponent component, UserAction... actions) {
+        for (UserAction action: actions) {
+            component.getInputMap().put(action.getKeyStroke(), action.getText());
+            component.getActionMap().put(action.getText(), action);
+        }
+    }
+
     private JEditorPane createTextArea() {
         JEditorPane textArea = new JEditorPane(QKit.CONTENT_TYPE,"");
-        textArea.getInputMap().put(toggleCommaFormatAction.getKeyStroke(), toggleCommaFormatAction.getText());
-        textArea.getActionMap().put(toggleCommaFormatAction.getText(), toggleCommaFormatAction);
+        overrideDefaultKeymap(textArea, toggleCommaFormatAction, newTabAction);
         Document doc = textArea.getDocument();
         doc.putProperty(MODIFIED, false);
         UndoManager um = new UndoManager() {
