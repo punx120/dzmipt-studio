@@ -62,6 +62,7 @@ public class StudioPanel extends JPanel implements Observer,WindowListener {
         Settings.reset();
     }
 
+    public static final String TITLE = "title";
     public static final String FILENAME = "filename";
     public static final String SERVER = "server";
     public static final String MODIFIED = "modified";
@@ -114,7 +115,6 @@ public class StudioPanel extends JPanel implements Observer,WindowListener {
     private UserAction toggleSyntaxHighlighting;
     private UserAction debugSyntaxHighlighting;
     private static int scriptNumber = 0;
-    private static int myScriptNumber;
     private JFrame frame;
     private DebugSyntaxHighlightingFrame debugSyntaxHighlightingFrame = null;
 
@@ -133,10 +133,7 @@ public class StudioPanel extends JPanel implements Observer,WindowListener {
     private final static int MAX_SERVERS_TO_CLONE = 20;
 
     public void refreshFrameTitle() {
-        String s = (String) textArea.getDocument().getProperty(FILENAME);
-        if (s == null)
-            s = "Script" + myScriptNumber;
-        String title = s.replace('\\','/');
+        String title = (String) textArea.getDocument().getProperty(TITLE);
         frame.setTitle(title + (getModified() ? " (not saved) " : "") + (server!=null?" @"+server.toString():"") +" Studio for kdb+ " + Lm.version);
     }
 
@@ -186,6 +183,21 @@ public class StudioPanel extends JPanel implements Observer,WindowListener {
     private void updateUndoRedoState(UndoManager um) {
         undoAction.setEnabled(um.canUndo());
         redoAction.setEnabled(um.canRedo());
+    }
+
+    private String getFilename() {
+        return (String) textArea.getDocument().getProperty(FILENAME);
+    }
+
+    private void setFilename(String filename) {
+        textArea.getDocument().putProperty(FILENAME, filename);
+        String title;
+        if (filename == null) {
+            title = "Script" + scriptNumber++;
+        } else {
+            title = new File(filename).getName();
+        }
+        textArea.getDocument().putProperty(TITLE, title);
     }
 
     private void initDocument() {
@@ -258,7 +270,7 @@ public class StudioPanel extends JPanel implements Observer,WindowListener {
             redoAction.putValue(Action.ACCELERATOR_KEY,KeyStroke.getKeyStroke(KeyEvent.VK_Y,menuShortcutKeyMask));
 
             doc = textArea.getDocument();
-            doc.putProperty(FILENAME,null);
+            setFilename(null);
             doc.addDocumentListener(new MarkingDocumentListener());
             windowListMonitor.fireMyEvent(new WindowListChangedEvent(this));
         }
@@ -331,7 +343,7 @@ public class StudioPanel extends JPanel implements Observer,WindowListener {
         settingsAction.setEnabled(true);
     }
 
-    private String getFilename() {
+    private String chooseFilename() {
         JFileChooser chooser = new JFileChooser();
         chooser.setFileSelectionMode(JFileChooser.FILES_ONLY);
 
@@ -353,7 +365,7 @@ public class StudioPanel extends JPanel implements Observer,WindowListener {
 
         chooser.setFileFilter(ff);
 
-        String filename = (String) textArea.getDocument().getProperty(FILENAME);
+        String filename = getFilename();
         if (filename != null) {
             File file = new File(filename);
             File dir = new File(file.getPath());
@@ -660,12 +672,12 @@ public class StudioPanel extends JPanel implements Observer,WindowListener {
 
     public void newFile() {
         try {
-            String filename = (String) textArea.getDocument().getProperty(FILENAME);
+            String filename = getFilename();
             if (!saveIfModified(filename))
                 return;
 
             textArea.getDocument().remove(0,textArea.getDocument().getLength());
-            textArea.getDocument().putProperty(FILENAME,null);
+            setFilename(null);
             windowListMonitor.fireMyEvent(new WindowListChangedEvent(this));
             initDocument();
             refreshFrameTitle();
@@ -676,11 +688,11 @@ public class StudioPanel extends JPanel implements Observer,WindowListener {
     }
 
     public void openFile() {
-        String filename = (String) textArea.getDocument().getProperty(FILENAME);
+        String filename = getFilename();
         if (!saveIfModified(filename))
             return;
 
-        filename = getFilename();
+        filename = chooseFilename();
 
         if (filename != null) {
             if (! loadFile(filename)) return;
@@ -763,7 +775,7 @@ public class StudioPanel extends JPanel implements Observer,WindowListener {
 
             textArea.getDocument().remove(0,textArea.getDocument().getLength());
             textArea.getDocument().insertString(0,s,null);
-            textArea.getDocument().putProperty(FILENAME,filename);
+            setFilename(filename);
             windowListMonitor.fireMyEvent(new WindowListChangedEvent(this));
             initDocument();
             textArea.setCaretPosition(0);
@@ -804,7 +816,7 @@ public class StudioPanel extends JPanel implements Observer,WindowListener {
 
         chooser.setFileFilter(ff);
 
-        String filename = (String) textArea.getDocument().getProperty(FILENAME);
+        String filename = getFilename();
         if (filename != null) {
             File file = new File(filename);
             File dir = new File(file.getPath());
@@ -852,11 +864,11 @@ public class StudioPanel extends JPanel implements Observer,WindowListener {
 
         try {
             if (!force)
-                if (null == textArea.getDocument().getProperty(FILENAME))
+                if (null == getFilename())
                     return saveAsFile();
 
             textArea.write(new BufferedWriter(new OutputStreamWriter(new FileOutputStream(filename), "UTF-8")));
-            textArea.getDocument().putProperty(FILENAME,filename);
+            setFilename(filename);
             windowListMonitor.fireMyEvent(new WindowListChangedEvent(this));
             setModified(false);
             addToMruFiles(filename);
@@ -1123,8 +1135,7 @@ public class StudioPanel extends JPanel implements Observer,WindowListener {
                                         new Integer(KeyEvent.VK_S),
                                         KeyStroke.getKeyStroke(KeyEvent.VK_S,menuShortcutKeyMask)) {
             public void actionPerformed(ActionEvent e) {
-                String filename = (String) textArea.getDocument().getProperty(FILENAME);
-                saveFile(filename,false);
+                saveFile(getFilename(),false);
             }
         };
 
@@ -1390,8 +1401,7 @@ public class StudioPanel extends JPanel implements Observer,WindowListener {
 
             if (choice == 0)
                 try {
-                    String filename = (String) textArea.getDocument().getProperty(FILENAME);
-                    if (!saveFile(filename,false))
+                    if (!saveFile(getFilename(),false))
                         // was cancelled so return
                         return false;
                 }
@@ -1464,7 +1474,7 @@ public class StudioPanel extends JPanel implements Observer,WindowListener {
                 item.addActionListener(new ActionListener() {
                     
                                        public void actionPerformed(ActionEvent e) {
-                                           loadMRUFile(filename,(String) textArea.getDocument().getProperty(FILENAME));
+                                           loadMRUFile(filename,getFilename());
                                        }
                                    });
                 menu.add(item);
@@ -1580,7 +1590,7 @@ public class StudioPanel extends JPanel implements Observer,WindowListener {
 
                 if (o instanceof StudioPanel) {
                     StudioPanel r = (StudioPanel) o;
-                    String filename = (String) r.textArea.getDocument().getProperty(FILENAME);
+                    String filename = r.getFilename();
 
                     if (filename != null)
                         t = filename.replace('\\','/');
@@ -1955,8 +1965,6 @@ public class StudioPanel extends JPanel implements Observer,WindowListener {
 
         if (filename != null)
             loadFile(filename);
-        else
-            myScriptNumber = scriptNumber++;
 
         refreshFrameTitle();
 
