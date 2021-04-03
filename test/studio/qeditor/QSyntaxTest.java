@@ -17,7 +17,7 @@ import static org.junit.jupiter.api.Assertions.assertTrue;
 public class QSyntaxTest {
 
     private static List<TokenID> tokens(String buffer) {
-        Syntax syntax = new QSyntaxNew();
+        Syntax syntax = new QSyntax();
         syntax.load(null, buffer.toCharArray(), 0, buffer.length(), true, buffer.length());
         List<TokenID> result = new ArrayList<>();
         for(;;) {

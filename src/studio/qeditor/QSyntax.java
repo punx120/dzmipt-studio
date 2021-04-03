@@ -1,481 +1,376 @@
 package studio.qeditor;
 
-import java.util.HashMap;
-import java.util.Map;
 import org.netbeans.editor.Syntax;
 import org.netbeans.editor.TokenID;
 
-public class QSyntax extends Syntax
-{
-    private Map map;
+import java.util.*;
 
-    private void initMap()
-    {
-        map=new HashMap();
-        Object o=new Object();
+import static studio.qeditor.SyntaxStateMachine.Action.*;
 
-        String[] keywords=new String[]
-        {
-            "bin","asin","atan","exit","prd","prior","setenv","tan","wj","wj1","wsum","ej","aj0","insert","acos","exp","wavg","avgs","log","sin","cos","sqrt","exec","abs","neg","not","null","floor","string","reciprocal","ceiling","signum","div","mod","xbar","xlog","and","or","each","mmu","lsq","inv","md5","ltime","gtime","count","first","var","dev","med","cov","cor","all","any","rand","sums","prds","mins","maxs","fills","deltas","ratios","differ","prev","next","rank","reverse","iasc","idesc","asc","desc","msum","mcount","mavg","mdev","xrank","mmin","mmax","xprev","rotate","list","distinct","group","where","flip","type","key","til","get","value","attr","cut","set","upsert","raze","union","inter","except","cross","ss","sv","vs","sublist","read0","read1","hopen","hclose","hdel","hsym","hcount","peach","system","ltrim","rtrim","trim","lower","upper","ssr","view","tables","views","cols","xcols","keys","xkey","xcol","xasc","xdesc","fkeys","meta","uj","ij","lj","pj","aj","asof","fby","ungroup","xgroup","plist","enlist","txf","save","load","rsave","rload","show","csv","parse","eval","over","scan","select","from","where","within","update","in","delete","sum","avg","min","max","like","last","by","do","while","if","getenv","xexp"
-        };
+public class QSyntax extends Syntax {
 
-        //      String [] keywords= Config.getInstance().getQKeywords();
-        for(int i=0;i<keywords.length;i++)
-        {
-            map.put(keywords[i],o);
-        }
+    private enum State {Init, // start of a line (or file)
+        AfterAtom, // - will means operator - after atom, identifier, brackets
+        AfterOperator, // - could mean start of atom like -10
+        AfterWhitespace,
+        Dot,
+        Long, Int, Short, Float, Real,
+        Date, Time, Datetime, Timestamp, Timespan, Month, Minute, Second,
+        Boolean, Byte, UnknownAtom,
+        NullLong, NullFloat, InfLong, InfFloat,
+        Zero, One, Two, ZeroOnes, Digits, DigitsDot, DigitsDotDigits, FractionE, FractionESign, Scientific,
+        DigitsDotDigitsDot, DateLike,
+        DigitsColon,MinuteLike,MinuteColon,SecondLike,SecondDot,TimeLikeD1,TimeLikeD2, TimeLikeD3, TimespanLike, //the order on this line is critical
+            DateD1,DateD2,DateD3,DateD4,DateD5,DateD6,DateD7,DateD8,
+            DateT1,DateT2,DateT3,DateT4,DateT5,DateT6,DateT7,DateT8,
+            DigitsD1,DigitsD2,DigitsD3,DigitsD4,DigitsD5,DigitsD6,DigitsD7,DigitsD8,
+        MinusZero,
+        MinusForAtom, String, StringEscape, StringEscapeD, StringEscapeDD, Symbol, SymbolColon,
+        Identifier,IdentifierDot,
+        CommentEOL,
+        CommentMLFirstLine, CommentMLInit, CommentML, CommentMLLastLine,
+        InitBaskSlash, QCommandStart, QCommand, OSCommand
     }
+    private static final State firstAtomState = State.Long;
+    private static final State lastAtomState = State.MinusZero;
 
-    public TokenID parseToken()
-    {
-        int start=offset;
-        Entry e=null;
-        
-        while(offset<stopOffset)
-        {
-            int documentPosition=stopPosition-(stopOffset-offset);
+    private static final Set<String> keywords = new HashSet<>(Arrays.asList(
+            "bin","asin","atan","exit","prd","prior","setenv","tan","wj","wj1","wsum","ej","aj0",
+            "insert","acos","exp","wavg","avgs","log","sin","cos","sqrt","exec","abs","neg","not","null",
+            "floor","string","reciprocal","ceiling","signum","div","mod","xbar","xlog","and","or","each",
+            "mmu","lsq","inv","md5","ltime","gtime","count","first","var","dev","med","cov","cor","all",
+            "any","rand","sums","prds","mins","maxs","fills","deltas","ratios","differ","prev","next",
+            "rank","reverse","iasc","idesc","asc","desc","msum","mcount","mavg","mdev","xrank","mmin",
+            "mmax","xprev","rotate","list","distinct","group","where","flip","type","key","til","get",
+            "value","attr","cut","set","upsert","raze","union","inter","except","cross","ss","sv","vs",
+            "sublist","read0","read1","hopen","hclose","hdel","hsym","hcount","peach","system","ltrim",
+            "rtrim","trim","lower","upper","ssr","view","tables","views","cols","xcols","keys","xkey","xcol",
+            "xasc","xdesc","fkeys","meta","uj","ij","lj","pj","aj","asof","fby","ungroup","xgroup","plist",
+            "enlist","txf","save","load","rsave","rload","show","csv","parse","eval","over","scan","select",
+            "from","where","within","update","in","delete","sum","avg","min","max","like","last","by","do",
+            "while","if","getenv","xexp") );
 
-            char c=buffer[offset++];
+    private final static SyntaxStateMachine stateMachine = new SyntaxStateMachine();
 
-            // hack to allow comment on first line
-            if(documentPosition==0)
-                if((c=='/')||(c=='\\') || (c=='-'))
-                    state=30;
-            
-            boolean found=false;
-            for(int i=0;i<entries.length;i++)
-            {
-                e=entries[i];
-                if(e.state==state)
-                {
-                    for(int j=0;j<e.chars.length;j++)
-                    {
-                        if(e.chars[j]==c)
-                        {
-                            found=true;
-                            break;
-                        }
-                    }
-                    found=found || (e.chars.length==0);
-                    if(found)
-                    {
-                        state=e.nextState;
-                        if((e.action==ACTION_MATCHANDPUTBACK)||(e.action==ACTION_MATCHANDCONSUME))
-                        {
-                            if(e.action==ACTION_MATCHANDPUTBACK)
-                                offset--;
-                            if(e.tokenID==QTokenContext.IDENTIFIER)
-                                if(map.get(new String(buffer,start,offset-start))!=null)
-                                    return QTokenContext.KEYWORD;
-                            return e.tokenID;
-                        }
-                        break;
-                    }
-                }
-            }
-            if(!found)
-            {
-                state=255;
-                e=null;
-            }
-        }
-        if(lastBuffer)
-        {
-            if(e!=null)
-            {
-                if(e.action==ACTION_LOOKSLIKE)
-                    if(e.tokenID==QTokenContext.IDENTIFIER)
-                        if(map.get(new String(buffer,start,offset-start))!=null)
-                            return QTokenContext.KEYWORD;
-                return e.tokenID;
-            }
-            else
-                return QTokenContext.UNKNOWN;
-        }
-        return null;
-    }
-    private static final int ACTION_LOOKSLIKE=0;
-    private static final int ACTION_MATCHANDCONSUME=1;
-    private static final int ACTION_MATCHANDPUTBACK=2;
-
-    public static class Entry
-    {
-        int state;
-        char[] chars;
-        int nextState;
-        TokenID tokenID;
-        int action;
-
-        public Entry(int state,char[] c,int nextState,TokenID tokenID,int action)
-        {
-            this.state=state;
-            this.chars=c;
-            this.nextState=nextState;
-            this.tokenID=tokenID;
-            this.action=action;
-        }
-    };
-    static final char[] whitespace=" \n\r\t".toCharArray();
-    static final char[] brackets="[](){}".toCharArray();
-    static final char[] operators="|/&^:!+-*%$=~#;@\\.><,?_'".toCharArray();
-    static final char[] delimiters="` \n\r\t\"|/&^:![](){}+-*%$=~#;@\\.><,?_'".toCharArray();
-    static final char[] digits="0123456789".toCharArray();
-    static final char[] a2z="abcdefghijklmnopqrstuvwxyz".toCharArray();
-    static final char[] A2Z="ABCDEFGHIJKLMNOPQRSTUVWXYZ".toCharArray();    // INIT state is defined as -1
-    public static final Entry[] entries=new Entry[]
-    {
-        new Entry(INIT,"\"".toCharArray(),9,QTokenContext.CHAR_VECTOR,ACTION_LOOKSLIKE),
-        new Entry(INIT,"`".toCharArray(),8,QTokenContext.SYMBOL,ACTION_LOOKSLIKE),
-        new Entry(INIT,"\n".toCharArray(),30,QTokenContext.WHITESPACE,ACTION_MATCHANDCONSUME),
-        new Entry(INIT,"\t ".toCharArray(),5,QTokenContext.WHITESPACE,ACTION_MATCHANDCONSUME),
-        new Entry(INIT,".".toCharArray(),26,QTokenContext.IDENTIFIER,ACTION_LOOKSLIKE),
-        new Entry(INIT,"0".toCharArray(),0,QTokenContext.INTEGER,ACTION_LOOKSLIKE),
-        new Entry(INIT,"1".toCharArray(),41,QTokenContext.INTEGER,ACTION_LOOKSLIKE),
-        new Entry(INIT,"23456789".toCharArray(),40,QTokenContext.INTEGER,ACTION_LOOKSLIKE),
-        new Entry(INIT,a2z,7,QTokenContext.IDENTIFIER,ACTION_LOOKSLIKE),
-        new Entry(INIT,A2Z,7,QTokenContext.IDENTIFIER,ACTION_LOOKSLIKE),
-        new Entry(INIT,whitespace,13,QTokenContext.WHITESPACE,ACTION_LOOKSLIKE),
-     //   new Entry(INIT,"-".toCharArray(),79,QTokenContext.OPERATOR,ACTION_LOOKSLIKE),
-        new Entry(INIT,operators,79,QTokenContext.OPERATOR,ACTION_MATCHANDCONSUME),
-        new Entry(INIT,brackets,81,QTokenContext.OPERATOR,ACTION_MATCHANDCONSUME),
-        new Entry(0,":".toCharArray(),INIT,QTokenContext.OPERATOR,ACTION_MATCHANDCONSUME),
-        new Entry(0,"D".toCharArray(),95,QTokenContext.TIMESPAN,ACTION_LOOKSLIKE),
-        new Entry(0,".".toCharArray(),27,QTokenContext.FLOAT,ACTION_LOOKSLIKE),
-        new Entry(0,"i".toCharArray(),24,QTokenContext.INTEGER,ACTION_LOOKSLIKE),
-        new Entry(0,"j".toCharArray(),2,QTokenContext.LONG,ACTION_LOOKSLIKE),
-        new Entry(0,"h".toCharArray(),3,QTokenContext.SHORT,ACTION_LOOKSLIKE),
-        new Entry(0,"e".toCharArray(),28,QTokenContext.REAL,ACTION_LOOKSLIKE),
-        new Entry(0,"f".toCharArray(),16,QTokenContext.FLOAT,ACTION_LOOKSLIKE),
-        new Entry(0,"b".toCharArray(),17,QTokenContext.BOOLEAN,ACTION_LOOKSLIKE),
-        new Entry(0,"p".toCharArray(),84,QTokenContext.TIMESTAMP,ACTION_LOOKSLIKE),
-        new Entry(0,"t".toCharArray(),18,QTokenContext.TIME,ACTION_LOOKSLIKE),
-        new Entry(0,"v".toCharArray(),19,QTokenContext.MINUTE,ACTION_LOOKSLIKE),
-        new Entry(0,"u".toCharArray(),20,QTokenContext.SECOND,ACTION_LOOKSLIKE),
-        new Entry(0,"wWnN".toCharArray(),1,QTokenContext.INTEGER,ACTION_LOOKSLIKE),
-        new Entry(0,"01".toCharArray(),25,QTokenContext.INTEGER,ACTION_LOOKSLIKE),
-        new Entry(0,"xX".toCharArray(),14,QTokenContext.BYTE,ACTION_LOOKSLIKE),
-        new Entry(0,"23456789".toCharArray(),4,QTokenContext.INTEGER,ACTION_LOOKSLIKE),
-        new Entry(0,delimiters,INIT,QTokenContext.INTEGER,ACTION_MATCHANDPUTBACK),
-        new Entry(1,delimiters,INIT,QTokenContext.INTEGER,ACTION_MATCHANDPUTBACK),
-        new Entry(1,"D".toCharArray(),95,QTokenContext.TIMESPAN,ACTION_LOOKSLIKE),
-        new Entry(1,"j".toCharArray(),2,QTokenContext.LONG,ACTION_LOOKSLIKE),
-        new Entry(1,"g".toCharArray(),2,QTokenContext.LONG,ACTION_LOOKSLIKE),
-        new Entry(1,"h".toCharArray(),3,QTokenContext.SHORT,ACTION_LOOKSLIKE),
-        new Entry(1,"e".toCharArray(),28,QTokenContext.REAL,ACTION_LOOKSLIKE),
-        new Entry(1,"f".toCharArray(),16,QTokenContext.FLOAT,ACTION_LOOKSLIKE),
-        new Entry(1,"b".toCharArray(),17,QTokenContext.BOOLEAN,ACTION_LOOKSLIKE),
-        new Entry(1,"t".toCharArray(),18,QTokenContext.TIME,ACTION_LOOKSLIKE),
-        new Entry(1,"v".toCharArray(),19,QTokenContext.MINUTE,ACTION_LOOKSLIKE),
-        new Entry(1,"u".toCharArray(),20,QTokenContext.SECOND,ACTION_LOOKSLIKE),
-        new Entry(1,"d".toCharArray(),21,QTokenContext.DATE,ACTION_LOOKSLIKE),
-        new Entry(1,"n".toCharArray(),105,QTokenContext.TIMESPAN,ACTION_LOOKSLIKE),
-        new Entry(1,"p".toCharArray(),84,QTokenContext.TIMESTAMP,ACTION_LOOKSLIKE),
-        new Entry(1,"z".toCharArray(),22,QTokenContext.DATETIME,ACTION_LOOKSLIKE),
-        new Entry(1,"m".toCharArray(),23,QTokenContext.MONTH,ACTION_LOOKSLIKE),
-        new Entry(2,delimiters,INIT,QTokenContext.LONG,ACTION_MATCHANDPUTBACK),
-        new Entry(3,delimiters,INIT,QTokenContext.SHORT,ACTION_MATCHANDPUTBACK),
-        new Entry(4,":".toCharArray(),44,QTokenContext.MINUTE,ACTION_LOOKSLIKE),
-        new Entry(4,".".toCharArray(),27,QTokenContext.FLOAT,ACTION_LOOKSLIKE),
-        new Entry(4,digits,43,QTokenContext.INTEGER,ACTION_LOOKSLIKE),
-        new Entry(4,delimiters,INIT,QTokenContext.INTEGER,ACTION_MATCHANDPUTBACK),
-        new Entry(4,"D".toCharArray(),95,QTokenContext.TIMESPAN,ACTION_LOOKSLIKE),
-        new Entry(4,"j".toCharArray(),2,QTokenContext.LONG,ACTION_LOOKSLIKE),
-        new Entry(4,"h".toCharArray(),3,QTokenContext.SHORT,ACTION_LOOKSLIKE),
-        new Entry(4,"e".toCharArray(),28,QTokenContext.REAL,ACTION_LOOKSLIKE),
-        new Entry(4,"f".toCharArray(),16,QTokenContext.FLOAT,ACTION_LOOKSLIKE),
-        new Entry(4,"t".toCharArray(),18,QTokenContext.TIME,ACTION_LOOKSLIKE),
-        new Entry(4,"v".toCharArray(),19,QTokenContext.MINUTE,ACTION_LOOKSLIKE),
-        new Entry(4,"u".toCharArray(),20,QTokenContext.SECOND,ACTION_LOOKSLIKE),
-        new Entry(4,"p".toCharArray(),84,QTokenContext.TIMESTAMP,ACTION_LOOKSLIKE),
-        new Entry(4,"i".toCharArray(),24,QTokenContext.INTEGER,ACTION_LOOKSLIKE),
-        new Entry(5,"-".toCharArray(),80,QTokenContext.OPERATOR,ACTION_LOOKSLIKE),
-        new Entry(5,"/".toCharArray(),6,QTokenContext.EOL_COMMENT,ACTION_LOOKSLIKE),
-        new Entry(5,"".toCharArray(),INIT,QTokenContext.WHITESPACE,ACTION_MATCHANDPUTBACK),
-        new Entry(6,"\n".toCharArray(),INIT,QTokenContext.EOL_COMMENT,ACTION_MATCHANDPUTBACK),
-        new Entry(6,"".toCharArray(),6,QTokenContext.EOL_COMMENT,ACTION_LOOKSLIKE),
-        new Entry(7,"_.".toCharArray(),7,QTokenContext.IDENTIFIER,ACTION_LOOKSLIKE),
-        new Entry(7,delimiters,INIT,QTokenContext.IDENTIFIER,ACTION_MATCHANDPUTBACK),
-        new Entry(7,digits,7,QTokenContext.IDENTIFIER,ACTION_LOOKSLIKE),
-        new Entry(7,a2z,7,QTokenContext.IDENTIFIER,ACTION_LOOKSLIKE),
-        new Entry(7,A2Z,7,QTokenContext.IDENTIFIER,ACTION_LOOKSLIKE),
-        new Entry(8,"/:_.`".toCharArray(),8,QTokenContext.SYMBOL,ACTION_LOOKSLIKE),
-        new Entry(8,a2z,8,QTokenContext.SYMBOL,ACTION_LOOKSLIKE),
-        new Entry(8,A2Z,8,QTokenContext.SYMBOL,ACTION_LOOKSLIKE),
-        new Entry(8,digits,8,QTokenContext.SYMBOL,ACTION_LOOKSLIKE),
-        new Entry(8,delimiters,INIT,QTokenContext.SYMBOL,ACTION_MATCHANDPUTBACK),
-        new Entry(9,"\"".toCharArray(),INIT,QTokenContext.CHAR_VECTOR,ACTION_MATCHANDCONSUME),
-        new Entry(9,"\\".toCharArray(),10,QTokenContext.CHAR_VECTOR,ACTION_LOOKSLIKE),
-        new Entry(9,"".toCharArray(),9,QTokenContext.CHAR_VECTOR,ACTION_LOOKSLIKE),
-        new Entry(10,"".toCharArray(),9,QTokenContext.CHAR_VECTOR,ACTION_LOOKSLIKE),
-      //  new Entry(11,"".toCharArray(),INIT,QTokenContext.CHAR_VECTOR,ACTION_MATCHANDPUTBACK),
-        //        new Entry(12,"".toCharArray(),INIT,null,QTokenContext.OPERATOR),
-        new Entry(13,"".toCharArray(),INIT,QTokenContext.WHITESPACE,ACTION_MATCHANDPUTBACK),
-        new Entry(14,digits,14,QTokenContext.BYTE,ACTION_LOOKSLIKE),
-        new Entry(14,"abcdefABCDEF".toCharArray(),14,QTokenContext.BYTE,ACTION_LOOKSLIKE),
-        new Entry(14,delimiters,INIT,QTokenContext.BYTE,ACTION_MATCHANDPUTBACK),
-        new Entry(15,delimiters,INIT,QTokenContext.REAL,ACTION_MATCHANDPUTBACK),
-        new Entry(16,delimiters,INIT,QTokenContext.FLOAT,ACTION_MATCHANDPUTBACK),
-        new Entry(17,delimiters,INIT,QTokenContext.BOOLEAN,ACTION_MATCHANDPUTBACK),
-        new Entry(18,delimiters,INIT,QTokenContext.TIME,ACTION_MATCHANDPUTBACK),
-        new Entry(19,delimiters,INIT,QTokenContext.MINUTE,ACTION_MATCHANDPUTBACK),
-        new Entry(20,delimiters,INIT,QTokenContext.SECOND,ACTION_MATCHANDPUTBACK),
-        new Entry(21,delimiters,INIT,QTokenContext.DATE,ACTION_MATCHANDPUTBACK),
-        new Entry(22,delimiters,INIT,QTokenContext.DATETIME,ACTION_MATCHANDPUTBACK),
-        new Entry(23,delimiters,INIT,QTokenContext.MONTH,ACTION_MATCHANDPUTBACK),
-        new Entry(24,delimiters,INIT,QTokenContext.INTEGER,ACTION_MATCHANDPUTBACK),
-        new Entry(25,":".toCharArray(),44,QTokenContext.MINUTE,ACTION_LOOKSLIKE),
-        new Entry(25,".".toCharArray(),27,QTokenContext.FLOAT,ACTION_LOOKSLIKE),
-        new Entry(25,"01".toCharArray(),25,QTokenContext.INTEGER,ACTION_LOOKSLIKE),
-        new Entry(25,"23456789".toCharArray(),43,QTokenContext.INTEGER,ACTION_LOOKSLIKE),
-        new Entry(25,delimiters,INIT,QTokenContext.INTEGER,ACTION_MATCHANDPUTBACK),
-        new Entry(25,"D".toCharArray(),95,QTokenContext.TIMESPAN,ACTION_LOOKSLIKE),
-        new Entry(25,"j".toCharArray(),2,QTokenContext.LONG,ACTION_LOOKSLIKE),
-        new Entry(25,"h".toCharArray(),3,QTokenContext.SHORT,ACTION_LOOKSLIKE),
-        new Entry(25,"e".toCharArray(),15,QTokenContext.REAL,ACTION_LOOKSLIKE),
-        new Entry(25,"f".toCharArray(),16,QTokenContext.FLOAT,ACTION_LOOKSLIKE),
-        new Entry(25,"t".toCharArray(),18,QTokenContext.TIME,ACTION_LOOKSLIKE),
-        new Entry(25,"v".toCharArray(),19,QTokenContext.MINUTE,ACTION_LOOKSLIKE),
-        new Entry(25,"u".toCharArray(),20,QTokenContext.SECOND,ACTION_LOOKSLIKE),
-        new Entry(25,"i".toCharArray(),24,QTokenContext.INTEGER,ACTION_LOOKSLIKE),
-        new Entry(25,"b".toCharArray(),17,QTokenContext.BOOLEAN,ACTION_LOOKSLIKE),
-        new Entry(26,a2z,7,QTokenContext.IDENTIFIER,ACTION_LOOKSLIKE),
-        new Entry(26,A2Z,7,QTokenContext.IDENTIFIER,ACTION_LOOKSLIKE),
-        new Entry(26,digits,27,QTokenContext.FLOAT,ACTION_LOOKSLIKE),
-        new Entry(26,"".toCharArray(),INIT,QTokenContext.OPERATOR,ACTION_MATCHANDPUTBACK),
-        new Entry(27,digits,27,QTokenContext.FLOAT,ACTION_LOOKSLIKE),
-        new Entry(27,"e".toCharArray(),28,QTokenContext.REAL,ACTION_LOOKSLIKE),
-        new Entry(27,"p".toCharArray(),84,QTokenContext.TIMESTAMP,ACTION_LOOKSLIKE),
-        new Entry(27,".".toCharArray(),255,QTokenContext.UNKNOWN,ACTION_LOOKSLIKE),
-        new Entry(27,delimiters,INIT,QTokenContext.FLOAT,ACTION_MATCHANDPUTBACK),
-        new Entry(28,digits,29,QTokenContext.FLOAT,ACTION_LOOKSLIKE),
-        new Entry(28,"-".toCharArray(),29,QTokenContext.FLOAT,ACTION_LOOKSLIKE),
-        new Entry(28,".".toCharArray(),255,QTokenContext.UNKNOWN,ACTION_LOOKSLIKE),
-        new Entry(28,delimiters,INIT,QTokenContext.REAL,ACTION_MATCHANDPUTBACK),
-        new Entry(29,digits,29,QTokenContext.FLOAT,ACTION_LOOKSLIKE),
-        new Entry(29,"f".toCharArray(),82,QTokenContext.FLOAT,ACTION_LOOKSLIKE),
-        new Entry(29,".".toCharArray(),255,QTokenContext.UNKNOWN,ACTION_LOOKSLIKE),
-        new Entry(29,delimiters,INIT,QTokenContext.FLOAT,ACTION_MATCHANDPUTBACK),
-        new Entry(30,"/".toCharArray(),33,QTokenContext.EOL_COMMENT,ACTION_LOOKSLIKE),
-        new Entry(30,"-".toCharArray(),80,QTokenContext.OPERATOR,ACTION_LOOKSLIKE),
-        new Entry(30,"\\".toCharArray(),31,QTokenContext.EOL_COMMENT,ACTION_LOOKSLIKE),
-        new Entry(30,"".toCharArray(),INIT,QTokenContext.WHITESPACE,ACTION_MATCHANDPUTBACK),
-        new Entry(31,"abcdeflopstuvwxzBCPSTW".toCharArray(),38,QTokenContext.COMMAND,ACTION_LOOKSLIKE),
-        new Entry(31," \t".toCharArray(),37,QTokenContext.EOL_COMMENT,ACTION_LOOKSLIKE),
-        new Entry(31,"\n".toCharArray(),32,QTokenContext.EOL_COMMENT,ACTION_LOOKSLIKE),
-        new Entry(31,"".toCharArray(),39,QTokenContext.EOL_COMMENT,ACTION_LOOKSLIKE),
-        new Entry(32,"".toCharArray(),32,QTokenContext.EOL_COMMENT,ACTION_LOOKSLIKE),
-        new Entry(33," \t".toCharArray(),33,QTokenContext.EOL_COMMENT,ACTION_LOOKSLIKE),
-        new Entry(33,"\n".toCharArray(),34,QTokenContext.EOL_COMMENT,ACTION_LOOKSLIKE),
-        new Entry(33,"".toCharArray(),6,QTokenContext.EOL_COMMENT,ACTION_LOOKSLIKE),
-        new Entry(34,"\n".toCharArray(),34,QTokenContext.EOL_COMMENT,ACTION_LOOKSLIKE),
-        new Entry(34,"\\".toCharArray(),36,QTokenContext.EOL_COMMENT,ACTION_LOOKSLIKE),
-        new Entry(34,"".toCharArray(),35,QTokenContext.EOL_COMMENT,ACTION_LOOKSLIKE),
-        new Entry(35,"\n".toCharArray(),34,QTokenContext.EOL_COMMENT,ACTION_LOOKSLIKE),
-        new Entry(35,"".toCharArray(),35,QTokenContext.EOL_COMMENT,ACTION_LOOKSLIKE),
-        new Entry(36," \t".toCharArray(),36,QTokenContext.EOL_COMMENT,ACTION_LOOKSLIKE),
-        new Entry(36,"\n".toCharArray(),INIT,QTokenContext.EOL_COMMENT,ACTION_MATCHANDPUTBACK),
-        new Entry(36,"".toCharArray(),35,QTokenContext.EOL_COMMENT,ACTION_LOOKSLIKE),
-        new Entry(37," \t".toCharArray(),37,QTokenContext.EOL_COMMENT,ACTION_LOOKSLIKE),
-        new Entry(37,"\n".toCharArray(),32,QTokenContext.EOL_COMMENT,ACTION_LOOKSLIKE),
-        new Entry(37,"".toCharArray(),6,QTokenContext.EOL_COMMENT,ACTION_LOOKSLIKE),
-        new Entry(38,"\n \t".toCharArray(),INIT,QTokenContext.COMMAND,ACTION_MATCHANDPUTBACK),
-        new Entry(38,"".toCharArray(),39,QTokenContext.SYSTEM,ACTION_LOOKSLIKE),
-        new Entry(39,"\n".toCharArray(),INIT,QTokenContext.SYSTEM,ACTION_MATCHANDPUTBACK),
-        new Entry(39,"".toCharArray(),39,QTokenContext.SYSTEM,ACTION_LOOKSLIKE),
-        new Entry(40,".".toCharArray(),27,QTokenContext.FLOAT,ACTION_LOOKSLIKE),
-        new Entry(40,digits,4,QTokenContext.INTEGER,ACTION_LOOKSLIKE),
-        new Entry(40,delimiters,INIT,QTokenContext.INTEGER,ACTION_MATCHANDPUTBACK),
-        new Entry(40,"D".toCharArray(),95,QTokenContext.TIMESPAN,ACTION_LOOKSLIKE),
-        new Entry(40,"j".toCharArray(),2,QTokenContext.LONG,ACTION_LOOKSLIKE),
-        new Entry(40,"h".toCharArray(),3,QTokenContext.SHORT,ACTION_LOOKSLIKE),
-        new Entry(40,"e".toCharArray(),28,QTokenContext.REAL,ACTION_LOOKSLIKE),
-        new Entry(40,"f".toCharArray(),16,QTokenContext.FLOAT,ACTION_LOOKSLIKE),
-        new Entry(40,"t".toCharArray(),18,QTokenContext.TIME,ACTION_LOOKSLIKE),
-        new Entry(40,"v".toCharArray(),19,QTokenContext.MINUTE,ACTION_LOOKSLIKE),
-        new Entry(40,"u".toCharArray(),20,QTokenContext.SECOND,ACTION_LOOKSLIKE),
-        new Entry(40,"i".toCharArray(),24,QTokenContext.INTEGER,ACTION_LOOKSLIKE),
-        new Entry(41,":".toCharArray(),INIT,QTokenContext.OPERATOR,ACTION_MATCHANDCONSUME),
-        new Entry(41,".".toCharArray(),27,QTokenContext.FLOAT,ACTION_LOOKSLIKE),
-        new Entry(41,"01".toCharArray(),42,QTokenContext.INTEGER,ACTION_LOOKSLIKE),
-        new Entry(41,"23456789".toCharArray(),4,QTokenContext.INTEGER,ACTION_LOOKSLIKE),
-        new Entry(41,delimiters,INIT,QTokenContext.INTEGER,ACTION_MATCHANDPUTBACK),
-        new Entry(41,"D".toCharArray(),95,QTokenContext.TIMESPAN,ACTION_LOOKSLIKE),
-        new Entry(41,"j".toCharArray(),2,QTokenContext.LONG,ACTION_LOOKSLIKE),
-        new Entry(41,"h".toCharArray(),3,QTokenContext.SHORT,ACTION_LOOKSLIKE),
-        new Entry(41,"e".toCharArray(),28,QTokenContext.REAL,ACTION_LOOKSLIKE),
-        new Entry(41,"f".toCharArray(),16,QTokenContext.FLOAT,ACTION_LOOKSLIKE),
-        new Entry(41,"t".toCharArray(),18,QTokenContext.TIME,ACTION_LOOKSLIKE),
-        new Entry(41,"v".toCharArray(),19,QTokenContext.MINUTE,ACTION_LOOKSLIKE),
-        new Entry(41,"u".toCharArray(),20,QTokenContext.SECOND,ACTION_LOOKSLIKE),
-        new Entry(41,"i".toCharArray(),24,QTokenContext.INTEGER,ACTION_LOOKSLIKE),
-        new Entry(41,"p".toCharArray(),84,QTokenContext.TIMESTAMP,ACTION_LOOKSLIKE),
-        new Entry(41,"b".toCharArray(),17,QTokenContext.BOOLEAN,ACTION_LOOKSLIKE),
-        new Entry(42,":".toCharArray(),44,QTokenContext.MINUTE,ACTION_LOOKSLIKE),
-        new Entry(42,".".toCharArray(),27,QTokenContext.FLOAT,ACTION_LOOKSLIKE),
-        new Entry(42,"01".toCharArray(),25,QTokenContext.INTEGER,ACTION_LOOKSLIKE),
-        new Entry(42,"23456789".toCharArray(),43,QTokenContext.INTEGER,ACTION_LOOKSLIKE),
-        new Entry(42,delimiters,INIT,QTokenContext.INTEGER,ACTION_MATCHANDPUTBACK),
-        new Entry(42,"D".toCharArray(),95,QTokenContext.TIMESPAN,ACTION_LOOKSLIKE),
-        new Entry(42,"j".toCharArray(),2,QTokenContext.LONG,ACTION_LOOKSLIKE),
-        new Entry(42,"h".toCharArray(),3,QTokenContext.SHORT,ACTION_LOOKSLIKE),
-        new Entry(42,"e".toCharArray(),28,QTokenContext.REAL,ACTION_LOOKSLIKE),
-        new Entry(42,"f".toCharArray(),16,QTokenContext.FLOAT,ACTION_LOOKSLIKE),
-        new Entry(42,"t".toCharArray(),18,QTokenContext.TIME,ACTION_LOOKSLIKE),
-        new Entry(42,"v".toCharArray(),19,QTokenContext.MINUTE,ACTION_LOOKSLIKE),
-        new Entry(42,"u".toCharArray(),20,QTokenContext.SECOND,ACTION_LOOKSLIKE),
-        new Entry(42,"i".toCharArray(),24,QTokenContext.INTEGER,ACTION_LOOKSLIKE),
-        new Entry(42,"b".toCharArray(),17,QTokenContext.BOOLEAN,ACTION_LOOKSLIKE),
-        new Entry(43,".".toCharArray(),27,QTokenContext.FLOAT,ACTION_LOOKSLIKE),
-        new Entry(43,digits,54,QTokenContext.INTEGER,ACTION_LOOKSLIKE),
-        new Entry(43,delimiters,INIT,QTokenContext.INTEGER,ACTION_MATCHANDPUTBACK),
-        new Entry(43,"D".toCharArray(),95,QTokenContext.TIMESPAN,ACTION_LOOKSLIKE),
-        new Entry(43,"j".toCharArray(),2,QTokenContext.LONG,ACTION_LOOKSLIKE),
-        new Entry(43,"h".toCharArray(),3,QTokenContext.SHORT,ACTION_LOOKSLIKE),
-        new Entry(43,"e".toCharArray(),28,QTokenContext.REAL,ACTION_LOOKSLIKE),
-        new Entry(43,"f".toCharArray(),16,QTokenContext.FLOAT,ACTION_LOOKSLIKE),
-        new Entry(43,"t".toCharArray(),18,QTokenContext.TIME,ACTION_LOOKSLIKE),
-        new Entry(43,"v".toCharArray(),19,QTokenContext.MINUTE,ACTION_LOOKSLIKE),
-        new Entry(43,"p".toCharArray(),84,QTokenContext.TIMESTAMP,ACTION_LOOKSLIKE),
-        new Entry(43,"u".toCharArray(),20,QTokenContext.SECOND,ACTION_LOOKSLIKE),
-        new Entry(43,"i".toCharArray(),24,QTokenContext.INTEGER,ACTION_LOOKSLIKE),
-        new Entry(44,digits,45,QTokenContext.MINUTE,ACTION_LOOKSLIKE),
-        new Entry(45,digits,46,QTokenContext.MINUTE,ACTION_LOOKSLIKE),
-        new Entry(46,":".toCharArray(),47,QTokenContext.SECOND,ACTION_LOOKSLIKE),
-
-        new Entry(46,".".toCharArray(),50,QTokenContext.SECOND,ACTION_LOOKSLIKE),
-
-
-        new Entry(46,delimiters,INIT,QTokenContext.MINUTE,ACTION_MATCHANDPUTBACK),
-        new Entry(47,digits,48,QTokenContext.SECOND,ACTION_LOOKSLIKE),
-        new Entry(48,digits,49,QTokenContext.SECOND,ACTION_LOOKSLIKE),
-        new Entry(49,".".toCharArray(),50,QTokenContext.TIME,ACTION_LOOKSLIKE),
-        new Entry(49,delimiters,INIT,QTokenContext.SECOND,ACTION_MATCHANDPUTBACK),
-        new Entry(50,digits,51,QTokenContext.TIME,ACTION_LOOKSLIKE),
-        new Entry(50,delimiters,INIT,QTokenContext.TIME,ACTION_MATCHANDPUTBACK),
-        new Entry(51,digits,52,QTokenContext.TIME,ACTION_LOOKSLIKE),
-        new Entry(51,delimiters,INIT,QTokenContext.TIME,ACTION_MATCHANDPUTBACK),
-        new Entry(52,digits,53,QTokenContext.TIME,ACTION_LOOKSLIKE),
-        new Entry(52,delimiters,INIT,QTokenContext.TIME,ACTION_MATCHANDPUTBACK),
-        new Entry(53,digits,83,QTokenContext.TIMESPAN,ACTION_LOOKSLIKE),
-        new Entry(53,delimiters,INIT,QTokenContext.TIME,ACTION_MATCHANDPUTBACK),
-
-        new Entry(54,".".toCharArray(),58,QTokenContext.FLOAT,ACTION_LOOKSLIKE),
-        new Entry(54,digits,57,QTokenContext.INTEGER,ACTION_LOOKSLIKE),
-        new Entry(54,delimiters,INIT,QTokenContext.INTEGER,ACTION_MATCHANDPUTBACK),
-        new Entry(54,"D".toCharArray(),95,QTokenContext.TIMESPAN,ACTION_LOOKSLIKE),
-        new Entry(54,"j".toCharArray(),2,QTokenContext.LONG,ACTION_LOOKSLIKE),
-        new Entry(54,"h".toCharArray(),3,QTokenContext.SHORT,ACTION_LOOKSLIKE),
-        new Entry(54,"e".toCharArray(),28,QTokenContext.REAL,ACTION_LOOKSLIKE),
-        new Entry(54,"f".toCharArray(),16,QTokenContext.FLOAT,ACTION_LOOKSLIKE),
-        new Entry(54,"t".toCharArray(),18,QTokenContext.TIME,ACTION_LOOKSLIKE),
-        new Entry(54,"v".toCharArray(),19,QTokenContext.MINUTE,ACTION_LOOKSLIKE),
-        new Entry(54,"u".toCharArray(),20,QTokenContext.SECOND,ACTION_LOOKSLIKE),
-        new Entry(54,"p".toCharArray(),84,QTokenContext.TIMESTAMP,ACTION_LOOKSLIKE),
-        new Entry(54,"i".toCharArray(),24,QTokenContext.INTEGER,ACTION_LOOKSLIKE),
-        new Entry(57,".".toCharArray(),27,QTokenContext.FLOAT,ACTION_LOOKSLIKE),
-        new Entry(57,digits,57,QTokenContext.INTEGER,ACTION_LOOKSLIKE),
-        new Entry(57,delimiters,INIT,QTokenContext.INTEGER,ACTION_MATCHANDPUTBACK),
-        new Entry(57,"D".toCharArray(),95,QTokenContext.TIMESPAN,ACTION_LOOKSLIKE),
-        new Entry(57,"j".toCharArray(),2,QTokenContext.LONG,ACTION_LOOKSLIKE),
-        new Entry(57,"h".toCharArray(),3,QTokenContext.SHORT,ACTION_LOOKSLIKE),
-        new Entry(57,"e".toCharArray(),28,QTokenContext.REAL,ACTION_LOOKSLIKE),
-        new Entry(57,"f".toCharArray(),16,QTokenContext.FLOAT,ACTION_LOOKSLIKE),
-        new Entry(57,"t".toCharArray(),18,QTokenContext.TIME,ACTION_LOOKSLIKE),
-        new Entry(57,"v".toCharArray(),19,QTokenContext.MINUTE,ACTION_LOOKSLIKE),
-        new Entry(57,"u".toCharArray(),20,QTokenContext.SECOND,ACTION_LOOKSLIKE),
-        new Entry(57,"p".toCharArray(),84,QTokenContext.TIMESTAMP,ACTION_LOOKSLIKE),
-        new Entry(57,"i".toCharArray(),24,QTokenContext.INTEGER,ACTION_LOOKSLIKE),
-        new Entry(58,digits,59,QTokenContext.FLOAT,ACTION_LOOKSLIKE),
-        new Entry(58,"e".toCharArray(),28,QTokenContext.REAL,ACTION_LOOKSLIKE),
-        new Entry(58,".".toCharArray(),255,QTokenContext.UNKNOWN,ACTION_LOOKSLIKE),
-        new Entry(58,delimiters,INIT,QTokenContext.FLOAT,ACTION_MATCHANDPUTBACK),
-        new Entry(59,digits,60,QTokenContext.FLOAT,ACTION_LOOKSLIKE),
-        new Entry(59,"e".toCharArray(),28,QTokenContext.REAL,ACTION_LOOKSLIKE),
-        new Entry(59,".".toCharArray(),255,QTokenContext.UNKNOWN,ACTION_LOOKSLIKE),
-        new Entry(59,delimiters,INIT,QTokenContext.FLOAT,ACTION_MATCHANDPUTBACK),
-        new Entry(60,digits,27,QTokenContext.FLOAT,ACTION_LOOKSLIKE),
-        new Entry(60,"e".toCharArray(),28,QTokenContext.REAL,ACTION_LOOKSLIKE),
-        new Entry(60,"m".toCharArray(),61,QTokenContext.MONTH,ACTION_LOOKSLIKE),
-        new Entry(60,".".toCharArray(),62,QTokenContext.DATE,ACTION_LOOKSLIKE),
-        new Entry(60,delimiters,INIT,QTokenContext.FLOAT,ACTION_MATCHANDPUTBACK),
-        new Entry(61,delimiters,INIT,QTokenContext.MONTH,ACTION_MATCHANDPUTBACK),
-        new Entry(62,digits,63,QTokenContext.DATE,ACTION_LOOKSLIKE),
-        new Entry(63,digits,64,QTokenContext.DATE,ACTION_LOOKSLIKE),
-        new Entry(64,"T".toCharArray(),65,QTokenContext.DATETIME,ACTION_LOOKSLIKE),
-        new Entry(64,"D".toCharArray(),85,QTokenContext.TIMESTAMP,ACTION_LOOKSLIKE),
-        new Entry(64,".".toCharArray(),255,QTokenContext.UNKNOWN,ACTION_LOOKSLIKE),
-        new Entry(64,delimiters,INIT,QTokenContext.DATE,ACTION_MATCHANDPUTBACK),
-        new Entry(65,digits,66,QTokenContext.UNKNOWN,ACTION_LOOKSLIKE),
-        new Entry(66,digits,67,QTokenContext.UNKNOWN,ACTION_LOOKSLIKE),
-        new Entry(67,":".toCharArray(),68,QTokenContext.UNKNOWN,ACTION_LOOKSLIKE),
-        new Entry(68,digits,69,QTokenContext.UNKNOWN,ACTION_LOOKSLIKE),
-        new Entry(69,digits,70,QTokenContext.DATETIME,ACTION_LOOKSLIKE),
-        new Entry(70,":".toCharArray(),71,QTokenContext.UNKNOWN,ACTION_LOOKSLIKE),
-        new Entry(70,delimiters,INIT,QTokenContext.DATETIME,ACTION_MATCHANDPUTBACK),
-        new Entry(71,digits,72,QTokenContext.UNKNOWN,ACTION_LOOKSLIKE),
-        new Entry(72,digits,73,QTokenContext.DATETIME,ACTION_LOOKSLIKE),
-        new Entry(73,".".toCharArray(),74,QTokenContext.DATETIME,ACTION_LOOKSLIKE),
-        new Entry(73,delimiters,INIT,QTokenContext.DATETIME,ACTION_MATCHANDPUTBACK),
-        new Entry(74,digits,74,QTokenContext.DATETIME,ACTION_LOOKSLIKE),
-        new Entry(74,delimiters,INIT,QTokenContext.DATETIME,ACTION_MATCHANDPUTBACK),
-        new Entry(79,"-".toCharArray(),80,QTokenContext.OPERATOR,ACTION_LOOKSLIKE),
-        new Entry(79,"".toCharArray(),INIT,QTokenContext.OPERATOR,ACTION_MATCHANDPUTBACK),
-        new Entry(80,digits,57,QTokenContext.INTEGER,ACTION_LOOKSLIKE),
-        new Entry(80,"".toCharArray(),INIT,QTokenContext.OPERATOR,ACTION_MATCHANDPUTBACK),
-        new Entry(81,"-".toCharArray(),80,QTokenContext.OPERATOR,ACTION_LOOKSLIKE),
-        new Entry(81,"".toCharArray(),INIT,QTokenContext.OPERATOR,ACTION_MATCHANDPUTBACK),
-        
-        new Entry(82,".".toCharArray(),255,QTokenContext.UNKNOWN,ACTION_LOOKSLIKE),
-        new Entry(82,delimiters,INIT,QTokenContext.FLOAT,ACTION_MATCHANDPUTBACK),
-
-        new Entry(83,digits,83,QTokenContext.TIMESPAN,ACTION_LOOKSLIKE),
-        new Entry(83,delimiters,INIT,QTokenContext.TIMESPAN,ACTION_MATCHANDPUTBACK),
-
-        new Entry(84,delimiters,INIT,QTokenContext.TIMESTAMP,ACTION_MATCHANDPUTBACK),
-        
-        new Entry(85,digits,86,QTokenContext.UNKNOWN,ACTION_LOOKSLIKE),
-        new Entry(85,delimiters,INIT,QTokenContext.TIMESPAN,ACTION_MATCHANDPUTBACK),
-        new Entry(86,digits,87,QTokenContext.UNKNOWN,ACTION_LOOKSLIKE),
-        new Entry(86,delimiters,INIT,QTokenContext.TIMESPAN,ACTION_MATCHANDPUTBACK),
-        new Entry(87,":".toCharArray(),88,QTokenContext.UNKNOWN,ACTION_LOOKSLIKE),
-        new Entry(87,delimiters,INIT,QTokenContext.TIMESPAN,ACTION_MATCHANDPUTBACK),
-        new Entry(88,digits,89,QTokenContext.UNKNOWN,ACTION_LOOKSLIKE),
-        new Entry(89,digits,90,QTokenContext.TIMESTAMP,ACTION_LOOKSLIKE),
-        new Entry(90,":".toCharArray(),91,QTokenContext.UNKNOWN,ACTION_LOOKSLIKE),
-        new Entry(90,delimiters,INIT,QTokenContext.TIMESTAMP,ACTION_MATCHANDPUTBACK),
-        new Entry(91,digits,92,QTokenContext.UNKNOWN,ACTION_LOOKSLIKE),
-        new Entry(92,digits,93,QTokenContext.TIMESTAMP,ACTION_LOOKSLIKE),
-        new Entry(93,".".toCharArray(),94,QTokenContext.TIMESTAMP,ACTION_LOOKSLIKE),
-        new Entry(93,delimiters,INIT,QTokenContext.TIMESTAMP,ACTION_MATCHANDPUTBACK),
-        new Entry(94,digits,94,QTokenContext.TIMESTAMP,ACTION_LOOKSLIKE),
-        new Entry(94,delimiters,INIT,QTokenContext.TIMESTAMP,ACTION_MATCHANDPUTBACK),
-
-        new Entry(95,digits,96,QTokenContext.UNKNOWN,ACTION_LOOKSLIKE),
-        new Entry(95,delimiters,INIT,QTokenContext.TIMESPAN,ACTION_MATCHANDPUTBACK),
-        new Entry(96,digits,97,QTokenContext.UNKNOWN,ACTION_LOOKSLIKE),
-        new Entry(96,delimiters,INIT,QTokenContext.TIMESPAN,ACTION_MATCHANDPUTBACK),
-        new Entry(97,":".toCharArray(),98,QTokenContext.UNKNOWN,ACTION_LOOKSLIKE),
-        new Entry(97,delimiters,INIT,QTokenContext.TIMESPAN,ACTION_MATCHANDPUTBACK),
-        new Entry(98,digits,99,QTokenContext.UNKNOWN,ACTION_LOOKSLIKE),
-        new Entry(99,digits,100,QTokenContext.TIMESTAMP,ACTION_LOOKSLIKE),
-        new Entry(100,":".toCharArray(),101,QTokenContext.UNKNOWN,ACTION_LOOKSLIKE),
-        new Entry(100,delimiters,INIT,QTokenContext.TIMESTAMP,ACTION_MATCHANDPUTBACK),
-        new Entry(101,digits,102,QTokenContext.UNKNOWN,ACTION_LOOKSLIKE),
-        new Entry(102,digits,103,QTokenContext.TIMESTAMP,ACTION_LOOKSLIKE),
-        new Entry(103,".".toCharArray(),104,QTokenContext.TIMESTAMP,ACTION_LOOKSLIKE),
-        new Entry(103,delimiters,INIT,QTokenContext.TIMESTAMP,ACTION_MATCHANDPUTBACK),
-        new Entry(104,digits,104,QTokenContext.TIMESTAMP,ACTION_LOOKSLIKE),
-        new Entry(104,delimiters,INIT,QTokenContext.TIMESTAMP,ACTION_MATCHANDPUTBACK),                
-
-        new Entry(105,delimiters,INIT,QTokenContext.TIMESPAN,ACTION_MATCHANDPUTBACK),
-
-        new Entry(255,delimiters,INIT,QTokenContext.UNKNOWN,ACTION_MATCHANDPUTBACK),
-        new Entry(255,"".toCharArray(),255,QTokenContext.UNKNOWN,ACTION_LOOKSLIKE)
-    };
-
-    public QSyntax()
-    {
-        initMap();
+    public QSyntax() {
         tokenContextPath=QTokenContext.contextPath;
     }
+
+    private TokenID getNext() {
+        TokenID token = null;
+        while (offset<stopOffset) {
+            SyntaxStateMachine.Next next = stateMachine.getNext(State.values()[state-INIT], buffer[offset++]);
+            if (next == null) {
+                state = State.AfterAtom.ordinal() + INIT;
+                if (token != null) {
+                    offset--;
+                    return token;
+                }
+                return QTokenContext.UNKNOWN;
+            } else {
+                state = next.nextState.ordinal() + INIT;
+                if (next.action == Match) return next.token;
+                if (next.action == MatchPrev) {
+                    offset--;
+                    return next.token;
+                }
+                token = next.token;
+            }
+        }
+
+        return token;
+    }
+
+    public TokenID parseToken() {
+        int start = offset;
+        TokenID token = getNext();
+        if (token == QTokenContext.IDENTIFIER) {
+            String word = new String(buffer, start, offset-start);
+            if (keywords.contains(word)) {
+                token = QTokenContext.KEYWORD;
+            }
+        }
+        return token;
+    }
+
+    private static void add(State fromState, String chars, State nextState, TokenID token, SyntaxStateMachine.Action action) {
+        stateMachine.add(fromState, chars, nextState, token, action);
+    }
+    private static void add(State[] fromStates, String chars, State nextState, TokenID token, SyntaxStateMachine.Action action) {
+        for(State fromState:fromStates) {
+            add(fromState, chars, nextState, token, action);
+        }
+    }
+    private static State[] s(State... states) {
+        return states;
+    }
+
+    private static final String digits = "0123456789";
+    private static final String a2z = "abcdefghijklmnopqrstuvwxyz";
+    private static final String A2Z = a2z.toUpperCase();
+    private static final String alpha = a2z + A2Z;
+    private static final String alphaNumeric = alpha + digits;
+    private static final String atomChars = alphaNumeric + ":.";
+    private static final String brackets = "[](){}";
+    private static final String operators = "|/&^:!+-*%$=~#;@\\.><,?_'";
+    private static final String whitespace = " \t\r";
+
+    private static String except(String src, String exclude) {
+        for (int i=0; i<exclude.length(); i++) {
+            int index = src.indexOf(exclude.charAt(i));
+            if (index == -1) continue;
+            src = src.substring(0,index) + src.substring(index+1);
+        }
+        return src;
+    }
+
+    private final static State[] typeStates = new State[] {
+            State.Long, State.Int, State.Short, State.Float, State.Real,
+            State.Date, State.Time, State.Datetime, State.Timestamp, State.Timespan,
+            State.Month, State.Minute, State.Second, State.Boolean };
+    private final static TokenID[] tokens = new TokenID[] {
+            QTokenContext.LONG, QTokenContext.INTEGER, QTokenContext.SHORT, QTokenContext.FLOAT, QTokenContext.REAL,
+            QTokenContext.DATE, QTokenContext.TIME, QTokenContext.DATETIME, QTokenContext.TIMESTAMP, QTokenContext.TIMESPAN,
+            QTokenContext.MONTH, QTokenContext.MINUTE, QTokenContext.SECOND, QTokenContext.BOOLEAN };
+    private final static String types = "jihfedtzpnmuvb";
+
+    private static void initUnknownAtom(State firstAtomState, State lastAtomState) {
+        add(State.UnknownAtom, "", State.AfterAtom, QTokenContext.UNKNOWN, MatchPrev);
+        for (int i=0; i<typeStates.length; i++) {
+            add(typeStates[i], "", State.AfterAtom, tokens[i], MatchPrev);
+        }
+
+        int firstIndex = firstAtomState.ordinal();
+        int lastIndex = lastAtomState.ordinal();
+        for(int index = firstIndex; index<=lastIndex; index++) {
+            State state = State.values()[index];
+            String wrongChars = except(atomChars, stateMachine.getChars(state));
+            add(state, wrongChars, State.UnknownAtom, QTokenContext.UNKNOWN, LooksLike);
+        }
+    }
+
+    /* Various ending can be found with the following code. We don't code all possible combinations. Only natural ones
+     test:{[s]
+        s:"",s;
+        types:"jihfepmdznuvt";
+        types: types where @'[{parse x; 1b};;0b] s,/:types;
+        values: parse each s,/:types;
+        defTypes: @[{[types;values;s]types where values~\:parse s}[types;values;];s;" "];
+        (defTypes; types except defTypes)
+    }
+    test "100"
+     */
+    private static void addAtomTypeEnding(String endingTypes, State... fromStates) {
+        for (State fromState: fromStates) {
+            addAtomTypeEnding(fromState, endingTypes);
+        }
+    }
+    private static void addAtomTypeEnding(State fromState, String endingTypes) {
+        for (int i=0; i<endingTypes.length(); i++) {
+            int index = types.indexOf(endingTypes.charAt(i));
+            if (index==-1) throw new IllegalStateException("Unknown type");
+
+            add(fromState, ""+types.charAt(index), typeStates[index], tokens[index], LooksLike);
+        }
+    }
+
+    private static void addTemporal(State[] fromStates, State firstState, TokenID[] tokens, String types, String... charsArray) {
+        String chars = charsArray[0];
+        for(State fromState: fromStates) {
+            add(fromState, chars, firstState, tokens[0], LooksLike);
+        }
+
+        State state = firstState;
+        for(int index = 1; index<charsArray.length; index++) {
+            chars = charsArray[index];
+            State nextState = State.values()[state.ordinal()+1];
+            add(state, chars, nextState, tokens[index], LooksLike);
+            if (chars.equals(digits)) {
+                add(nextState, digits, nextState, tokens[index], LooksLike);
+            }
+            addAtomTypeEnding(state, types);
+            state = nextState;
+        }
+        addAtomTypeEnding(state, types);
+    }
+
+    private static void addTemporal(State[] fromStates, State firstState, TokenID token, String types, String... charsArray) {
+        TokenID[] tokens = new TokenID[charsArray.length];
+        Arrays.fill(tokens, token);
+        addTemporal(fromStates, firstState, tokens, types, charsArray);
+    }
+
+    private static void addTemporal(State fromState, State firstState, TokenID token, String types, String... charsArray) {
+        addTemporal(new State[] {fromState}, firstState, token, types, charsArray);
+    }
+
+    /*
+    rules for -
+    INIT,whitespace -> sign
+    operator ->sign
+
+    bracket -> operator
+    atom -> operator
+    identifier -> operator
+
+     */
+
+    static {
+        add(s(State.Init,State.AfterOperator,State.AfterAtom,State.AfterWhitespace), "0", State.Zero, QTokenContext.LONG, LooksLike);
+        add(s(State.Init,State.AfterOperator,State.AfterAtom,State.AfterWhitespace), "1", State.One, QTokenContext.LONG, LooksLike);
+        add(s(State.Init,State.AfterOperator,State.AfterAtom,State.AfterWhitespace), "2", State.Two, QTokenContext.LONG, LooksLike);
+        add(s(State.Init,State.AfterOperator,State.AfterAtom,State.AfterWhitespace), except(digits, "012"), State.Digits, QTokenContext.LONG, LooksLike);
+        add(s(State.Init,State.AfterOperator,State.AfterAtom,State.AfterWhitespace), ".", State.Dot, QTokenContext.OPERATOR, LooksLike);
+        add(s(State.Init,State.AfterOperator,State.AfterAtom,State.AfterWhitespace), brackets, State.AfterAtom, QTokenContext.BRACKET, Match);
+        add(s(State.Init,State.AfterOperator,State.AfterAtom,State.AfterWhitespace), except(operators, ".-\\/"), State.AfterOperator, QTokenContext.OPERATOR, Match);
+        add(State.Init, whitespace, State.Init, QTokenContext.WHITESPACE, Match);
+        add(s(State.AfterOperator,State.AfterAtom,State.AfterWhitespace), whitespace, State.AfterWhitespace, QTokenContext.WHITESPACE, Match);
+        add(s(State.Init,State.AfterOperator,State.AfterAtom,State.AfterWhitespace), "\n", State.Init, QTokenContext.WHITESPACE, Match);
+        add(s(State.Init,State.AfterOperator,State.AfterAtom,State.AfterWhitespace), "\"", State.String, QTokenContext.CHAR_VECTOR, LooksLike);
+        add(s(State.Init,State.AfterOperator,State.AfterAtom,State.AfterWhitespace), "`", State.Symbol, QTokenContext.SYMBOL, LooksLike);
+        add(s(State.Init,State.AfterOperator,State.AfterAtom,State.AfterWhitespace), alpha, State.Identifier, QTokenContext.IDENTIFIER, LooksLike);
+
+        add(s(State.Init,State.AfterOperator,State.AfterWhitespace), "-", State.MinusForAtom, QTokenContext.OPERATOR, LooksLike);
+        add(State.AfterAtom, "-", State.AfterOperator, QTokenContext.OPERATOR, Match);
+
+        add(State.Init, "/", State.CommentMLFirstLine, QTokenContext.EOL_COMMENT, LooksLike);
+        add(State.AfterWhitespace, "/", State.CommentEOL, QTokenContext.EOL_COMMENT, LooksLike);
+        add(State.Init, "\\", State.InitBaskSlash, QTokenContext.OPERATOR, LooksLike);
+        add(State.AfterWhitespace, "\\", State.AfterOperator, QTokenContext.OPERATOR, Match);
+        add(s(State.AfterAtom,State.AfterOperator), "\\/", State.AfterOperator, QTokenContext.OPERATOR, Match);
+
+        add(State.CommentEOL, "\n", State.Init, QTokenContext.EOL_COMMENT, Match);
+        add(State.CommentEOL, "", State.CommentEOL, QTokenContext.EOL_COMMENT, LooksLike);
+
+        add(State.CommentMLFirstLine, whitespace, State.CommentMLFirstLine, QTokenContext.EOL_COMMENT, LooksLike);
+        add(State.CommentMLFirstLine, "\n", State.CommentMLInit, QTokenContext.EOL_COMMENT, Match);
+        add(State.CommentMLFirstLine, "", State.CommentEOL, QTokenContext.EOL_COMMENT, LooksLike);
+
+        add(State.CommentMLInit, whitespace, State.CommentMLInit, QTokenContext.EOL_COMMENT, LooksLike);
+        add(State.CommentMLInit, "\\", State.CommentMLLastLine, QTokenContext.EOL_COMMENT, LooksLike);
+        add(State.CommentMLInit, "\n", State.CommentMLInit, QTokenContext.EOL_COMMENT, Match);
+        add(State.CommentMLInit, "", State.CommentML, QTokenContext.EOL_COMMENT, LooksLike);
+
+        add(State.CommentML, "\n", State.CommentMLInit, QTokenContext.EOL_COMMENT, Match);
+        add(State.CommentML, "", State.CommentML, QTokenContext.EOL_COMMENT, LooksLike);
+
+        add(State.CommentMLLastLine, whitespace, State.CommentMLLastLine, QTokenContext.EOL_COMMENT, LooksLike);
+        add(State.CommentMLLastLine, "\n", State.Init, QTokenContext.EOL_COMMENT, Match);
+        add(State.CommentMLLastLine, "", State.CommentML, QTokenContext.EOL_COMMENT, LooksLike);
+
+        add(State.InitBaskSlash, alpha, State.QCommandStart, QTokenContext.COMMAND, LooksLike);
+        add(State.InitBaskSlash, "", State.AfterOperator, QTokenContext.OPERATOR, MatchPrev);
+
+        add(State.QCommandStart, whitespace, State.QCommand, QTokenContext.COMMAND, LooksLike);
+        add(State.QCommandStart, "\n", State.Init, QTokenContext.COMMAND, Match);
+        add(State.QCommandStart, "", State.OSCommand, QTokenContext.SYSTEM, LooksLike);
+
+        add(State.QCommand, "\n", State.Init, QTokenContext.COMMAND, Match);
+        add(State.QCommand, "", State.QCommand, QTokenContext.COMMAND, LooksLike);
+
+        add(State.OSCommand, "\n", State.Init, QTokenContext.SYSTEM, Match);
+        add(State.OSCommand, "", State.OSCommand, QTokenContext.SYSTEM, LooksLike);
+
+        add(State.MinusForAtom, except(digits,"0"), State.Digits, QTokenContext.LONG, LooksLike);
+        add(State.MinusForAtom, "0", State.MinusZero, QTokenContext.LONG, LooksLike);
+        add(State.MinusForAtom, ".", State.Dot, QTokenContext.OPERATOR, LooksLike);
+        add(State.MinusForAtom, "", State.AfterOperator, QTokenContext.OPERATOR, MatchPrev);
+
+        add(s(State.Zero, State.One), "01", State.ZeroOnes, QTokenContext.LONG, LooksLike);
+        add(s(State.Zero, State.One), except(digits,"01"), State.Digits, QTokenContext.LONG, LooksLike);
+        add(s(State.Zero, State.One, State.Two, State.MinusZero, State.ZeroOnes, State.Digits), ".", State.DigitsDot, QTokenContext.FLOAT, LooksLike);
+        add(s(State.Zero, State.One, State.Two, State.MinusZero,
+                State.ZeroOnes, State.Digits, State.DigitsDot, State.DigitsDotDigits),
+                "e", State.FractionE, QTokenContext.REAL, LooksLike);
+        add(State.Zero, "x", State.Byte, QTokenContext.BYTE, LooksLike);
+        add(State.Zero, "n", State.NullFloat, QTokenContext.FLOAT, LooksLike);
+        add(State.Zero, "N", State.NullLong, QTokenContext.LONG, LooksLike);
+        add(s(State.Zero, State.MinusZero), "w", State.InfFloat, QTokenContext.FLOAT, LooksLike);
+        add(s(State.Zero, State.MinusZero), "W", State.InfLong, QTokenContext.LONG, LooksLike);
+        addAtomTypeEnding("jihfpuvtb", State.Zero, State.One, State.Two, State.MinusZero);
+        addAtomTypeEnding("jihfepmdznuvt", State.NullFloat, State.NullLong, State.InfFloat, State.InfLong);
+        add(s(State.NullFloat, State.NullLong), "g", State.AfterAtom, QTokenContext.KEYWORD, Match);
+        add(s(State.NullFloat, State.NullLong), "c", State.AfterAtom, QTokenContext.CHAR_VECTOR, Match);
+
+        add(s(State.MinusZero, State.Digits), digits, State.Digits, QTokenContext.LONG, LooksLike);
+
+        add(State.Two, digits, State.Digits, QTokenContext.LONG, LooksLike);
+        add(s(State.Zero,State.One,State.Two),":",State.AfterOperator, QTokenContext.OPERATOR, Match);
+
+        add(State.ZeroOnes, "01", State.ZeroOnes, QTokenContext.LONG, LooksLike);
+        add(State.ZeroOnes, except(digits, "01"), State.Digits, QTokenContext.LONG, LooksLike);
+        addAtomTypeEnding(State.ZeroOnes, "jihfpnuvtb");
+
+        addAtomTypeEnding(State.Digits, "jihfpnuvt");
+
+        add(State.DigitsDot, ".", State.UnknownAtom, QTokenContext.UNKNOWN, LooksLike);
+        add(State.DigitsDot, digits, State.DigitsDotDigits, QTokenContext.FLOAT, LooksLike);
+        addAtomTypeEnding(State.DigitsDot,"fpnt");
+
+        add(State.DigitsDotDigits, digits, State.DigitsDotDigits, QTokenContext.FLOAT, LooksLike);
+        add(State.DigitsDotDigits, ".", State.DigitsDotDigitsDot, QTokenContext.UNKNOWN, LooksLike);
+        addAtomTypeEnding(State.DigitsDotDigits, "fpmnt");
+
+        add(State.Dot, digits, State.DigitsDotDigits, QTokenContext.FLOAT, LooksLike);
+        add(State.Dot, "", State.AfterOperator, QTokenContext.OPERATOR, MatchPrev);
+
+        add(State.FractionE, "+-", State.FractionESign, QTokenContext.UNKNOWN, LooksLike);
+        add(State.FractionE, digits, State.Scientific, QTokenContext.FLOAT, LooksLike);
+
+        add(State.FractionESign, digits, State.Scientific, QTokenContext.FLOAT, LooksLike);
+
+        add(State.Scientific, digits, State.Scientific, QTokenContext.FLOAT, LooksLike);
+        addAtomTypeEnding(State.Scientific, "fem");
+
+        add(State.DigitsDotDigitsDot, digits, State.DateLike, QTokenContext.DATE, LooksLike);
+        add(State.DateLike, digits, State.DateLike, QTokenContext.DATE, LooksLike);
+        addAtomTypeEnding(State.DateLike, "dpmzn");
+
+        addTemporal(State.DateLike, State.DateD1, QTokenContext.TIMESTAMP,"pmzn","D",digits,":",digits,":",digits,".",digits);
+        addTemporal(State.DateLike, State.DateT1, QTokenContext.DATETIME,"pmzn","T",digits,":",digits,":",digits,".",digits);
+        addTemporal(s(State.Zero, State.One, State.Two, State.ZeroOnes, State.Digits), State.DigitsD1, QTokenContext.TIMESPAN, "pmzn", "D",digits,":",digits,":",digits,".",digits);
+
+        String d1 ="9876543210"; // to not equals to digits
+        addTemporal(s(State.ZeroOnes, State.Digits),State.DigitsColon,
+                new TokenID[] {
+                        QTokenContext.MINUTE, QTokenContext.MINUTE, QTokenContext.MINUTE,
+                        QTokenContext.SECOND, QTokenContext.TIME, QTokenContext.TIME, QTokenContext.TIME, QTokenContext.TIME,
+                        QTokenContext.TIMESPAN
+                },"uvtpn", ":",digits,":",digits,".",d1,d1,d1,digits);
+
+
+        add(State.Byte, digits + "abcdefABCDEF", State.Byte, QTokenContext.BYTE, LooksLike);
+
+        initUnknownAtom(firstAtomState, lastAtomState);
+
+        add(State.String, "\\", State.StringEscape, QTokenContext.CHAR_VECTOR, Match);
+        add(State.String, "\"", State.AfterAtom, QTokenContext.CHAR_VECTOR, Match);
+        add(State.String, "\n", State.String, QTokenContext.CHAR_VECTOR, Match);
+        add(State.String, "", State.String, QTokenContext.CHAR_VECTOR, LooksLike);
+        add(State.StringEscape, "nrt\\\"", State.String, QTokenContext.CHAR_VECTOR, Match);
+        add(State.StringEscape, "0123", State.StringEscapeD, QTokenContext.UNKNOWN, LooksLike);
+        add(State.StringEscape, "", State.String, QTokenContext.UNKNOWN, Match);
+        add(State.StringEscapeD, "01234567", State.StringEscapeDD, QTokenContext.UNKNOWN, LooksLike);
+        add(State.StringEscapeD, "", State.String, QTokenContext.UNKNOWN, Match);
+        add(State.StringEscapeDD, "01234567", State.String, QTokenContext.CHAR_VECTOR, Match);
+        add(State.StringEscapeDD, "", State.String, QTokenContext.UNKNOWN, Match);
+
+        add(State.Symbol, alphaNumeric + "`_.", State.Symbol, QTokenContext.SYMBOL, LooksLike);
+        add(State.Symbol, ":", State.SymbolColon, QTokenContext.SYMBOL, LooksLike);
+        add(State.Symbol, "", State.AfterAtom, QTokenContext.SYMBOL, MatchPrev);
+
+        add(State.SymbolColon, alphaNumeric + "_.:/", State.SymbolColon, QTokenContext.SYMBOL, LooksLike);
+        add(State.SymbolColon, "`", State.Symbol, QTokenContext.SYMBOL, LooksLike);
+        add(State.SymbolColon, "", State.AfterAtom, QTokenContext.SYMBOL, MatchPrev);
+
+        add(State.Identifier, alphaNumeric +"_", State.Identifier, QTokenContext.IDENTIFIER, LooksLike);
+        add(State.Identifier, ".", State.IdentifierDot, QTokenContext.IDENTIFIER, LooksLike);
+        add(State.IdentifierDot, alpha, State.Identifier, QTokenContext.IDENTIFIER, LooksLike);
+        add(State.Dot, alpha, State.Identifier, QTokenContext.IDENTIFIER, LooksLike);
+    }
+
+    static {
+        stateMachine.init();
+    }
+
 }

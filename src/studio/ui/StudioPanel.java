@@ -34,7 +34,6 @@ import studio.kdb.ListModel;
 import studio.qeditor.QKit;
 import org.netbeans.editor.ext.ExtKit;
 import org.netbeans.editor.ext.ExtSettingsInitializer;
-import studio.qeditor.QKitNew;
 import studio.qeditor.QSettingsInitializer;
 import studio.kdb.*;
 import studio.ui.action.QPadImport;
@@ -55,8 +54,6 @@ public class StudioPanel extends JPanel implements Observer,WindowListener {
         Settings.addInitializer(new ExtSettingsInitializer(),Settings.CORE_LEVEL);
 
         JEditorPane.registerEditorKitForContentType(QKit.CONTENT_TYPE,QKit.class.getName());
-
-        JEditorPane.registerEditorKitForContentType(QKitNew.CONTENT_TYPE, QKitNew.class.getName());
 
         Settings.addInitializer(new QSettingsInitializer());
         Settings.reset();
@@ -112,15 +109,10 @@ public class StudioPanel extends JPanel implements Observer,WindowListener {
     private UserAction addServerAction;
     private UserAction removeServerAction;
     private UserAction toggleCommaFormatAction;
-    private UserAction toggleSyntaxHighlighting;
-    private UserAction debugSyntaxHighlighting;
     private static int scriptNumber = 0;
     private JFrame frame;
-    private DebugSyntaxHighlightingFrame debugSyntaxHighlightingFrame = null;
 
     private QueryExecutor queryExecutor;
-
-    private String contentType = QKitNew.CONTENT_TYPE;
 
     private static List<StudioPanel> allPanels = new ArrayList<>();
 
@@ -163,7 +155,7 @@ public class StudioPanel extends JPanel implements Observer,WindowListener {
 
         Document doc;
         if (textArea == null) {
-            textArea = new JEditorPane(contentType,"");
+            textArea = new JEditorPane(QKit.CONTENT_TYPE,"");
 
             textArea.getInputMap().put(toggleCommaFormatAction.getKeyStroke(), toggleCommaFormatAction.getText());
             textArea.getActionMap().put(toggleCommaFormatAction.getText(), toggleCommaFormatAction);
@@ -233,10 +225,6 @@ public class StudioPanel extends JPanel implements Observer,WindowListener {
         }
         else
             doc = textArea.getDocument();
-
-        if (debugSyntaxHighlightingFrame != null) {
-            debugSyntaxHighlightingFrame.setEditor(textArea);
-        }
 
         JComponent c = (textArea.getUI() instanceof BaseTextUI) ? Utilities.getEditorUI(textArea).getExtComponent() : new JScrollPane(textArea);
 
@@ -1237,44 +1225,6 @@ public class StudioPanel extends JPanel implements Observer,WindowListener {
                     }
             }
         };
-
-        toggleSyntaxHighlighting = new UserAction("Change contentType",
-                                                    Util.BLANK_ICON,
-                                                        "Change syntax highlighting - experimental",
-                                                            null,
-                                                            null) {
-            @Override
-            public void actionPerformed(ActionEvent e) {
-                if (textArea == null) return;
-                contentType = contentType.equals(QKit.CONTENT_TYPE) ? QKitNew.CONTENT_TYPE : QKit.CONTENT_TYPE;
-                log.info("Changing syntax highlighting to {}", contentType);
-
-                String text = textArea.getText();
-                int start = textArea.getSelectionStart();
-                int end = textArea.getSelectionEnd();
-                int pos = textArea.getCaretPosition();
-
-                textArea = null;
-                initDocument();
-                textArea.setText(text);
-                textArea.setSelectionStart(start);
-                textArea.setSelectionEnd(end);
-                textArea.setCaretPosition(pos);
-            }
-        };
-
-        debugSyntaxHighlighting = new UserAction("Debugging of Syntax Highlighting",
-                Util.BLANK_ICON,
-                "Debug - required for development",
-                null,
-                null) {
-            @Override
-            public void actionPerformed(ActionEvent e) {
-                debugSyntaxHighlightingFrame = new DebugSyntaxHighlightingFrame();
-                debugSyntaxHighlightingFrame.setEditor(textArea);
-            }
-        };
-
     }
 
     public void settings() {
@@ -1441,12 +1391,6 @@ public class StudioPanel extends JPanel implements Observer,WindowListener {
         menu.add(new JMenuItem(replaceAction));
 //        menu.addSeparator();
 //        menu.add(new JMenuItem(editFontAction));
-        menu.addSeparator();
-        JMenuItem contentTypeMenuItem = new JMenuItem(toggleSyntaxHighlighting);
-        String text = "Change syntax highlighting to " + (contentType.equals(QKit.CONTENT_TYPE) ? "new":"old") + " mode";
-        contentTypeMenuItem.setText(text);
-        menu.add(contentTypeMenuItem);
-        menu.add(new JMenuItem(debugSyntaxHighlighting));
         menubar.add(menu);
 
         menu = new JMenu(I18n.getString("Server"));

@@ -3,7 +3,7 @@ package studio.ui;
 import org.netbeans.editor.Utilities;
 import studio.kdb.*;
 import studio.kdb.ListModel;
-import studio.qeditor.QKitNew;
+import studio.qeditor.QKit;
 
 import javax.swing.*;
 import javax.swing.border.EtchedBorder;
@@ -48,7 +48,7 @@ public class TabPanel extends JPanel {
                 title = title + " [" + grid.getRowCount() + " rows] ";
                 icon = Util.TABLE_ICON;
             } else {
-                textArea = new JEditorPane(QKitNew.CONTENT_TYPE, "");
+                textArea = new JEditorPane(QKit.CONTENT_TYPE, "");
                 textArea.setEditable(false);
                 component = Utilities.getEditorUI(textArea).getExtComponent();
                 title = I18n.getString("ConsoleView");
