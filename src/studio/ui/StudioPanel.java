@@ -70,6 +70,9 @@ public class StudioPanel extends JPanel implements Observer,WindowListener {
     private String lastQuery = null;
     private JMenuBar menubar;
     private JToolBar toolbar;
+    private int currentTextArea = -1;
+    private List<JEditorPane> textAreas = new ArrayList<>();
+    private JTabbedPane tabbedEditors;
     private JEditorPane textArea;
     private JSplitPane splitpane;
     private JTabbedPane tabbedPane;
@@ -83,6 +86,7 @@ public class StudioPanel extends JPanel implements Observer,WindowListener {
     private UserAction serverListAction;
     private UserAction serverHistoryAction;
     private UserAction newWindowAction;
+    private UserAction newTabAction;
     private UserAction saveFileAction;
     private UserAction saveAsFileAction;
     private UserAction exportAction;
@@ -124,9 +128,12 @@ public class StudioPanel extends JPanel implements Observer,WindowListener {
 
     private final static int MAX_SERVERS_TO_CLONE = 20;
 
-    public void refreshFrameTitle() {
+    public void refreshTitle() {
         String title = (String) textArea.getDocument().getProperty(TITLE);
         frame.setTitle(title + (getModified() ? " (not saved) " : "") + (server!=null?" @"+server.toString():"") +" Studio for kdb+ " + Lm.version);
+        if (currentTextArea != -1) {
+            tabbedEditors.setTitleAt(currentTextArea, title);
+        }
     }
 
     private void updateUndoRedoState(UndoManager um) {
@@ -147,121 +154,36 @@ public class StudioPanel extends JPanel implements Observer,WindowListener {
             title = new File(filename).getName();
         }
         textArea.getDocument().putProperty(TITLE, title);
+        refreshTitle();
     }
 
-    private void initDocument() {
-        initActions();
-        refreshActionState();
-
-        Document doc;
-        if (textArea == null) {
-            textArea = new JEditorPane(QKit.CONTENT_TYPE,"");
-
-            textArea.getInputMap().put(toggleCommaFormatAction.getKeyStroke(), toggleCommaFormatAction.getText());
-            textArea.getActionMap().put(toggleCommaFormatAction.getText(), toggleCommaFormatAction);
-
-
-            BaseKit baseKit = ((BaseKit)textArea.getUI().getEditorKit(textArea));
-            copyAction = baseKit.getActionByName(BaseKit.copyAction);
-            copyAction.putValue(Action.SHORT_DESCRIPTION,"Copy the selected text to the clipboard");
-            copyAction.putValue(Action.SMALL_ICON,Util.COPY_ICON);
-            copyAction.putValue(Action.NAME,I18n.getString("Copy"));
-            copyAction.putValue(Action.MNEMONIC_KEY,new Integer(KeyEvent.VK_C));
-            copyAction.putValue(Action.ACCELERATOR_KEY,KeyStroke.getKeyStroke(KeyEvent.VK_C,menuShortcutKeyMask));
-
-            cutAction = baseKit.getActionByName(BaseKit.cutAction);
-            cutAction.putValue(Action.SHORT_DESCRIPTION,"Cut the selected text");
-            cutAction.putValue(Action.SMALL_ICON,Util.CUT_ICON);
-            cutAction.putValue(Action.NAME,I18n.getString("Cut"));
-            cutAction.putValue(Action.MNEMONIC_KEY,new Integer(KeyEvent.VK_T));
-            cutAction.putValue(Action.ACCELERATOR_KEY,KeyStroke.getKeyStroke(KeyEvent.VK_X,menuShortcutKeyMask));
-
-            pasteAction = baseKit.getActionByName(BaseKit.pasteAction);
-            pasteAction.putValue(Action.SHORT_DESCRIPTION,"Paste text from the clipboard");
-            pasteAction.putValue(Action.SMALL_ICON,Util.PASTE_ICON);
-            pasteAction.putValue(Action.NAME,I18n.getString("Paste"));
-            pasteAction.putValue(Action.MNEMONIC_KEY,new Integer(KeyEvent.VK_P));
-            pasteAction.putValue(Action.ACCELERATOR_KEY,KeyStroke.getKeyStroke(KeyEvent.VK_V,menuShortcutKeyMask));
-
-            findAction = baseKit.getActionByName(ExtKit.findAction);
-            findAction.putValue(Action.SHORT_DESCRIPTION,"Find text in the document");
-            findAction.putValue(Action.SMALL_ICON,Util.FIND_ICON);
-            findAction.putValue(Action.NAME,I18n.getString("Find"));
-            findAction.putValue(Action.MNEMONIC_KEY,new Integer(KeyEvent.VK_F));
-            findAction.putValue(Action.ACCELERATOR_KEY,KeyStroke.getKeyStroke(KeyEvent.VK_F,menuShortcutKeyMask));
-
-            replaceAction = baseKit.getActionByName(ExtKit.replaceAction);
-            replaceAction.putValue(Action.SHORT_DESCRIPTION,"Replace text in the document");
-            replaceAction.putValue(Action.SMALL_ICON,Util.REPLACE_ICON);
-            replaceAction.putValue(Action.NAME,I18n.getString("Replace"));
-            replaceAction.putValue(Action.MNEMONIC_KEY,new Integer(KeyEvent.VK_R));
-            replaceAction.putValue(Action.ACCELERATOR_KEY,KeyStroke.getKeyStroke(KeyEvent.VK_R,menuShortcutKeyMask));
-
-            selectAllAction = baseKit.getActionByName(BaseKit.selectAllAction);
-            selectAllAction.putValue(Action.SHORT_DESCRIPTION,"Select all text in the document");
-            selectAllAction.putValue(Action.SMALL_ICON,null);
-            selectAllAction.putValue(Action.NAME,I18n.getString("SelectAll"));
-            selectAllAction.putValue(Action.MNEMONIC_KEY,new Integer(KeyEvent.VK_A));
-            selectAllAction.putValue(Action.ACCELERATOR_KEY,KeyStroke.getKeyStroke(KeyEvent.VK_A,menuShortcutKeyMask));
-
-            undoAction = baseKit.getActionByName(BaseKit.undoAction);
-            undoAction.putValue(Action.SHORT_DESCRIPTION,"Undo the last change to the document");
-            undoAction.putValue(Action.SMALL_ICON,Util.UNDO_ICON);
-            undoAction.putValue(Action.NAME,I18n.getString("Undo"));
-            undoAction.putValue(Action.MNEMONIC_KEY,new Integer(KeyEvent.VK_U));
-            undoAction.putValue(Action.ACCELERATOR_KEY,KeyStroke.getKeyStroke(KeyEvent.VK_Z,menuShortcutKeyMask));
-
-            redoAction = baseKit.getActionByName(BaseKit.redoAction);
-            redoAction.putValue(Action.SHORT_DESCRIPTION,"Redo the last change to the document");
-            redoAction.putValue(Action.SMALL_ICON,Util.REDO_ICON);
-            redoAction.putValue(Action.NAME,I18n.getString("Redo"));
-            redoAction.putValue(Action.MNEMONIC_KEY,new Integer(KeyEvent.VK_R));
-            redoAction.putValue(Action.ACCELERATOR_KEY,KeyStroke.getKeyStroke(KeyEvent.VK_Y,menuShortcutKeyMask));
-
-            doc = textArea.getDocument();
-            setFilename(null);
-            doc.addDocumentListener(new MarkingDocumentListener());
-            rebuildAll();
-        }
-        else
-            doc = textArea.getDocument();
-
-        JComponent c = (textArea.getUI() instanceof BaseTextUI) ? Utilities.getEditorUI(textArea).getExtComponent() : new JScrollPane(textArea);
-
-        doc.putProperty(SERVER,server);
+    private JEditorPane createTextArea() {
+        JEditorPane textArea = new JEditorPane(QKit.CONTENT_TYPE,"");
+        textArea.getInputMap().put(toggleCommaFormatAction.getKeyStroke(), toggleCommaFormatAction.getText());
+        textArea.getActionMap().put(toggleCommaFormatAction.getText(), toggleCommaFormatAction);
+        Document doc = textArea.getDocument();
         doc.putProperty(MODIFIED, false);
+        UndoManager um = new UndoManager() {
+            public void undoableEditHappened(UndoableEditEvent e) {
+                super.undoableEditHappened(e);
+                updateUndoRedoState(this);
+            }
 
-        UndoManager um = (UndoManager) doc.getProperty(BaseDocument.UNDO_MANAGER_PROP);
-        if (um == null) {
-            um = new UndoManager() {
-                public void undoableEditHappened(UndoableEditEvent e) {
-                    super.undoableEditHappened(e);
-                    updateUndoRedoState(this);
-                }
+            public synchronized void redo() throws CannotRedoException {
+                super.redo();
+                updateUndoRedoState(this);
+            }
 
-                public synchronized void redo() throws CannotRedoException {
-                    super.redo();
-                    updateUndoRedoState(this);
-                }
+            public synchronized void undo() throws CannotUndoException {
+                super.undo();
+                updateUndoRedoState(this);
+            }
+        };
+        doc.putProperty(BaseDocument.UNDO_MANAGER_PROP,um);
+        doc.addUndoableEditListener(um);
 
-                public synchronized void undo() throws CannotUndoException {
-                    super.undo();
-                    updateUndoRedoState(this);
-                }
-            };
-            doc.putProperty(BaseDocument.UNDO_MANAGER_PROP,um);
-            doc.addUndoableEditListener(um);
-        }
-        um.discardAllEdits();
-        updateUndoRedoState(um);
-
-        if (splitpane.getTopComponent() != c) {
-            splitpane.setTopComponent(c);
-            splitpane.setDividerLocation(0.5);
-        }
-
-        rebuildMenuAndTooblar();
-        textArea.requestFocus();
+        initTextAction((BaseKit) textArea.getEditorKit());
+        return textArea;
     }
 
     private void refreshActionState() {
@@ -614,20 +536,11 @@ public class StudioPanel extends JPanel implements Observer,WindowListener {
     }
 
     public void newFile() {
-        try {
-            String filename = getFilename();
-            if (!saveIfModified(filename))
-                return;
-
-            textArea.getDocument().remove(0,textArea.getDocument().getLength());
-            setFilename(null);
-            rebuildAll();
-            initDocument();
-            refreshFrameTitle();
-        }
-        catch (BadLocationException e) {
-            log.error("Unexpected exception", e);
-        }
+        String filename = getFilename();
+        if (!saveIfModified(filename))
+            return;
+        setFilename(null);
+        initTextArea("");
     }
 
     public void openFile() {
@@ -714,25 +627,37 @@ public class StudioPanel extends JPanel implements Observer,WindowListener {
 
     public boolean loadFile(String filename) {
         try {
-            String s = getContents(filename);
-
-            textArea.getDocument().remove(0,textArea.getDocument().getLength());
-            textArea.getDocument().insertString(0,s,null);
+            String content = getContents(filename);
             setFilename(filename);
-            rebuildAll();
-            initDocument();
-            textArea.setCaretPosition(0);
-            refreshFrameTitle();
+            initTextArea(content);
             return true;
-        }
-        catch (BadLocationException e) {
-            log.error("Unexpected exception", e);
         } catch (IOException e) {
             log.error("Failed to load file {}", filename, e);
             JOptionPane.showMessageDialog(frame, "Failed to load file "+filename + ".\n" + e.getMessage(),
                             "Error in file load", JOptionPane.ERROR_MESSAGE);
         }
         return false;
+    }
+
+    private void initTextArea(String content) {
+        try {
+            textArea.getDocument().remove(0, textArea.getDocument().getLength());
+            textArea.getDocument().insertString(0, content,null);
+            textArea.setCaretPosition(0);
+
+            refreshActionState();
+
+            setModified(false);
+
+            UndoManager um = (UndoManager) textArea.getDocument().getProperty(BaseDocument.UNDO_MANAGER_PROP);
+            um.discardAllEdits();
+            updateUndoRedoState(um);
+            rebuildAll();
+            textArea.requestFocus();
+        }
+        catch (BadLocationException e) {
+            log.error("Unexpected exception", e);
+        }
     }
 
     public boolean saveAsFile() {
@@ -815,7 +740,6 @@ public class StudioPanel extends JPanel implements Observer,WindowListener {
             rebuildAll();
             setModified(false);
             addToMruFiles(filename);
-            refreshFrameTitle();
             return true;
         }
         catch (Exception e) {
@@ -859,7 +783,7 @@ public class StudioPanel extends JPanel implements Observer,WindowListener {
         if (textArea != null) {
             Document doc = textArea.getDocument();
             doc.putProperty(MODIFIED, value);
-            refreshFrameTitle();
+            refreshTitle();
         }
     }
 
@@ -890,7 +814,7 @@ public class StudioPanel extends JPanel implements Observer,WindowListener {
         Config.getInstance().addServerToHistory(server);
         serverHistory.add(server);
 
-        refreshFrameTitle();
+        refreshTitle();
         rebuildAll();
     }
 
@@ -967,6 +891,10 @@ public class StudioPanel extends JPanel implements Observer,WindowListener {
                 new StudioPanel(server,null);
             }
         };
+
+        newTabAction = UserAction.create("New Tab", Util.BLANK_ICON, "Open a new tab", new Integer(KeyEvent.VK_T),
+                                        KeyStroke.getKeyStroke(KeyEvent.VK_T, menuShortcutKeyMask),
+                                        (e) -> addTab(server, null) );
 
         serverListAction = UserAction.create(I18n.getString("ServerList"),
                 Util.TEXT_TREE_ICON,
@@ -1227,6 +1155,64 @@ public class StudioPanel extends JPanel implements Observer,WindowListener {
         };
     }
 
+    private void initTextAction(BaseKit baseKit) {
+        copyAction = baseKit.getActionByName(BaseKit.copyAction);
+        copyAction.putValue(Action.SHORT_DESCRIPTION,"Copy the selected text to the clipboard");
+        copyAction.putValue(Action.SMALL_ICON,Util.COPY_ICON);
+        copyAction.putValue(Action.NAME,I18n.getString("Copy"));
+        copyAction.putValue(Action.MNEMONIC_KEY,new Integer(KeyEvent.VK_C));
+        copyAction.putValue(Action.ACCELERATOR_KEY,KeyStroke.getKeyStroke(KeyEvent.VK_C,menuShortcutKeyMask));
+
+        cutAction = baseKit.getActionByName(BaseKit.cutAction);
+        cutAction.putValue(Action.SHORT_DESCRIPTION,"Cut the selected text");
+        cutAction.putValue(Action.SMALL_ICON,Util.CUT_ICON);
+        cutAction.putValue(Action.NAME,I18n.getString("Cut"));
+        cutAction.putValue(Action.MNEMONIC_KEY,new Integer(KeyEvent.VK_T));
+        cutAction.putValue(Action.ACCELERATOR_KEY,KeyStroke.getKeyStroke(KeyEvent.VK_X,menuShortcutKeyMask));
+
+        pasteAction = baseKit.getActionByName(BaseKit.pasteAction);
+        pasteAction.putValue(Action.SHORT_DESCRIPTION,"Paste text from the clipboard");
+        pasteAction.putValue(Action.SMALL_ICON,Util.PASTE_ICON);
+        pasteAction.putValue(Action.NAME,I18n.getString("Paste"));
+        pasteAction.putValue(Action.MNEMONIC_KEY,new Integer(KeyEvent.VK_P));
+        pasteAction.putValue(Action.ACCELERATOR_KEY,KeyStroke.getKeyStroke(KeyEvent.VK_V,menuShortcutKeyMask));
+
+        findAction = baseKit.getActionByName(ExtKit.findAction);
+        findAction.putValue(Action.SHORT_DESCRIPTION,"Find text in the document");
+        findAction.putValue(Action.SMALL_ICON,Util.FIND_ICON);
+        findAction.putValue(Action.NAME,I18n.getString("Find"));
+        findAction.putValue(Action.MNEMONIC_KEY,new Integer(KeyEvent.VK_F));
+        findAction.putValue(Action.ACCELERATOR_KEY,KeyStroke.getKeyStroke(KeyEvent.VK_F,menuShortcutKeyMask));
+
+        replaceAction = baseKit.getActionByName(ExtKit.replaceAction);
+        replaceAction.putValue(Action.SHORT_DESCRIPTION,"Replace text in the document");
+        replaceAction.putValue(Action.SMALL_ICON,Util.REPLACE_ICON);
+        replaceAction.putValue(Action.NAME,I18n.getString("Replace"));
+        replaceAction.putValue(Action.MNEMONIC_KEY,new Integer(KeyEvent.VK_R));
+        replaceAction.putValue(Action.ACCELERATOR_KEY,KeyStroke.getKeyStroke(KeyEvent.VK_R,menuShortcutKeyMask));
+
+        selectAllAction = baseKit.getActionByName(BaseKit.selectAllAction);
+        selectAllAction.putValue(Action.SHORT_DESCRIPTION,"Select all text in the document");
+        selectAllAction.putValue(Action.SMALL_ICON,null);
+        selectAllAction.putValue(Action.NAME,I18n.getString("SelectAll"));
+        selectAllAction.putValue(Action.MNEMONIC_KEY,new Integer(KeyEvent.VK_A));
+        selectAllAction.putValue(Action.ACCELERATOR_KEY,KeyStroke.getKeyStroke(KeyEvent.VK_A,menuShortcutKeyMask));
+
+        undoAction = baseKit.getActionByName(BaseKit.undoAction);
+        undoAction.putValue(Action.SHORT_DESCRIPTION,"Undo the last change to the document");
+        undoAction.putValue(Action.SMALL_ICON,Util.UNDO_ICON);
+        undoAction.putValue(Action.NAME,I18n.getString("Undo"));
+        undoAction.putValue(Action.MNEMONIC_KEY,new Integer(KeyEvent.VK_U));
+        undoAction.putValue(Action.ACCELERATOR_KEY,KeyStroke.getKeyStroke(KeyEvent.VK_Z,menuShortcutKeyMask));
+
+        redoAction = baseKit.getActionByName(BaseKit.redoAction);
+        redoAction.putValue(Action.SHORT_DESCRIPTION,"Redo the last change to the document");
+        redoAction.putValue(Action.SMALL_ICON,Util.REDO_ICON);
+        redoAction.putValue(Action.NAME,I18n.getString("Redo"));
+        redoAction.putValue(Action.MNEMONIC_KEY,new Integer(KeyEvent.VK_R));
+        redoAction.putValue(Action.ACCELERATOR_KEY,KeyStroke.getKeyStroke(KeyEvent.VK_Y,menuShortcutKeyMask));
+    }
+
     public void settings() {
         SettingsDialog dialog = new SettingsDialog(frame);
         dialog.alignAndShow();
@@ -1330,6 +1316,7 @@ public class StudioPanel extends JPanel implements Observer,WindowListener {
         JMenu menu = new JMenu(I18n.getString("File"));
         menu.setMnemonic(KeyEvent.VK_F);
         menu.add(new JMenuItem(newWindowAction));
+        menu.add(new JMenuItem(newTabAction));
         menu.add(new JMenuItem(openFileAction));
         menu.add(new JMenuItem(saveFileAction));
         menu.add(new JMenuItem(saveAsFileAction));
@@ -1780,19 +1767,44 @@ public class StudioPanel extends JPanel implements Observer,WindowListener {
         splitpane.setDividerLocation(0.5);
     }
 
+    private void addTab(Server server, String filename) {
+        textArea = createTextArea();
+        textAreas.add(textArea);
+        currentTextArea = textAreas.size()-1;
+        tabbedEditors.add(Utilities.getEditorUI(textArea).getExtComponent());
+        tabbedEditors.setSelectedIndex(currentTextArea);
+        setServer(server);
+
+        if (filename != null) {
+            loadFile(filename);
+        } else {
+            setFilename(null);
+            initTextArea("");
+        }
+        textArea.getDocument().addDocumentListener(new MarkingDocumentListener());
+    }
+
     public StudioPanel(Server server,String filename) {
 
         registerForMacOSXEvents();
+        initActions();
+        serverHistory = new HistoricalList<>(Config.getInstance().getServerHistoryDepth(),
+                Config.getInstance().getServerHistory());
 
         splitpane = new JSplitPane();
         frame = new JFrame();
         allPanels.add(this);
 
-        initDocument();
-        serverHistory = new HistoricalList<>(Config.getInstance().getServerHistoryDepth(),
-                                                Config.getInstance().getServerHistory());
-        setServer(server);
+        tabbedEditors = new JTabbedPane();
+        tabbedEditors.addChangeListener(e->{
+            currentTextArea = tabbedEditors.getSelectedIndex();
+            textArea = textAreas.get(currentTextArea);
+            refreshTitle();
+        });
+        splitpane.setTopComponent(tabbedEditors);
+        splitpane.setDividerLocation(0.5);
 
+        addTab(server, filename);
         menubar = createMenuBar();
         toolbar = createToolbar();
 
@@ -1819,10 +1831,7 @@ public class StudioPanel extends JPanel implements Observer,WindowListener {
 
         frame.setJMenuBar(menubar);
 
-        if (filename != null)
-            loadFile(filename);
-
-        refreshFrameTitle();
+        refreshTitle();
 
         frame.getContentPane().add(toolbar,BorderLayout.NORTH);
         frame.getContentPane().add(splitpane,BorderLayout.CENTER);
