@@ -122,7 +122,7 @@ public class StudioPanel extends JPanel implements Observer,WindowListener {
 
     private String contentType = QKitNew.CONTENT_TYPE;
 
-    public static java.util.List windowList = Collections.synchronizedList(new LinkedList());
+    private static List<StudioPanel> allPanels = new ArrayList<>();
 
     private final List<Server> serverHistory;
 
@@ -137,49 +137,6 @@ public class StudioPanel extends JPanel implements Observer,WindowListener {
         frame.setTitle(title + (getModified() ? " (not saved) " : "") + (server!=null?" @"+server.toString():"") +" Studio for kdb+ " + Lm.version);
     }
 
-    public static class WindowListChangedEvent extends EventObject {
-        public WindowListChangedEvent(Object source) {
-            super(source);
-        }
-    }
-
-    public interface WindowListChangedEventListener extends EventListener {
-        public void WindowListChangedEventOccurred(WindowListChangedEvent evt);
-    }
-
-    public static class WindowListMonitor {
-        protected javax.swing.event.EventListenerList listenerList = new javax.swing.event.EventListenerList();
-
-        public synchronized void addEventListener(WindowListChangedEventListener listener) {
-            listenerList.add(WindowListChangedEventListener.class,listener);
-        }
-
-        public synchronized void removeEventListener(WindowListChangedEventListener listener) {
-            listenerList.remove(WindowListChangedEventListener.class,listener);
-        }
-
-        synchronized void fireMyEvent(WindowListChangedEvent evt) {
-            Object[] listeners = listenerList.getListenerList();
-            for (int i = 0;i < listeners.length;i += 2)
-                if (listeners[i] == WindowListChangedEventListener.class)
-                    ((WindowListChangedEventListener) listeners[i + 1]).WindowListChangedEventOccurred(evt);
-        }
-    }
-    public static WindowListMonitor windowListMonitor = new WindowListMonitor();
-/*
-    private void updateKeyBindings(JEditorPane editorPane) {
-        InputMap inputMap = editorPane.getInputMap();
-        inputMap.put(KeyStroke.getKeyStroke("DELETE"),ExtKit.deleteNextCharAction);
-        inputMap.put(KeyStroke.getKeyStroke("BACK_SPACE"),ExtKit.deletePrevCharAction);
-        inputMap.put(KeyStroke.getKeyStroke("ENTER"),ExtKit.insertBreakAction);
-        inputMap.put(KeyStroke.getKeyStroke("UP"),ExtKit.upAction);
-        inputMap.put(KeyStroke.getKeyStroke("DOWN"),ExtKit.downAction);
-        inputMap.put(KeyStroke.getKeyStroke("LEFT"),ExtKit.backwardAction);
-        inputMap.put(KeyStroke.getKeyStroke("RIGHT"),ExtKit.forwardAction);
-        inputMap.put(KeyStroke.getKeyStroke("ctrl Z"),ExtKit.undoAction);
-        inputMap.put(KeyStroke.getKeyStroke("ctrl Y"),ExtKit.redoAction);
-    }
-*/
     private void updateUndoRedoState(UndoManager um) {
         undoAction.setEnabled(um.canUndo());
         redoAction.setEnabled(um.canRedo());
@@ -272,7 +229,7 @@ public class StudioPanel extends JPanel implements Observer,WindowListener {
             doc = textArea.getDocument();
             setFilename(null);
             doc.addDocumentListener(new MarkingDocumentListener());
-            windowListMonitor.fireMyEvent(new WindowListChangedEvent(this));
+            rebuildAll();
         }
         else
             doc = textArea.getDocument();
@@ -315,9 +272,7 @@ public class StudioPanel extends JPanel implements Observer,WindowListener {
             splitpane.setDividerLocation(0.5);
         }
 
-        rebuildToolbar();
-        rebuildMenuBar();
-
+        rebuildMenuAndTooblar();
         textArea.requestFocus();
     }
 
@@ -678,7 +633,7 @@ public class StudioPanel extends JPanel implements Observer,WindowListener {
 
             textArea.getDocument().remove(0,textArea.getDocument().getLength());
             setFilename(null);
-            windowListMonitor.fireMyEvent(new WindowListChangedEvent(this));
+            rebuildAll();
             initDocument();
             refreshFrameTitle();
         }
@@ -776,7 +731,7 @@ public class StudioPanel extends JPanel implements Observer,WindowListener {
             textArea.getDocument().remove(0,textArea.getDocument().getLength());
             textArea.getDocument().insertString(0,s,null);
             setFilename(filename);
-            windowListMonitor.fireMyEvent(new WindowListChangedEvent(this));
+            rebuildAll();
             initDocument();
             textArea.setCaretPosition(0);
             refreshFrameTitle();
@@ -869,7 +824,7 @@ public class StudioPanel extends JPanel implements Observer,WindowListener {
 
             textArea.write(new BufferedWriter(new OutputStreamWriter(new FileOutputStream(filename), "UTF-8")));
             setFilename(filename);
-            windowListMonitor.fireMyEvent(new WindowListChangedEvent(this));
+            rebuildAll();
             setModified(false);
             addToMruFiles(filename);
             refreshFrameTitle();
@@ -882,13 +837,13 @@ public class StudioPanel extends JPanel implements Observer,WindowListener {
     }
 
     private void arrangeAll() {
-        int noWins = windowList.size();
+        int noWins = allPanels.size();
 
-        Iterator i = windowList.iterator();
+        Iterator<StudioPanel> panelIterator = allPanels.iterator();
 
         Dimension screenSize = Toolkit.getDefaultToolkit().getScreenSize();
 
-        int noRows = noWins > 3 ? 3 : noWins;
+        int noRows = Math.min(noWins, 3);
         int height = screenSize.height / noRows;
 
         for (int row = 0;row < noRows;row++) {
@@ -902,17 +857,12 @@ public class StudioPanel extends JPanel implements Observer,WindowListener {
             int width = screenSize.width / noCols;
 
             for (int col = 0;col < noCols;col++) {
-                Object o = i.next();
-                JFrame f;
+                StudioPanel panel = panelIterator.next();
+                JFrame frame = panel.frame;
 
-                if (o instanceof StudioPanel)
-                    f = ((StudioPanel) o).frame;
-                else
-                    f = (JFrame) o;
-
-                f.setSize(width,height);
-                f.setLocation(col * width,((noRows - 1) - row) * height);
-                ensureDeiconified(f);
+                frame.setSize(width,height);
+                frame.setLocation(col * width,((noRows - 1) - row) * height);
+                ensureDeiconified(frame);
             }
         }
     }
@@ -953,7 +903,7 @@ public class StudioPanel extends JPanel implements Observer,WindowListener {
         serverHistory.add(server);
 
         refreshFrameTitle();
-        windowListMonitor.fireMyEvent(new WindowListChangedEvent(this));
+        rebuildAll();
     }
 
     private void initActions() {
@@ -1005,7 +955,7 @@ public class StudioPanel extends JPanel implements Observer,WindowListener {
                                          null) {
             public void actionPerformed(ActionEvent e) {
                 quitWindow();
-                if (windowList.size() == 0)
+                if (allPanels.size() == 0)
                     System.exit(0);
             }
         };
@@ -1069,10 +1019,7 @@ public class StudioPanel extends JPanel implements Observer,WindowListener {
                     s = f.getServer();
                     Config.getInstance().addServer(s);
                     setServer(s);
-                    rebuildToolbar();
-                    rebuildMenuBar();
-
-                    windowListMonitor.fireMyEvent(new WindowListChangedEvent(this));
+                    rebuildAll();
                 }
             }
         };
@@ -1091,9 +1038,7 @@ public class StudioPanel extends JPanel implements Observer,WindowListener {
                     Config.getInstance().addServer(s);
                     ConnectionPool.getInstance().purge(s);   //?
                     setServer(s);
-                    rebuildToolbar();
-                    rebuildMenuBar();
-                    windowListMonitor.fireMyEvent(new WindowListChangedEvent(this));
+                    rebuildAll();
                 }
             }
         };
@@ -1121,9 +1066,7 @@ public class StudioPanel extends JPanel implements Observer,WindowListener {
                     if (servers.length > 0)
                         setServer(servers[0]);
 
-                    rebuildToolbar();
-                    rebuildMenuBar();
-                    windowListMonitor.fireMyEvent(new WindowListChangedEvent(this));
+                    rebuildAll();
                 }
             }
         };
@@ -1366,25 +1309,10 @@ public class StudioPanel extends JPanel implements Observer,WindowListener {
 
     public boolean quit() {
         boolean okToExit = true;
-
-        Object[] objs = windowList.toArray();
-
-        for (int i = 0;i < objs.length;i++) {
-            Object o = objs[i];
-
-            if (o instanceof StudioPanel) {
-                if (!((StudioPanel) o).quitWindow())
-                    okToExit = false;
-            }
-            else
-                if (o instanceof JFrame) {
-                    JFrame f = (JFrame) o;
-                    f.setVisible(false);
-
-                    f.dispose();
-                }
+        for(StudioPanel panel: allPanels) {
+            if (!panel.quitWindow())
+                okToExit = false;
         }
-
         return okToExit;
     }
 
@@ -1412,12 +1340,22 @@ public class StudioPanel extends JPanel implements Observer,WindowListener {
                 return false;
         }
 
-        windowList.remove(this);
-        windowListMonitor.removeEventListener(windowListChangedEventListener);
-        windowListMonitor.fireMyEvent(new WindowListChangedEvent(this));
+        allPanels.remove(this);
+        rebuildAll();
         frame.dispose();
 
         return true;
+    }
+
+    private static void rebuildAll() {
+        for (StudioPanel panel: allPanels) {
+            panel.rebuildMenuAndTooblar();
+        }
+    }
+
+    private void rebuildMenuAndTooblar() {
+        rebuildMenuBar();
+        rebuildToolbar();
     }
 
     private void rebuildMenuBar() {
@@ -1543,7 +1481,7 @@ public class StudioPanel extends JPanel implements Observer,WindowListener {
                                                //ebuildToolbar();
                                                setServer(clone);
                                                ConnectionPool.getInstance().purge(clone); //?
-                                               windowListMonitor.fireMyEvent(new WindowListChangedEvent(this));
+                                               rebuildAll();
                                            }
                                        }
                                    });
@@ -1577,47 +1515,32 @@ public class StudioPanel extends JPanel implements Observer,WindowListener {
         menu.add(new JMenuItem(toggleDividerOrientationAction));
         menu.add(new JMenuItem(arrangeAllAction));
 
-        if (windowList.size() > 0) {
+        if (allPanels.size() > 0) {
             menu.addSeparator();
 
             int i = 0;
-            Iterator it = windowList.iterator();
-
-            while (it.hasNext()) {
+            for (StudioPanel panel: allPanels) {
                 String t = "unknown";
 
-                final Object o = it.next();
+                String filename = panel.getFilename();
 
-                if (o instanceof StudioPanel) {
-                    StudioPanel r = (StudioPanel) o;
-                    String filename = r.getFilename();
+                if (filename != null)
+                    t = filename.replace('\\','/');
 
-                    if (filename != null)
-                        t = filename.replace('\\','/');
-
-                    if (r.server != null)
-                        t = t + "[" + r.server.getFullName() + "]";
-                    else
-                        t = t + "[no server]";
-                }
+                if (panel.server != null)
+                    t = t + "[" + panel.server.getFullName() + "]";
                 else
-                    if (o instanceof JFrame)
-                        t = ((JFrame) o).getTitle();
+                    t = t + "[no server]";
 
                 JMenuItem item = new JMenuItem("" + (i + 1) + " " + t);
                 item.addActionListener(new ActionListener() {
                     
                                        public void actionPerformed(ActionEvent e) {
-                                           if (o instanceof StudioPanel) {
-                                               JFrame f = ((StudioPanel) o).frame;
-                                               ensureDeiconified(f);
-                                           }
-                                           else
-                                               ensureDeiconified((JFrame) o);
+                                           ensureDeiconified(panel.frame);
                                        }
                                    });
 
-                if (o == this)
+                if (panel == this)
                     item.setIcon(Util.CHECK_ICON);
                 else
                     item.setIcon(Util.BLANK_ICON);
@@ -1864,7 +1787,6 @@ public class StudioPanel extends JPanel implements Observer,WindowListener {
             return bundle.getString(key);
         }
     }
-    private WindowListChangedEventListener windowListChangedEventListener;
 
     private int dividerLastPosition; // updated from property change listener
     private void minMaxDivider(){
@@ -1918,19 +1840,9 @@ public class StudioPanel extends JPanel implements Observer,WindowListener {
 
         registerForMacOSXEvents();
 
-        windowListChangedEventListener = new WindowListChangedEventListener() {
-            
-            public void WindowListChangedEventOccurred(WindowListChangedEvent evt) {
-                rebuildMenuBar();
-                rebuildToolbar();
-            }
-        };
-
-        windowListMonitor.addEventListener(windowListChangedEventListener);
-
         splitpane = new JSplitPane();
         frame = new JFrame();
-        windowList.add(this);
+        allPanels.add(this);
 
         initDocument();
         serverHistory = new HistoricalList<>(Config.getInstance().getServerHistoryDepth(),
@@ -2230,7 +2142,7 @@ public class StudioPanel extends JPanel implements Observer,WindowListener {
 
     public void windowClosing(WindowEvent e) {
         if (quitWindow())
-            if (windowList.size() == 0)
+            if (allPanels.size() == 0)
                 System.exit(0);
     }
 
