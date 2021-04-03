@@ -59,6 +59,7 @@ public class StudioPanel extends JPanel implements Observer,WindowListener {
         Settings.reset();
     }
 
+    public static final String TEXTAREA = "textArea";
     public static final String TITLE = "title";
     public static final String FILENAME = "filename";
     public static final String SERVER = "server";
@@ -70,8 +71,6 @@ public class StudioPanel extends JPanel implements Observer,WindowListener {
     private String lastQuery = null;
     private JMenuBar menubar;
     private JToolBar toolbar;
-    private int currentTextArea = -1;
-    private List<JEditorPane> textAreas = new ArrayList<>();
     private JTabbedPane tabbedEditors;
     private JEditorPane textArea;
     private JSplitPane splitpane;
@@ -79,6 +78,7 @@ public class StudioPanel extends JPanel implements Observer,WindowListener {
     private ServerList serverList;
     private UserAction arrangeAllAction;
     private UserAction closeFileAction;
+    private UserAction closeTabAction;
     private UserAction cleanAction;
     private UserAction openFileAction;
     private UserAction openInExcel;
@@ -128,11 +128,16 @@ public class StudioPanel extends JPanel implements Observer,WindowListener {
 
     private final static int MAX_SERVERS_TO_CLONE = 20;
 
+    private String getTitle() {
+        return (String) textArea.getDocument().getProperty(TITLE);
+    }
+
     public void refreshTitle() {
-        String title = (String) textArea.getDocument().getProperty(TITLE);
+        String title = getTitle();
         frame.setTitle(title + (getModified() ? " (not saved) " : "") + (server!=null?" @"+server.toString():"") +" Studio for kdb+ " + Lm.version);
-        if (currentTextArea != -1) {
-            tabbedEditors.setTitleAt(currentTextArea, title);
+        int index = tabbedEditors.getSelectedIndex();
+        if (index != -1) {
+            tabbedEditors.setTitleAt(index, title);
         }
     }
 
@@ -167,7 +172,7 @@ public class StudioPanel extends JPanel implements Observer,WindowListener {
 
     private JEditorPane createTextArea() {
         JEditorPane textArea = new JEditorPane(QKit.CONTENT_TYPE,"");
-        overrideDefaultKeymap(textArea, toggleCommaFormatAction, newTabAction);
+        overrideDefaultKeymap(textArea, toggleCommaFormatAction, newTabAction, closeTabAction);
         Document doc = textArea.getDocument();
         doc.putProperty(MODIFIED, false);
         UndoManager um = new UndoManager() {
@@ -867,17 +872,13 @@ public class StudioPanel extends JPanel implements Observer,WindowListener {
             }
         };
 
-        closeFileAction = new UserAction(I18n.getString("Close"),
-                                         Util.BLANK_ICON,
-                                         "Close current document",
-                                         new Integer(KeyEvent.VK_C),
-                                         null) {
-            public void actionPerformed(ActionEvent e) {
-                quitWindow();
-                if (allPanels.size() == 0)
-                    System.exit(0);
-            }
-        };
+        closeTabAction = UserAction.create("Close Tab", Util.BLANK_ICON, "Close current tab", KeyEvent.VK_W,
+                                    KeyStroke.getKeyStroke(KeyEvent.VK_W, menuShortcutKeyMask),
+                                    (e) -> closeTab()  );
+
+        closeFileAction = UserAction.create("Close Window", Util.BLANK_ICON, "Close current window (close all tabs)",
+                                    KeyEvent.VK_C, null,
+                                    (e) -> closeWindow() );
 
         openFileAction = new UserAction(I18n.getString("Open"),
                                         Util.FOLDER_ICON,
@@ -1123,17 +1124,8 @@ public class StudioPanel extends JPanel implements Observer,WindowListener {
             }
         };
 
-        exitAction = new UserAction(I18n.getString("Exit"),
-                                    Util.BLANK_ICON,
-                                    "Close this window",
-                                    new Integer(KeyEvent.VK_X),
-                                    null) {
-            
-            public void actionPerformed(ActionEvent e) {
-                if (quit())
-                    System.exit(0);
-            }
-        };
+        exitAction = UserAction.create(I18n.getString("Exit"), Util.BLANK_ICON, "Close this window",
+                                    KeyEvent.VK_X, (e) -> quit() );
 
         settingsAction = new UserAction("Settings",
                 Util.BLANK_ICON,
@@ -1251,41 +1243,54 @@ public class StudioPanel extends JPanel implements Observer,WindowListener {
     }
 
     public boolean quit() {
-        boolean okToExit = true;
         for(StudioPanel panel: allPanels.toArray(new StudioPanel[0])) {
-            if (!panel.quitWindow())
-                okToExit = false;
+            if (!panel.closeWindow())
+                return false;
         }
-        return okToExit;
+        //closing the last window would exit the application
+        return true;
     }
 
-    public boolean quitWindow() {
+    private boolean closeWindow() {
+        while (tabbedEditors.getTabCount() > 0) {
+            if (! closeTab()) return false;
+        }
+        //closing the last tab would dispose the frame
+        return true;
+    }
+
+    public boolean closeTab() {
         if (getModified()) {
             int choice = JOptionPane.showOptionDialog(frame,
-                                                      "Changes not saved.\nSave now?",
-                                                      "Save changes?",
-                                                      JOptionPane.YES_NO_CANCEL_OPTION,
-                                                      JOptionPane.QUESTION_MESSAGE,
-                                                      Util.QUESTION_ICON,
+                    getTitle() + " is changed. Save changes?","Save changes?",
+                    JOptionPane.YES_NO_CANCEL_OPTION, JOptionPane.QUESTION_MESSAGE, Util.QUESTION_ICON,
                                                       null, // use standard button titles
                                                       null);      // no default selection
 
-            if (choice == 0)
+            if (choice == JOptionPane.YES_OPTION)
                 try {
                     if (!saveFile(getFilename(),false))
                         // was cancelled so return
                         return false;
                 }
                 catch (Exception e) {
+
                     return false;
                 }
-            else if ((choice == 2) || (choice == JOptionPane.CLOSED_OPTION))
+            else if ((choice == JOptionPane.CANCEL_OPTION) || (choice == JOptionPane.CLOSED_OPTION))
                 return false;
         }
 
-        allPanels.remove(this);
-        rebuildAll();
-        frame.dispose();
+        tabbedEditors.remove(tabbedEditors.getSelectedIndex());
+
+        if (tabbedEditors.getTabCount() == 0) {
+            frame.dispose();
+            allPanels.remove(this);
+            rebuildAll();
+            if (allPanels.size() == 0) {
+                System.exit(0);
+            }
+        }
 
         return true;
     }
@@ -1328,6 +1333,7 @@ public class StudioPanel extends JPanel implements Observer,WindowListener {
         menu.add(new JMenuItem(saveFileAction));
         menu.add(new JMenuItem(saveAsFileAction));
 
+        menu.add(new JMenuItem(closeTabAction));
         menu.add(new JMenuItem(closeFileAction));
 
         if (! Util.MAC_OS_X) {
@@ -1775,11 +1781,11 @@ public class StudioPanel extends JPanel implements Observer,WindowListener {
     }
 
     private void addTab(Server server, String filename) {
-        textArea = createTextArea();
-        textAreas.add(textArea);
-        currentTextArea = textAreas.size()-1;
-        tabbedEditors.add(Utilities.getEditorUI(textArea).getExtComponent());
-        tabbedEditors.setSelectedIndex(currentTextArea);
+        JEditorPane textArea = createTextArea();
+        JComponent component = Utilities.getEditorUI(textArea).getExtComponent();
+        component.putClientProperty(TEXTAREA, textArea);
+        tabbedEditors.add(component);
+        tabbedEditors.setSelectedIndex(tabbedEditors.getTabCount()-1);
         setServer(server);
 
         if (filename != null) {
@@ -1804,8 +1810,8 @@ public class StudioPanel extends JPanel implements Observer,WindowListener {
 
         tabbedEditors = new JTabbedPane();
         tabbedEditors.addChangeListener(e->{
-            currentTextArea = tabbedEditors.getSelectedIndex();
-            textArea = textAreas.get(currentTextArea);
+            if ( tabbedEditors.getSelectedIndex() == -1) return;
+            textArea = (JEditorPane) ((JComponent)tabbedEditors.getSelectedComponent()).getClientProperty(TEXTAREA);
             refreshTitle();
         });
         splitpane.setTopComponent(tabbedEditors);
@@ -2101,9 +2107,7 @@ public class StudioPanel extends JPanel implements Observer,WindowListener {
     }
 
     public void windowClosing(WindowEvent e) {
-        if (quitWindow())
-            if (allPanels.size() == 0)
-                System.exit(0);
+        closeWindow();
     }
 
     
