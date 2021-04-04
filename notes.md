@@ -1,16 +1,17 @@
-* Adding support for multiple tabs in a StudioPanel 
+* Add notes into About dialog
+* Add support for multiple tabs in a StudioPanel 
 
 `dz1.8` 2021.03.30
 -----
-* Fix for memory leak related to keeping previously loaded results
-* Fix formatting of results with Composition type
+* Fix memory leak related to keeping previously loaded results
+* Fix formatting of Composition type in the result output
 * Import servers from QPad (http://www.qinsightpad.com/)
 
 `dz1.7` 2021.01.19
 -----
-* Adding history of servers opened in StudioPanel
+* Add history of servers opened in StudioPanel
 * Fix syntax highlighting for communication handle symbol (like `:server:port )
-* Adding Log4j 2 for logging application and queries to $HOME/.studioforkdb/log folder
+* Add Log4j 2 for logging application and queries to $HOME/.studioforkdb/log folder
 * Set new syntax highlighting in Console result pane
 
 `dz1.6` 2020.12.22

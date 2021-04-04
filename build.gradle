@@ -1,3 +1,5 @@
+import java.text.SimpleDateFormat
+
 apply plugin: 'idea'
 //and standard one
 apply plugin: 'java'
@@ -15,7 +17,13 @@ repositories {
     mavenCentral()
 }
 
+configurations {
+    txtmark
+}
+
 dependencies {
+    txtmark group: 'com.github.rjeschke', name: 'txtmark', version: '0.13'
+
     compile group: 'org.apache.logging.log4j', name: 'log4j-api', version: '2.14.0'
     compile group: 'org.apache.logging.log4j', name: 'log4j-core', version: '2.14.0'
     compile group: 'org.apache.logging.log4j', name: 'log4j-iostreams', version: '2.14.0'
@@ -37,7 +45,7 @@ sourceSets {
             include 'studio*.properties'
             include 'org/netbeans/editor/Bundle*.properties'
             include '*.png'
-            include 'notes.md'
+            include 'notes.html'
             include 'build.txt'
         }
     }
@@ -60,18 +68,25 @@ application {
     mainClassName = 'studio.core.Studio'
 }
 
-task getBuildHash {
-    def stdout = new ByteArrayOutputStream()
-    exec{
-        commandLine 'git'
-        args 'rev-parse', '--short', 'HEAD'
-        standardOutput = stdout
-        ignoreExitValue = true
-    }
-    file('src/build.txt').text = stdout.size() == 0 ? "unknown" : stdout;
+def buildTime() {
+    def df = new SimpleDateFormat("yyyy.MM.dd HH:mm:ss")
+    return df.format(new Date())
 }
 
-processResources.dependsOn('getBuildHash')
+task getBuildHash {
+    doLast {
+        file("src/build.txt").text = buildTime()
+    }
+}
+
+task convertNotes (type: JavaExec) {
+    main = 'com.github.rjeschke.txtmark.Run'
+    classpath = configurations.txtmark
+    args 'notes.md'
+    standardOutput new FileOutputStream("src/notes.html")
+}
+
+processResources.dependsOn('getBuildHash', 'convertNotes')
 
 task sourcesJar(type: Jar) {
     classifier = 'sources'

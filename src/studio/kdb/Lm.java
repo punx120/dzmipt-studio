@@ -12,8 +12,10 @@ public class Lm {
     public static String build = "unknown";
     public static String date = "unknown";
 
-    private static final Pattern versionPattern = Pattern.compile("\\s*`(?<version>.*)`\\s*(?<date>.*)");
-    private static final String notesFileName = "notes.md";
+    public static String notes = "Failed to read notes. The latest notes can be found at https://github.com/dzmipt/kdbStudio/blob/master/notes.md";
+
+    private static final Pattern versionPattern = Pattern.compile("\\s*\\<h2\\>\\<code\\>(?<version>.*)\\</code\\>\\s*(?<date>.*)\\</h2\\>\\s*");
+    private static final String notesFileName = "notes.html";
     private static final String buildFileName = "build.txt";
 
     private static final Logger log = LogManager.getLogger();
@@ -22,15 +24,23 @@ public class Lm {
         try {
             InputStream inputStream = Lm.class.getClassLoader().getResourceAsStream(notesFileName);
             BufferedReader reader = new BufferedReader(new InputStreamReader(inputStream));
+
+            StringBuilder notesBuilder = new StringBuilder();
             String line;
+            boolean versionFound = false;
             while ( (line = reader.readLine())!=null) {
-                Matcher matcher = versionPattern.matcher(line);
-                if (matcher.matches()) {
-                    version = matcher.group("version");
-                    date = matcher.group("date");
-                    break;
+                if (!versionFound) {
+                    Matcher matcher = versionPattern.matcher(line);
+                    if (matcher.matches()) {
+                        version = matcher.group("version");
+                        date = matcher.group("date");
+                        versionFound = true;
+                    }
                 }
+
+                notesBuilder.append(line).append("\n");
             }
+            notes = notesBuilder.toString();
             inputStream.close();
         } catch (IOException|NullPointerException|IllegalStateException|IllegalArgumentException e) {
             log.error("Can't read version and build date", e);

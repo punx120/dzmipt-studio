@@ -17,15 +17,16 @@ public class HelpDialog extends JDialog {
         super(parent, "Studio for kdb+");
         final JEditorPane jep = new JEditorPane("text/html",
                 "<html><head><title>Studio for kdb+</title></head><body><h1>Studio for kdb+</h1>"
-                        + "<p>Version: " + Lm.version
-                        + "<br>Build date: " + Lm.date
-                        + "<br>Build hash: " + Lm.build
+                        + "<p>Version: " + Lm.version + " (" + Lm.date + ")"
+                        + "<br>Build date: " + Lm.build
                         + "<br>JVM Version: " + System.getProperty("java.version")
                         + "</p><p>License: <a href=\"http://github.com/CharlesSkelton/studio/blob/master/license.md\">Apache 2</a>"
                         + "<br>N.B. Some components have their own license terms, see this project on github for details."
                         + "<br>Source available from <a href=\"http://github.com/dzmipt/kdbStudio\">Github</a>"
                         + "<br>The repository was forked from <a href=\"http://github.com/CharlesSkelton/studio\">Github</a>"
                         + "<br>Contributions and corrections welcome."
+                        + "<h1>Notes</h1>"
+                        + Lm.notes
                         + "</p></body></html>");
         jep.setEditable(false);
         jep.setOpaque(true);
@@ -37,26 +38,17 @@ public class HelpDialog extends JDialog {
             }
         });
         jep.setBorder(BorderFactory.createEmptyBorder(10,20,10,20));
-        getContentPane().add(jep);
+        jep.setCaretPosition(0);
+        getContentPane().add(new JScrollPane(jep));
         JPanel buttonPane = new JPanel();
         JButton button = new JButton("Close");
         buttonPane.add(button);
         button.addActionListener(new CloseActionListener());
         getContentPane().add(buttonPane, BorderLayout.PAGE_END);
         setDefaultCloseOperation(DISPOSE_ON_CLOSE);
+        setPreferredSize(new Dimension(800,450));
         pack();
         setVisible(true);
-    }
-
-    public void setStartLocation(Component parent) {
-        Point parentlocation = parent.getLocation();
-        Dimension oursize = getPreferredSize();
-        Dimension parentsize = parent.getSize();
-        int x = parentlocation.x + (parentsize.width - oursize.width) / 2;
-        int y = parentlocation.y + (parentsize.height - oursize.height) / 2;
-        x = Math.max(0, x);
-        y = Math.max(0, y);
-        setLocation(x, y);
     }
 
     @Override
