@@ -17,6 +17,7 @@ import javax.swing.event.DocumentEvent;
 import javax.swing.event.DocumentListener;
 import javax.swing.event.UndoableEditEvent;
 import javax.swing.filechooser.FileFilter;
+import javax.swing.filechooser.FileNameExtensionFilter;
 import javax.swing.filechooser.FileView;
 import javax.swing.plaf.basic.BasicSplitPaneUI;
 import javax.swing.table.TableModel;
@@ -115,6 +116,8 @@ public class StudioPanel extends JPanel implements Observer,WindowListener {
     private UserAction toggleCommaFormatAction;
     private static int scriptNumber = 0;
     private JFrame frame;
+
+    private static JFileChooser fileChooser;
 
     private QueryExecutor queryExecutor;
 
@@ -221,49 +224,24 @@ public class StudioPanel extends JPanel implements Observer,WindowListener {
     }
 
     private String chooseFilename() {
-        JFileChooser chooser = new JFileChooser();
-        chooser.setFileSelectionMode(JFileChooser.FILES_ONLY);
+        if (fileChooser == null) {
+            fileChooser = new JFileChooser();
+            fileChooser.setFileSelectionMode(JFileChooser.FILES_ONLY);
 
-        FileFilter ff =
-            new FileFilter() {
-                public String getDescription() {
-                    return "q script";
-                }
-
-                public boolean accept(File file) {
-                    if (file.isDirectory() || file.getName().endsWith(".q"))
-                        return true;
-                    else
-                        return false;
-                }
-            };
-
-        chooser.addChoosableFileFilter(ff);
-
-        chooser.setFileFilter(ff);
+            FileFilter ff = new FileNameExtensionFilter("q script", "q");
+            fileChooser.addChoosableFileFilter(ff);
+            fileChooser.setFileFilter(ff);
+        }
 
         String filename = getFilename();
         if (filename != null) {
-            File file = new File(filename);
-            File dir = new File(file.getPath());
-            chooser.setCurrentDirectory(dir);
+            fileChooser.setCurrentDirectory(new File(new File(filename).getPath()));
         }
 
-        int option = chooser.showOpenDialog(this);
-
+        int option = fileChooser.showOpenDialog(this);
         if (option == JFileChooser.APPROVE_OPTION) {
-            File sf = chooser.getSelectedFile();
-            File f = chooser.getCurrentDirectory();
-            String dir = f.getAbsolutePath();
-
-            try {
-                filename = dir + "/" + sf.getName();
-                return filename;
-            }
-            catch (Exception e) {
-            }
+            return fileChooser.getSelectedFile().getAbsolutePath();
         }
-
         return null;
     }
 
