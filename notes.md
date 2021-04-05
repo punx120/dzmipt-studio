@@ -1,5 +1,7 @@
 * Add notes into About dialog
-* Add support for multiple tabs in a StudioPanel 
+* Add support for multiple tabs in a StudioPanel:
+    * Ctrl + N (Command + N) opens a new tab
+    * Ctrl + Shift + N (Command + Shift + N) opens a new window
 
 `dz1.8` 2021.03.30
 -----
