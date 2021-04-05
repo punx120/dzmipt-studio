@@ -83,7 +83,7 @@ task convertNotes (type: JavaExec) {
     main = 'com.github.rjeschke.txtmark.Run'
     classpath = configurations.txtmark
     args 'notes.md'
-    standardOutput new FileOutputStream("src/notes.html")
+    standardOutput new FileOutputStream(new File(projectDir,"src/notes.html"))
 }
 
 processResources.dependsOn('getBuildHash', 'convertNotes')
