@@ -43,8 +43,25 @@ public class Config {
 
     private final static Map<String, Config> instances = new ConcurrentHashMap<>();
 
+    public enum ExecAllOption {Execute, Ask, Ignore};
+
     private Config(String filename) {
         init(filename);
+    }
+
+    public ExecAllOption getExecAllOption() {
+        String value = p.getProperty("execAllOption", "Ask");
+        try {
+            return ExecAllOption.valueOf(value);
+        } catch (IllegalArgumentException e) {
+            log.info(value + " - can't parse execAllOption from Config. Reset to default: Ask");
+            return ExecAllOption.Ask;
+        }
+    }
+
+    public void setExecAllOption(ExecAllOption option) {
+        p.setProperty("execAllOption", option.toString());
+        save();
     }
 
     public Font getFont() {
@@ -118,6 +135,10 @@ public class Config {
         checkForUpgrade();
         initServers();
         initServerHistory();
+    }
+
+    public String getFilename() {
+        return filename;
     }
 
     private void upgradeTo12() {

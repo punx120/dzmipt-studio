@@ -1,3 +1,5 @@
+* Options to execute all script when nothing is selected. The default option is to ask
+    * The option is added to Settings
 * Add notes into About dialog
 * Add support for multiple tabs in a StudioPanel:
     * Ctrl + N (Command + N) opens a new tab

@@ -13,14 +13,15 @@ import java.util.Map;
 import static javax.swing.GroupLayout.PREFERRED_SIZE;
 
 public class SettingsDialog extends EscapeDialog {
-    private JComboBox comboBoxAuthMechanism;
+    private JComboBox<String> comboBoxAuthMechanism;
     private JTextField txtUser;
     private JPasswordField txtPassword;
     private JCheckBox chBoxShowServerCombo;
-    private JComboBox comboBoxLookAndFeel;
+    private JComboBox<CustomiszedLookAndFeelInfo> comboBoxLookAndFeel;
     private JFormattedTextField txtTabsCount;
     private JFormattedTextField txtMaxCharsInResult;
     private JFormattedTextField txtMaxCharsInTableCell;
+    private JComboBox<Config.ExecAllOption> comboBoxExecAll;
     private JButton btnOk;
     private JButton btnCancel;
 
@@ -61,6 +62,10 @@ public class SettingsDialog extends EscapeDialog {
 
     public int getMaxCharsInTableCell() {
         return (Integer) txtMaxCharsInTableCell.getValue();
+    }
+
+    public Config.ExecAllOption getExecAllOption() {
+        return (Config.ExecAllOption) comboBoxExecAll.getSelectedItem();
     }
 
     private void refreshCredentials() {
@@ -108,6 +113,9 @@ public class SettingsDialog extends EscapeDialog {
         JLabel lblMaxCharsInTableCell = new JLabel("Max chars in table cell");
         txtMaxCharsInTableCell = new JFormattedTextField(formatter);
         txtMaxCharsInTableCell.setValue(Config.getInstance().getMaxCharsInTableCell());
+        JLabel lblExecAll = new JLabel ("Execute the script when nothing is selected");
+        comboBoxExecAll = new JComboBox<>(Config.ExecAllOption.values());
+        comboBoxExecAll.setSelectedItem(Config.getInstance().getExecAllOption());
         JLabel lblAuthMechanism = new JLabel("Authentication:");
         JLabel lblUser = new JLabel("  User:");
         JLabel lblPassword = new JLabel("  Password:");
@@ -115,6 +123,7 @@ public class SettingsDialog extends EscapeDialog {
         Component glue = Box.createGlue();
         Component glue1 = Box.createGlue();
         Component glue2 = Box.createGlue();
+        Component glue3 = Box.createGlue();
 
         btnOk = new JButton("OK");
         btnCancel = new JButton("Cancel");
@@ -148,6 +157,11 @@ public class SettingsDialog extends EscapeDialog {
                                         .addComponent(txtMaxCharsInResult)
                                         .addComponent(lblMaxCharsInTableCell)
                                         .addComponent(txtMaxCharsInTableCell)
+                        ).addGroup(
+                            layout.createSequentialGroup()
+                                        .addComponent(lblExecAll)
+                                        .addComponent(comboBoxExecAll)
+                                        .addComponent(glue3)
                         ).addGroup(
                             layout.createSequentialGroup()
                                         .addComponent(lblAuthMechanism)
@@ -184,7 +198,12 @@ public class SettingsDialog extends EscapeDialog {
                                 .addComponent(txtMaxCharsInResult)
                                 .addComponent(lblMaxCharsInTableCell)
                                 .addComponent(txtMaxCharsInTableCell)
-                ).addGroup(
+                    ).addGroup(
+                        layout.createParallelGroup(GroupLayout.Alignment.BASELINE)
+                                .addComponent(lblExecAll)
+                                .addComponent(comboBoxExecAll)
+                                .addComponent(glue3)
+                    ).addGroup(
                         layout.createParallelGroup(GroupLayout.Alignment.BASELINE)
                                 .addComponent(lblAuthMechanism)
                                 .addComponent(comboBoxAuthMechanism)

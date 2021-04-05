@@ -1041,6 +1041,7 @@ public class StudioPanel extends JPanel implements Observer,WindowListener {
         Config.getInstance().setResultTabsCount(dialog.getResultTabsCount());
         Config.getInstance().setMaxCharsInResult(dialog.getMaxCharsInResult());
         Config.getInstance().setMaxCharsInTableCell(dialog.getMaxCharsInTableCell());
+        Config.getInstance().setExecAllOption(dialog.getExecAllOption());
 
         String lfClass = dialog.getLookAndFeelClassName();
         if (!lfClass.equals(UIManager.getLookAndFeel().getClass().getName())) {
@@ -1753,12 +1754,11 @@ public class StudioPanel extends JPanel implements Observer,WindowListener {
 
     private void executeQuery(String text) {
         if (text == null) {
-            JOptionPane.showMessageDialog(frame,
-                                          "\nNo text available to submit to server.\n\n",
-                                          "Studio for kdb+",
-                                          JOptionPane.OK_OPTION,
-                                          Util.INFORMATION_ICON);
-
+            return;
+        }
+        text = text.trim();
+        if (text.length() == 0) {
+            log.info("Nothing to execute - got empty string");
             return;
         }
 
@@ -1789,22 +1789,26 @@ public class StudioPanel extends JPanel implements Observer,WindowListener {
 
     private String getEditorText(JEditorPane editor) {
         String text = editor.getSelectedText();
+        if (text != null) return text;
 
-        if (text != null) {
-            if (text.length() > 0)
-                if (text.trim().length() == 0)
-                    return null; // selected text is whitespace
+        Config.ExecAllOption option = Config.getInstance().getExecAllOption();
+        if (option == Config.ExecAllOption.Ignore) {
+            log.info("Nothing is selected. Ignore execution of the whole script");
+            return null;
         }
-        else
-            text = editor.getText(); // get the full text then
+        if (option == Config.ExecAllOption.Execute) {
+            return editor.getText();
+        }
+        //Ask
+        int result = JOptionPane.showOptionDialog(frame, "Nothing is selected. Execute the whole script?",
+                    "Execute All?", JOptionPane.YES_NO_OPTION, JOptionPane.QUESTION_MESSAGE,
+                        Util.QUESTION_ICON,null, JOptionPane.NO_OPTION);
 
-        if (text != null)
-            text = text.trim();
+        if (result == JOptionPane.YES_OPTION ) {
+            return editor.getText();
+        }
 
-        if (text.trim().length() == 0)
-            text = null;
-
-        return text;
+        return null;
     }
 
     private String getCurrentLineEditorText(JEditorPane editor) {

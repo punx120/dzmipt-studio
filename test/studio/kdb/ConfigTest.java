@@ -139,9 +139,9 @@ public class ConfigTest {
         assertEquals(server1, config.getServerHistory().get(2));
     }
 
-    private Config copyConfigFromFile(File file, Consumer<Properties> propsModification) throws IOException {
+    private Config copyConfig(Config config, Consumer<Properties> propsModification) throws IOException {
         Properties p = new Properties();
-        p.load(new FileInputStream(file));
+        p.load(new FileInputStream(config.getFilename()));
         propsModification.accept(p);
 
         File newFile = File.createTempFile("studioforkdb", ".tmp");
@@ -157,12 +157,12 @@ public class ConfigTest {
     public void upgrade13Test() throws IOException {
         config.addServer(server);
 
-        Config newConfig = copyConfigFromFile(tmpFile, p -> {
+        Config newConfig = copyConfig(config, p -> {
             p.setProperty("version", "1.2");
         });
         assertEquals(0, newConfig.getServerHistory().size());
 
-        newConfig = copyConfigFromFile(tmpFile, p -> {
+        newConfig = copyConfig(config, p -> {
             p.setProperty("version", "1.2");
             p.setProperty("lruServer", server.getFullName());
         });
@@ -192,5 +192,23 @@ public class ConfigTest {
         ServerTreeNode serverTree = config.getServerTree();
         assertEquals(1, serverTree.getChildCount());
         assertEquals(1, serverTree.getChild(0).getChildCount());
+    }
+
+    @Test
+    public void testExecAllOptions() throws IOException {
+        assertEquals(Config.ExecAllOption.Ask, config.getExecAllOption());
+
+        config.setExecAllOption(Config.ExecAllOption.Ignore);
+        assertEquals(Config.ExecAllOption.Ignore, config.getExecAllOption());
+
+        Config newConfig = copyConfig(config, p -> {});
+        assertEquals(Config.ExecAllOption.Ignore, newConfig.getExecAllOption());
+
+        newConfig = copyConfig(config, p -> {
+            p.setProperty("execAllOption", "testValue");
+        });
+
+        assertEquals(Config.ExecAllOption.Ask, newConfig.getExecAllOption());
+
     }
 }
