@@ -1629,6 +1629,7 @@ public class StudioPanel extends JPanel implements Observer,WindowListener {
         tabbedEditors.addChangeListener(e->{
             if ( tabbedEditors.getSelectedIndex() == -1) return;
             textArea = (JEditorPane) ((JComponent)tabbedEditors.getSelectedComponent()).getClientProperty(TEXTAREA);
+            setServer((Server) textArea.getDocument().getProperty(SERVER));
             refreshTitle();
         });
         splitpane.setTopComponent(tabbedEditors);
