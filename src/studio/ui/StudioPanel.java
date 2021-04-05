@@ -809,327 +809,165 @@ public class StudioPanel extends JPanel implements Observer,WindowListener {
     }
 
     private void initActions() {
-        cleanAction = new UserAction("Clean",
-                                        Util.NEW_DOCUMENT_ICON,
-                                       "Clean editor script",
-                                       new Integer(KeyEvent.VK_N),
-                                       null) {
-            public void actionPerformed(ActionEvent e) {
-                //   PrintUtilities.printComponent(textArea);
-                newFile();
-            }
-        };
+        cleanAction = UserAction.create("Clean", Util.NEW_DOCUMENT_ICON, "Clean editor script", KeyEvent.VK_N,
+                null, e -> newFile());
 
-        arrangeAllAction = new UserAction(I18n.getString("ArrangeAll"),
-                                           Util.BLANK_ICON,
-                                          "Arrange all windows on screen",
-                                          new Integer(KeyEvent.VK_A),
-                                          null) {
-            public void actionPerformed(ActionEvent e) {
-                arrangeAll();
-            }
-        };
-    
-        minMaxDividerAction = new UserAction(I18n.getString("MaximizeEditorPane"),
-                                             Util.BLANK_ICON,
-                                             "Maximize editor pane",
-                                             new Integer(KeyEvent.VK_M),
-                                             KeyStroke.getKeyStroke(KeyEvent.VK_M,menuShortcutKeyMask)) {
-            public void actionPerformed(ActionEvent e) {
-              minMaxDivider();
-            }
-        };
+        arrangeAllAction = UserAction.create(I18n.getString("ArrangeAll"), Util.BLANK_ICON, "Arrange all windows on screen",
+                KeyEvent.VK_A, null, e -> arrangeAll());
 
-        toggleDividerOrientationAction = new UserAction(I18n.getString("ToggleDividerOrientation"),
-                                                         Util.BLANK_ICON,
-                                                        "Toggle the window divider's orientation",
-                                                        new Integer(KeyEvent.VK_C),
-                                                        null) {
-            public void actionPerformed(ActionEvent e) {
-                toggleDividerOrientation();
-            }
-        };
+        minMaxDividerAction = UserAction.create(I18n.getString("MaximizeEditorPane"), Util.BLANK_ICON, "Maximize editor pane",
+                KeyEvent.VK_M, KeyStroke.getKeyStroke(KeyEvent.VK_M, menuShortcutKeyMask),
+                e -> minMaxDivider());
+
+        toggleDividerOrientationAction = UserAction.create(I18n.getString("ToggleDividerOrientation"), Util.BLANK_ICON,
+                "Toggle the window divider's orientation", KeyEvent.VK_C, null, e -> toggleDividerOrientation());
 
         closeTabAction = UserAction.create("Close Tab", Util.BLANK_ICON, "Close current tab", KeyEvent.VK_W,
-                                    KeyStroke.getKeyStroke(KeyEvent.VK_W, menuShortcutKeyMask),
-                                    (e) -> closeTab()  );
+                KeyStroke.getKeyStroke(KeyEvent.VK_W, menuShortcutKeyMask), e -> closeTab());
 
         closeFileAction = UserAction.create("Close Window", Util.BLANK_ICON, "Close current window (close all tabs)",
-                                    KeyEvent.VK_C, null,
-                                    (e) -> closeWindow() );
+                KeyEvent.VK_C, null, e -> closeWindow());
 
-        openFileAction = new UserAction(I18n.getString("Open"),
-                                        Util.FOLDER_ICON,
-                                        "Open a script",
-                                        new Integer(KeyEvent.VK_O),
-                                        KeyStroke.getKeyStroke(KeyEvent.VK_O,menuShortcutKeyMask)) {
-            public void actionPerformed(ActionEvent e) {
-                openFile();
-            }
-        };
+        openFileAction = UserAction.create(I18n.getString("Open"), Util.FOLDER_ICON, "Open a script", KeyEvent.VK_O,
+                KeyStroke.getKeyStroke(KeyEvent.VK_O, menuShortcutKeyMask), e -> openFile());
 
-        newWindowAction = new UserAction(I18n.getString("NewWindow"),
-                                                   Util.BLANK_ICON,
-                                                   "Open a new window",
-                                                   new Integer(KeyEvent.VK_N),
-                                                   KeyStroke.getKeyStroke(KeyEvent.VK_N, menuShortcutKeyMask) ) {
-            public void actionPerformed(ActionEvent e) {
-                new StudioPanel(server,null);
-            }
-        };
+        newWindowAction = UserAction.create(I18n.getString("NewWindow"), Util.BLANK_ICON, "Open a new window",
+                KeyEvent.VK_N, KeyStroke.getKeyStroke(KeyEvent.VK_N, menuShortcutKeyMask), e -> new StudioPanel(server, null));
 
-        newTabAction = UserAction.create("New Tab", Util.BLANK_ICON, "Open a new tab", new Integer(KeyEvent.VK_T),
-                                        KeyStroke.getKeyStroke(KeyEvent.VK_T, menuShortcutKeyMask),
-                                        (e) -> addTab(server, null) );
+        newTabAction = UserAction.create("New Tab", Util.BLANK_ICON, "Open a new tab", KeyEvent.VK_T,
+                KeyStroke.getKeyStroke(KeyEvent.VK_T, menuShortcutKeyMask),
+                e -> addTab(server, null));
 
-        serverListAction = UserAction.create(I18n.getString("ServerList"),
-                Util.TEXT_TREE_ICON,
-                "Show sever list",
-                new Integer(KeyEvent.VK_L),
-                KeyStroke.getKeyStroke(KeyEvent.VK_L, menuShortcutKeyMask | Event.SHIFT_MASK),
-                e-> showServerList(false) );
-        serverHistoryAction = UserAction.create("Server History",
-                null,
-                "Recent selected servers",
-                new Integer(KeyEvent.VK_R),
-                KeyStroke.getKeyStroke(KeyEvent.VK_R, menuShortcutKeyMask | Event.SHIFT_MASK),
-                e-> showServerList(true) );
+        serverListAction = UserAction.create(I18n.getString("ServerList"), Util.TEXT_TREE_ICON, "Show sever list",
+                KeyEvent.VK_L, KeyStroke.getKeyStroke(KeyEvent.VK_L, menuShortcutKeyMask | InputEvent.SHIFT_MASK),
+                e -> showServerList(false));
 
+        serverHistoryAction = UserAction.create("Server History", null, "Recent selected servers", KeyEvent.VK_R,
+                KeyStroke.getKeyStroke(KeyEvent.VK_R, menuShortcutKeyMask | InputEvent.SHIFT_MASK),
+                e -> showServerList(true));
 
-        importFromQPadAction = UserAction.create("Import Servers from QPad...",
-                null, "Import from Servers.cfg",
-                new Integer(KeyEvent.VK_I), null,
-                e-> QPadImport.doImport(this));
+        importFromQPadAction = UserAction.create("Import Servers from QPad...", null, "Import from Servers.cfg",
+                KeyEvent.VK_I, null, e -> QPadImport.doImport(this));
 
-        editServerAction = new UserAction(I18n.getString("Edit"),
-                                          Util.SERVER_INFORMATION_ICON,
-                                          "Edit the server details",
-                                          new Integer(KeyEvent.VK_E),
-                                          null) {
-            public void actionPerformed(ActionEvent e) {
-                Server s = new Server(server);
+        editServerAction = UserAction.create(I18n.getString("Edit"), Util.SERVER_INFORMATION_ICON, "Edit the server details",
+                KeyEvent.VK_E, null, e -> {
+                    Server s = new Server(server);
 
-                EditServerForm f = new EditServerForm(frame,s);
-                f.alignAndShow();
-                if (f.getResult() == ACCEPTED) {
-                    if (stopAction.isEnabled())
-                        stopAction.actionPerformed(e);
+                    EditServerForm f = new EditServerForm(frame, s);
+                    f.alignAndShow();
+                    if (f.getResult() == ACCEPTED) {
+                        if (stopAction.isEnabled())
+                            stopAction.actionPerformed(e);
 
-                    ConnectionPool.getInstance().purge(server);
-                    Config.getInstance().removeServer(server);
+                        ConnectionPool.getInstance().purge(server);
+                        Config.getInstance().removeServer(server);
 
-                    s = f.getServer();
-                    Config.getInstance().addServer(s);
-                    setServer(s);
-                    rebuildAll();
-                }
-            }
-        };
+                        s = f.getServer();
+                        Config.getInstance().addServer(s);
+                        setServer(s);
+                        rebuildAll();
+                    }
+                });
 
 
-        addServerAction = new UserAction(I18n.getString("Add"),
-                                         Util.ADD_SERVER_ICON,
-                                         "Configure a new server",
-                                         new Integer(KeyEvent.VK_A),
-                                         null) {
-            public void actionPerformed(ActionEvent e) {
-                AddServerForm f = new AddServerForm(frame);
-                f.alignAndShow();
-                if (f.getResult() == ACCEPTED) {
-                    Server s = f.getServer();
-                    Config.getInstance().addServer(s);
-                    ConnectionPool.getInstance().purge(s);   //?
-                    setServer(s);
-                    rebuildAll();
-                }
-            }
-        };
+        addServerAction = UserAction.create(I18n.getString("Add"), Util.ADD_SERVER_ICON, "Configure a new server",
+                KeyEvent.VK_A, null, e -> {
+                    AddServerForm f = new AddServerForm(frame);
+                    f.alignAndShow();
+                    if (f.getResult() == ACCEPTED) {
+                        Server s = f.getServer();
+                        Config.getInstance().addServer(s);
+                        ConnectionPool.getInstance().purge(s);   //?
+                        setServer(s);
+                        rebuildAll();
+                    }
+                });
 
-        removeServerAction = new UserAction(I18n.getString("Remove"),
-                                            Util.DELETE_SERVER_ICON,
-                                            "Remove this server",
-                                            new Integer(KeyEvent.VK_R),
-                                            null) {
-            public void actionPerformed(ActionEvent e) {
-                int choice = JOptionPane.showOptionDialog(frame,
-                                                          "Remove server " + server.getFullName() + " from list?",
-                                                          "Remove server?",
-                                                          JOptionPane.YES_NO_CANCEL_OPTION,
-                                                          JOptionPane.QUESTION_MESSAGE,
-                                                          Util.QUESTION_ICON,
-                                                          null, // use standard button titles
-                                                          null);      // no default selection
+        removeServerAction = UserAction.create(I18n.getString("Remove"), Util.DELETE_SERVER_ICON, "Remove this server",
+                KeyEvent.VK_R, null, e -> {
+                    int choice = JOptionPane.showOptionDialog(frame,
+                            "Remove server " + server.getFullName() + " from list?",
+                            "Remove server?",
+                            JOptionPane.YES_NO_CANCEL_OPTION,
+                            JOptionPane.QUESTION_MESSAGE,
+                            Util.QUESTION_ICON,
+                            null, // use standard button titles
+                            null);      // no default selection
 
-                if (choice == 0) {
-                    Config.getInstance().removeServer(server);
+                    if (choice == 0) {
+                        Config.getInstance().removeServer(server);
 
-                    Server[] servers = Config.getInstance().getServers();
+                        Server[] servers = Config.getInstance().getServers();
 
-                    if (servers.length > 0)
-                        setServer(servers[0]);
+                        if (servers.length > 0)
+                            setServer(servers[0]);
 
-                    rebuildAll();
-                }
-            }
-        };
+                        rebuildAll();
+                    }
+                });
 
 
-        saveFileAction = new UserAction(I18n.getString("Save"),
-                                        Util.DISKS_ICON,
-                                        "Save the script",
-                                        new Integer(KeyEvent.VK_S),
-                                        KeyStroke.getKeyStroke(KeyEvent.VK_S,menuShortcutKeyMask)) {
-            public void actionPerformed(ActionEvent e) {
-                saveFile(getFilename(),false);
-            }
-        };
+        saveFileAction = UserAction.create(I18n.getString("Save"), Util.DISKS_ICON, "Save the script",
+                KeyEvent.VK_S, KeyStroke.getKeyStroke(KeyEvent.VK_S, menuShortcutKeyMask),
+                e -> saveFile(getFilename(), false));
 
-        saveAsFileAction = new UserAction(I18n.getString("SaveAs"),
-                                          Util.SAVE_AS_ICON,
-                                          "Save script as",
-                                          new Integer(KeyEvent.VK_A),
-                                          null) {
-            public void actionPerformed(ActionEvent e) {
-                saveAsFile();
-            }
-        };
+        saveAsFileAction = UserAction.create(I18n.getString("SaveAs"), Util.SAVE_AS_ICON, "Save script as",
+                KeyEvent.VK_A, null, e -> saveAsFile());
 
-        exportAction = new UserAction(I18n.getString("Export"),
-                                      Util.EXPORT_ICON,
-                                      "Export result set",
-                                      new Integer(KeyEvent.VK_E),
-                                      null) {
-            public void actionPerformed(ActionEvent e) {
-                export();
-            }
-        };
+        exportAction = UserAction.create(I18n.getString("Export"), Util.EXPORT_ICON, "Export result set",
+                KeyEvent.VK_E, null, e -> export());
 
-        chartAction = new UserAction(I18n.getString("Chart"),
-                                     Util.CHART_ICON,
-                                     "Chart current data set",
-                                     new Integer(KeyEvent.VK_E),
-                                     null) {
-            public void actionPerformed(ActionEvent e) {
-                new LineChart((KTableModel) getSelectedTable().getModel());
-            }
-        };
+        chartAction = UserAction.create(I18n.getString("Chart"), Util.CHART_ICON, "Chart current data set",
+                KeyEvent.VK_E, null, e -> new LineChart((KTableModel) getSelectedTable().getModel()));
 
+        stopAction = UserAction.create(I18n.getString("Stop"), Util.STOP_ICON, "Stop the query",
+                KeyEvent.VK_S, null, e -> queryExecutor.cancel());
 
-        stopAction = new UserAction(I18n.getString("Stop"),
-                                    Util.STOP_ICON,
-                                    "Stop the query",
-                                    new Integer(KeyEvent.VK_S),
-                                    null) {
-            public void actionPerformed(ActionEvent e) {
-                queryExecutor.cancel();
-            }
-        };
+        openInExcel = UserAction.create(I18n.getString("OpenInExcel"), Util.EXCEL_ICON, "Open in Excel",
+                KeyEvent.VK_O, null, e -> {
+                    try {
+                        File file = File.createTempFile("studioExport", ".xls");
+                        new ExcelExporter().exportTableX(frame, getSelectedTable(), file, true);
+                    } catch (IOException ex) {
+                        log.error("Failed to create temporary file", ex);
+                        JOptionPane.showMessageDialog(frame, "Failed to Open in Excel " + ex.getMessage(),
+                                "Error", JOptionPane.ERROR_MESSAGE);
+                    }
+                });
 
+        executeAction = UserAction.create(I18n.getString("Execute"), Util.TABLE_SQL_RUN_ICON, "Execute the full or highlighted text as a query",
+                KeyEvent.VK_E, KeyStroke.getKeyStroke(KeyEvent.VK_E, menuShortcutKeyMask), e -> executeQuery());
 
-        openInExcel = new UserAction(I18n.getString("OpenInExcel"),
-                                     Util.EXCEL_ICON,
-                                     "Open in Excel",
-                                     new Integer(KeyEvent.VK_O),
-                                     null) {
-            
-            public void actionPerformed(ActionEvent e) {
-                try {
-                    File file = File.createTempFile("studioExport",".xls");
-                    new ExcelExporter().exportTableX(frame,getSelectedTable(),file,true);
-                }
-                catch (IOException ex) {
-                    log.error("Failed to create temporary file", ex);
-                    JOptionPane.showMessageDialog(frame, "Failed to Open in Excel " + ex.getMessage(),
-                                                    "Error", JOptionPane.ERROR_MESSAGE);
-                }
-            }
-        };
+        executeCurrentLineAction = UserAction.create(I18n.getString("ExecuteCurrentLine"), Util.RUN_ICON, "Execute the current line as a query",
+                KeyEvent.VK_ENTER, KeyStroke.getKeyStroke(KeyEvent.VK_ENTER, menuShortcutKeyMask), e -> executeQueryCurrentLine());
 
+        refreshAction = UserAction.create(I18n.getString("Refresh"), Util.REFRESH_ICON, "Refresh the result set",
+                KeyEvent.VK_R, KeyStroke.getKeyStroke(KeyEvent.VK_Y, menuShortcutKeyMask | InputEvent.SHIFT_MASK), e -> refreshQuery());
 
-        executeAction = new UserAction(I18n.getString("Execute"),
-                                       Util.TABLE_SQL_RUN_ICON,
-                                       "Execute the full or highlighted text as a query",
-                                       new Integer(KeyEvent.VK_E),
-                                       KeyStroke.getKeyStroke(KeyEvent.VK_E,menuShortcutKeyMask)) {
-            
-            public void actionPerformed(ActionEvent e) {
-                executeQuery();
-            }
-        };
+        toggleCommaFormatAction = UserAction.create("Toggle Comma Format", Util.COMMA_ICON, "Add/remove thousands separator in selected result",
+                KeyEvent.VK_F, KeyStroke.getKeyStroke(KeyEvent.VK_J, menuShortcutKeyMask),
+                e -> {
+                    TabPanel tab = (TabPanel) tabbedPane.getSelectedComponent();
+                    if (tab != null) tab.toggleCommaFormatting();
+                });
 
-
-        executeCurrentLineAction = new UserAction(I18n.getString("ExecuteCurrentLine"),
-                                                  Util.RUN_ICON,
-                                                  "Execute the current line as a query",
-                                                  new Integer(KeyEvent.VK_ENTER),
-                                                  KeyStroke.getKeyStroke(KeyEvent.VK_ENTER,menuShortcutKeyMask)) {
-            
-            public void actionPerformed(ActionEvent e) {
-                executeQueryCurrentLine();
-            }
-        };
-
-
-        refreshAction = new UserAction(I18n.getString("Refresh"),
-                                       Util.REFRESH_ICON,
-                                       "Refresh the result set",
-                                       new Integer(KeyEvent.VK_R),
-                                       KeyStroke.getKeyStroke(KeyEvent.VK_Y,menuShortcutKeyMask | Event.SHIFT_MASK)) {
-            
-            public void actionPerformed(ActionEvent e) {
-                refreshQuery();
-            }
-        };
-
-        toggleCommaFormatAction = UserAction.create("Toggle Comma Format",
-                                                    Util.COMMA_ICON,
-                                                    "Add/remove thousands separator in selected result",
-                                                    KeyEvent.VK_F,
-                                                    KeyStroke.getKeyStroke(KeyEvent.VK_J, menuShortcutKeyMask),
-                                                            (event) -> {
-                                                                TabPanel tab = (TabPanel) tabbedPane.getSelectedComponent();
-                                                                if (tab != null) tab.toggleCommaFormatting();
-                                                            });
-
-        aboutAction = new UserAction(I18n.getString("About"),
-                                     Util.ABOUT_ICON,
-                                     "About Studio for kdb+",
-                                     new Integer(KeyEvent.VK_E),
-                                     null) {
-            
-            public void actionPerformed(ActionEvent e) {
-                about();
-            }
-        };
+        aboutAction = UserAction.create(I18n.getString("About"), Util.ABOUT_ICON, "About Studio for kdb+",
+                KeyEvent.VK_E, null, e -> about());
 
         exitAction = UserAction.create(I18n.getString("Exit"), Util.BLANK_ICON, "Close this window",
-                                    KeyEvent.VK_X, (e) -> quit() );
+                KeyEvent.VK_X, e -> quit());
 
-        settingsAction = new UserAction("Settings",
-                Util.BLANK_ICON,
-                "Settings",
-                new Integer(KeyEvent.VK_S),
-                null) {
+        settingsAction = UserAction.create("Settings", Util.BLANK_ICON, "Settings",
+                KeyEvent.VK_S, null, e -> settings());
 
-            public void actionPerformed(ActionEvent e) {
-                settings();
-            }
-        };
-
-        codeKxComAction = new UserAction("code.kx.com",
-                                         Util.TEXT_ICON,
-                                         "Open code.kx.com",
-                                         new Integer(KeyEvent.VK_C),
-                                         null) {
-            
-            public void actionPerformed(ActionEvent e) {
+        codeKxComAction = UserAction.create("code.kx.com", Util.TEXT_ICON, "Open code.kx.com",
+                KeyEvent.VK_C, null, e -> {
                     try {
                         BrowserLaunch.openURL("http://code.kx.com/q/");
                     } catch (Exception ex) {
-                       JOptionPane.showMessageDialog(null, "Error attempting to launch web browser:\n" + ex.getLocalizedMessage());
+                        JOptionPane.showMessageDialog(null, "Error attempting to launch web browser:\n" + ex.getLocalizedMessage());
                     }
-            }
-        };
+                });
     }
 
     private void initTextAction(BaseKit baseKit) {
@@ -1137,56 +975,56 @@ public class StudioPanel extends JPanel implements Observer,WindowListener {
         copyAction.putValue(Action.SHORT_DESCRIPTION,"Copy the selected text to the clipboard");
         copyAction.putValue(Action.SMALL_ICON,Util.COPY_ICON);
         copyAction.putValue(Action.NAME,I18n.getString("Copy"));
-        copyAction.putValue(Action.MNEMONIC_KEY,new Integer(KeyEvent.VK_C));
+        copyAction.putValue(Action.MNEMONIC_KEY, KeyEvent.VK_C);
         copyAction.putValue(Action.ACCELERATOR_KEY,KeyStroke.getKeyStroke(KeyEvent.VK_C,menuShortcutKeyMask));
 
         cutAction = baseKit.getActionByName(BaseKit.cutAction);
         cutAction.putValue(Action.SHORT_DESCRIPTION,"Cut the selected text");
         cutAction.putValue(Action.SMALL_ICON,Util.CUT_ICON);
         cutAction.putValue(Action.NAME,I18n.getString("Cut"));
-        cutAction.putValue(Action.MNEMONIC_KEY,new Integer(KeyEvent.VK_T));
+        cutAction.putValue(Action.MNEMONIC_KEY, KeyEvent.VK_T);
         cutAction.putValue(Action.ACCELERATOR_KEY,KeyStroke.getKeyStroke(KeyEvent.VK_X,menuShortcutKeyMask));
 
         pasteAction = baseKit.getActionByName(BaseKit.pasteAction);
         pasteAction.putValue(Action.SHORT_DESCRIPTION,"Paste text from the clipboard");
         pasteAction.putValue(Action.SMALL_ICON,Util.PASTE_ICON);
         pasteAction.putValue(Action.NAME,I18n.getString("Paste"));
-        pasteAction.putValue(Action.MNEMONIC_KEY,new Integer(KeyEvent.VK_P));
+        pasteAction.putValue(Action.MNEMONIC_KEY, KeyEvent.VK_P);
         pasteAction.putValue(Action.ACCELERATOR_KEY,KeyStroke.getKeyStroke(KeyEvent.VK_V,menuShortcutKeyMask));
 
         findAction = baseKit.getActionByName(ExtKit.findAction);
         findAction.putValue(Action.SHORT_DESCRIPTION,"Find text in the document");
         findAction.putValue(Action.SMALL_ICON,Util.FIND_ICON);
         findAction.putValue(Action.NAME,I18n.getString("Find"));
-        findAction.putValue(Action.MNEMONIC_KEY,new Integer(KeyEvent.VK_F));
+        findAction.putValue(Action.MNEMONIC_KEY, KeyEvent.VK_F);
         findAction.putValue(Action.ACCELERATOR_KEY,KeyStroke.getKeyStroke(KeyEvent.VK_F,menuShortcutKeyMask));
 
         replaceAction = baseKit.getActionByName(ExtKit.replaceAction);
         replaceAction.putValue(Action.SHORT_DESCRIPTION,"Replace text in the document");
         replaceAction.putValue(Action.SMALL_ICON,Util.REPLACE_ICON);
         replaceAction.putValue(Action.NAME,I18n.getString("Replace"));
-        replaceAction.putValue(Action.MNEMONIC_KEY,new Integer(KeyEvent.VK_R));
+        replaceAction.putValue(Action.MNEMONIC_KEY, KeyEvent.VK_R);
         replaceAction.putValue(Action.ACCELERATOR_KEY,KeyStroke.getKeyStroke(KeyEvent.VK_R,menuShortcutKeyMask));
 
         selectAllAction = baseKit.getActionByName(BaseKit.selectAllAction);
         selectAllAction.putValue(Action.SHORT_DESCRIPTION,"Select all text in the document");
         selectAllAction.putValue(Action.SMALL_ICON,null);
         selectAllAction.putValue(Action.NAME,I18n.getString("SelectAll"));
-        selectAllAction.putValue(Action.MNEMONIC_KEY,new Integer(KeyEvent.VK_A));
+        selectAllAction.putValue(Action.MNEMONIC_KEY, KeyEvent.VK_A);
         selectAllAction.putValue(Action.ACCELERATOR_KEY,KeyStroke.getKeyStroke(KeyEvent.VK_A,menuShortcutKeyMask));
 
         undoAction = baseKit.getActionByName(BaseKit.undoAction);
         undoAction.putValue(Action.SHORT_DESCRIPTION,"Undo the last change to the document");
         undoAction.putValue(Action.SMALL_ICON,Util.UNDO_ICON);
         undoAction.putValue(Action.NAME,I18n.getString("Undo"));
-        undoAction.putValue(Action.MNEMONIC_KEY,new Integer(KeyEvent.VK_U));
+        undoAction.putValue(Action.MNEMONIC_KEY, KeyEvent.VK_U);
         undoAction.putValue(Action.ACCELERATOR_KEY,KeyStroke.getKeyStroke(KeyEvent.VK_Z,menuShortcutKeyMask));
 
         redoAction = baseKit.getActionByName(BaseKit.redoAction);
         redoAction.putValue(Action.SHORT_DESCRIPTION,"Redo the last change to the document");
         redoAction.putValue(Action.SMALL_ICON,Util.REDO_ICON);
         redoAction.putValue(Action.NAME,I18n.getString("Redo"));
-        redoAction.putValue(Action.MNEMONIC_KEY,new Integer(KeyEvent.VK_R));
+        redoAction.putValue(Action.MNEMONIC_KEY, KeyEvent.VK_R);
         redoAction.putValue(Action.ACCELERATOR_KEY,KeyStroke.getKeyStroke(KeyEvent.VK_Y,menuShortcutKeyMask));
     }
 
