@@ -1052,6 +1052,10 @@ public class StudioPanel extends JPanel implements Observer,WindowListener {
         rebuildToolbar();
     }
 
+    public static StudioPanel[] getPanels() {
+        return allPanels.toArray(new StudioPanel[0]);
+    }
+
     public void about() {
         HelpDialog help = new HelpDialog(frame);
         Util.centerChildOnParent(help,frame);

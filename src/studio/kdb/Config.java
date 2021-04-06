@@ -64,6 +64,15 @@ public class Config {
         save();
     }
 
+    public String getNotesHash() {
+        return p.getProperty("notesHash","");
+    }
+
+    public void setNotesHash(String notesHash) {
+        p.setProperty("notesHash", notesHash);
+        save();
+    }
+
     public Font getFont() {
         String name = p.getProperty("font.name", "Monospaced");
         int  size = Integer.parseInt(p.getProperty("font.size","14"));

@@ -4,6 +4,8 @@ import org.apache.logging.log4j.LogManager;
 import org.apache.logging.log4j.Logger;
 
 import java.io.*;
+import java.security.MessageDigest;
+import java.security.NoSuchAlgorithmException;
 import java.util.regex.Matcher;
 import java.util.regex.Pattern;
 
@@ -53,6 +55,22 @@ public class Lm {
             inputStream.close();
         } catch (IOException|NullPointerException e) {
             log.error("Can't read build hash", e);
+        }
+    }
+
+    public static String getNotesHash() {
+        try {
+            MessageDigest digest = MessageDigest.getInstance("MD5");
+            digest.reset();
+            digest.update(notes.getBytes());
+            byte[] bytes = digest.digest();
+            StringBuilder sb = new StringBuilder(bytes.length * 2);
+            for(byte b: bytes)
+                sb.append(String.format("%02x", b));
+            return sb.toString();
+        } catch (NoSuchAlgorithmException e) {
+            log.error("MD5 MessageDigest");
+            return "";
         }
     }
 
