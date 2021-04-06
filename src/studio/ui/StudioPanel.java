@@ -131,16 +131,23 @@ public class StudioPanel extends JPanel implements Observer,WindowListener {
 
     private final static int MAX_SERVERS_TO_CLONE = 20;
 
+    private String getTabTitle() {
+        if (getFilename() != null) return getTitle();
+        if (server == null) return getTitle();
+
+        if (server.getName().length() > 0) return server.getName();
+        return server.getHost() + ":" + server.getPort();
+    }
+
     private String getTitle() {
         return (String) textArea.getDocument().getProperty(TITLE);
     }
 
     public void refreshTitle() {
-        String title = getTitle();
-        frame.setTitle(title + (getModified() ? " (not saved) " : "") + (server!=null?" @"+server.toString():"") +" Studio for kdb+ " + Lm.version);
+        frame.setTitle(getTitle() + (getModified() ? " (not saved) " : "") + (server!=null?" @"+server.toString():"") +" Studio for kdb+ " + Lm.version);
         int index = tabbedEditors.getSelectedIndex();
         if (index != -1) {
-            tabbedEditors.setTitleAt(index, title);
+            tabbedEditors.setTitleAt(index, getTabTitle());
         }
     }
 
