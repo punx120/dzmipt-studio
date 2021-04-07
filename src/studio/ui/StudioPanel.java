@@ -60,7 +60,6 @@ public class StudioPanel extends JPanel implements Observer,WindowListener {
         Settings.reset();
     }
 
-    public static final String TEXTAREA = "textArea";
     public static final String TITLE = "title";
     public static final String FILENAME = "filename";
     public static final String SERVER = "server";
@@ -1612,7 +1611,6 @@ public class StudioPanel extends JPanel implements Observer,WindowListener {
     private void addTab(Server server, String filename) {
         JEditorPane textArea = createTextArea();
         JComponent component = Utilities.getEditorUI(textArea).getExtComponent();
-        component.putClientProperty(TEXTAREA, textArea);
         tabbedEditors.add(component);
         tabbedEditors.setSelectedIndex(tabbedEditors.getTabCount()-1);
         setServer(server);
@@ -1640,7 +1638,7 @@ public class StudioPanel extends JPanel implements Observer,WindowListener {
         tabbedEditors = new JTabbedPane();
         tabbedEditors.addChangeListener(e->{
             if ( tabbedEditors.getSelectedIndex() == -1) return;
-            textArea = (JEditorPane) ((JComponent)tabbedEditors.getSelectedComponent()).getClientProperty(TEXTAREA);
+            textArea = (JEditorPane) ((JComponent)tabbedEditors.getSelectedComponent()).getClientProperty(JTextComponent.class);
             setServer((Server) textArea.getDocument().getProperty(SERVER));
             refreshTitle();
         });
