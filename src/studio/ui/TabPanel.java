@@ -11,9 +11,6 @@ import javax.swing.border.EtchedBorder;
 import java.awt.*;
 
 public class TabPanel extends JPanel {
-    private Icon icon;
-    private String title;
-
     private JComponent component = null;
 
     private JToolBar toolbar = null;
@@ -23,18 +20,16 @@ public class TabPanel extends JPanel {
     private JEditorPane textArea = null;
     private QGrid grid = null;
     private KFormatContext formatContext = new KFormatContext(KFormatContext.DEFAULT);
-
-    public TabPanel(String title,Icon icon,JComponent component) {
-        this.title = title;
-        this.icon = icon;
-        this.component = component;
-        initComponents();
-    }
+    private ResultType type;
 
     public TabPanel(QueryResult queryResult) {
         this.queryResult = queryResult;
         this.result = queryResult.getResult();
         initComponents();
+    }
+
+    public ResultType getType() {
+        return type;
     }
 
     private void initComponents() {
@@ -43,19 +38,18 @@ public class TabPanel extends JPanel {
             if (model != null) {
                 grid = new QGrid(model);
                 component = grid;
-
-                boolean dictModel = model instanceof DictModel;
-                boolean listModel = model instanceof ListModel;
-                boolean tableModel = !(dictModel || listModel);
-                title = tableModel ? "Table" : (dictModel ? "Dict" : "List");
-                title = title + " [" + grid.getRowCount() + " rows] ";
-                icon = Util.TABLE_ICON;
+                if (model instanceof DictModel) {
+                    type = ResultType.DICT;
+                } else if (model instanceof ListModel) {
+                    type = ResultType.LIST;
+                } else {
+                    type = ResultType.TABLE;
+                }
             } else {
                 textArea = new JEditorPane(QKit.CONTENT_TYPE, "");
                 textArea.setEditable(false);
                 component = Utilities.getEditorUI(textArea).getExtComponent();
-                title = I18n.getString("ConsoleView");
-                icon = Util.CONSOLE_ICON;
+                type = ResultType.TEXT;
             }
 
             tglBtnComma = new JToggleButton(Util.COMMA_CROSSED_ICON);
@@ -71,6 +65,15 @@ public class TabPanel extends JPanel {
             toolbar.setFloatable(false);
             toolbar.add(tglBtnComma);
             updateFormatting();
+        } else {
+            textArea = new JTextPane();
+            String hint = QErrors.lookup(queryResult.getError().getMessage());
+            hint = hint == null ? "" : "\nStudio Hint: Possibly this error refers to " + hint;
+            textArea.setText("An error occurred during execution of the query.\nThe server sent the response:\n" + queryResult.getError().getMessage() + hint);
+            textArea.setForeground(Color.RED);
+            textArea.setEditable(false);
+            component = new JScrollPane(textArea);
+            type = ResultType.ERROR;
         }
 
         setLayout(new BorderLayout());
@@ -78,7 +81,11 @@ public class TabPanel extends JPanel {
     }
 
     public void addInto(JTabbedPane tabbedPane) {
-        tabbedPane.addTab(title,icon, this);
+        String title = type.title;
+        if (isTable()) {
+            title = title + " [" + grid.getRowCount() + " rows] ";
+        }
+        tabbedPane.addTab(title, type.icon, this);
         tabbedPane.setSelectedIndex(tabbedPane.getTabCount()-1);
         updateToolbarLocation(tabbedPane);
     }
@@ -101,7 +108,7 @@ public class TabPanel extends JPanel {
         if (grid != null) {
             grid.setFormatContext(formatContext);
         }
-        if (textArea != null) {
+        if (type == ResultType.TEXT) {
             String text;
             if ((result instanceof K.UnaryPrimitive&&0==((K.UnaryPrimitive)result).getPrimitiveAsInt())) text = "";
             else {
@@ -121,5 +128,23 @@ public class TabPanel extends JPanel {
         return grid.getTable();
     }
 
+    public boolean isTable() {
+        return grid != null;
+    }
+
+    public enum ResultType {
+        ERROR("Error Details ", Util.ERROR_SMALL_ICON),
+        TEXT(I18n.getString("ConsoleView"), Util.CONSOLE_ICON),
+        LIST("List", Util.TABLE_ICON),
+        DICT("Dict", Util.TABLE_ICON),
+        TABLE("Table", Util.TABLE_ICON);
+
+        private final String title;
+        private final Icon icon;
+        ResultType(String title, Icon icon) {
+            this.title = title;
+            this.icon = icon;
+        }
+    };
 }
 

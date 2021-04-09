@@ -70,7 +70,6 @@ public class StudioPanel extends JPanel implements Observer,WindowListener {
     private JTextField txtServer;
     private String exportFilename;
     private String lastQuery = null;
-    private JMenuBar menubar;
     private JToolBar toolbar;
     private JTabbedPane tabbedEditors;
     private JEditorPane textArea;
@@ -149,11 +148,6 @@ public class StudioPanel extends JPanel implements Observer,WindowListener {
         }
     }
 
-    private void updateUndoRedoState(UndoManager um) {
-        undoAction.setEnabled(um.canUndo());
-        redoAction.setEnabled(um.canRedo());
-    }
-
     private String getFilename() {
         return (String) textArea.getDocument().getProperty(FILENAME);
     }
@@ -187,17 +181,17 @@ public class StudioPanel extends JPanel implements Observer,WindowListener {
         UndoManager um = new UndoManager() {
             public void undoableEditHappened(UndoableEditEvent e) {
                 super.undoableEditHappened(e);
-                updateUndoRedoState(this);
+                refreshActionState();
             }
 
             public synchronized void redo() throws CannotRedoException {
                 super.redo();
-                updateUndoRedoState(this);
+                refreshActionState();
             }
 
             public synchronized void undo() throws CannotUndoException {
                 super.undo();
-                updateUndoRedoState(this);
+                refreshActionState();
             }
         };
         doc.putProperty(BaseDocument.UNDO_MANAGER_PROP,um);
@@ -208,13 +202,33 @@ public class StudioPanel extends JPanel implements Observer,WindowListener {
     }
 
     private void refreshActionState() {
-        exportAction.setEnabled(false);
-        chartAction.setEnabled(false);
-        openInExcel.setEnabled(false);
-        stopAction.setEnabled(false);
-        executeAction.setEnabled(true);
-        executeCurrentLineAction.setEnabled(true);
-        refreshAction.setEnabled(false);
+        if (tabbedPane == null) return; // not fully initialized
+
+        editServerAction.setEnabled(server != null);
+        removeServerAction.setEnabled(server != null);
+
+        TabPanel tab = (TabPanel) tabbedPane.getSelectedComponent();
+        if (tab == null) {
+            exportAction.setEnabled(false);
+            chartAction.setEnabled(false);
+            openInExcel.setEnabled(false);
+            refreshAction.setEnabled(false);
+        } else {
+            exportAction.setEnabled(tab.isTable());
+            chartAction.setEnabled(tab.getType() == TabPanel.ResultType.TABLE);
+            openInExcel.setEnabled(tab.isTable());
+            refreshAction.setEnabled(true);
+        }
+
+        UndoManager um = (UndoManager) textArea.getDocument().getProperty(BaseDocument.UNDO_MANAGER_PROP);
+        undoAction.setEnabled(um.canUndo());
+        redoAction.setEnabled(um.canRedo());
+
+        boolean queryRunning = getQueryExecutor(textArea).running();
+        stopAction.setEnabled(queryRunning);
+        executeAction.setEnabled(!queryRunning);
+        executeCurrentLineAction.setEnabled(!queryRunning);
+        refreshAction.setEnabled(lastQuery != null && !queryRunning);
     }
 
     private String chooseFilename() {
@@ -628,14 +642,9 @@ public class StudioPanel extends JPanel implements Observer,WindowListener {
             textArea.getDocument().remove(0, textArea.getDocument().getLength());
             textArea.getDocument().insertString(0, content,null);
             textArea.setCaretPosition(0);
-
-            refreshActionState();
-
             setModified(false);
-
             UndoManager um = (UndoManager) textArea.getDocument().getProperty(BaseDocument.UNDO_MANAGER_PROP);
             um.discardAllEdits();
-            updateUndoRedoState(um);
             rebuildAll();
             textArea.requestFocus();
         }
@@ -1123,20 +1132,12 @@ public class StudioPanel extends JPanel implements Observer,WindowListener {
     }
 
     private void rebuildMenuBar() {
-        menubar = createMenuBar();
-        SwingUtilities.invokeLater(
-            new Runnable() {
-            
-                public void run() {
-                    if (frame != null) {
-                        frame.setJMenuBar(menubar);
-                        menubar.validate();
-                        menubar.repaint();
-                        frame.validate();
-                        frame.repaint();
-                    }
-                }
-            });
+        JMenuBar menubar = createMenuBar();
+        frame.setJMenuBar(menubar);
+        menubar.validate();
+        menubar.repaint();
+        frame.validate();
+        frame.repaint();
     }
 
     private JMenuBar createMenuBar() {
@@ -1438,20 +1439,6 @@ public class StudioPanel extends JPanel implements Observer,WindowListener {
         if (toolbar != null) {
             toolbar.removeAll();
             toolbarAddServerSelection();
-            if (server == null) {
-                editServerAction.setEnabled(false);
-                removeServerAction.setEnabled(false);
-                stopAction.setEnabled(false);
-                executeAction.setEnabled(false);
-                executeCurrentLineAction.setEnabled(false);
-                refreshAction.setEnabled(false);
-            }
-            else {
-                executeAction.setEnabled(true);
-                executeCurrentLineAction.setEnabled(true);
-                editServerAction.setEnabled(true);
-                removeServerAction.setEnabled(true);
-            }
 
             toolbar.add(stopAction);
             toolbar.add(executeAction);
@@ -1492,18 +1479,11 @@ public class StudioPanel extends JPanel implements Observer,WindowListener {
                 if (c instanceof JButton)
                     ((JButton) c).setRequestFocusEnabled(false);
             }
+            refreshActionState();
         }
     }
 
-    private JToolBar createToolbar() {
-        toolbar = new JToolBar();
-        toolbar.setLayout(new BoxLayout(toolbar, BoxLayout.X_AXIS));
-        toolbar.setFloatable(false);
-        rebuildToolbar();
-        return toolbar;
-    }
-
-    private static class Impl extends FileView implements 
+    private static class Impl extends FileView implements
         LocaleSupport.Localizer {
         // FileView implementation
         
@@ -1626,16 +1606,22 @@ public class StudioPanel extends JPanel implements Observer,WindowListener {
             if ( tabbedEditors.getSelectedIndex() == -1) return;
             textArea = getTextArea(tabbedEditors.getSelectedIndex());
             setServer((Server) textArea.getDocument().getProperty(SERVER));
+            lastQuery = null;
             refreshTitle();
+            refreshActionState();
         });
         splitpane.setTopComponent(tabbedEditors);
         splitpane.setDividerLocation(0.5);
 
         addTab(server, filename);
-        menubar = createMenuBar();
-        toolbar = createToolbar();
+        toolbar = new JToolBar();
+        toolbar.setLayout(new BoxLayout(toolbar, BoxLayout.X_AXIS));
+        toolbar.setFloatable(false);
+
 
         tabbedPane = new JTabbedPane(JTabbedPane.TOP);
+        tabbedPane.addChangeListener(e->refreshActionState());
+
         splitpane.setBottomComponent(tabbedPane);
         splitpane.setOneTouchExpandable(true);
         splitpane.setOrientation(JSplitPane.VERTICAL_SPLIT);
@@ -1656,9 +1642,7 @@ public class StudioPanel extends JPanel implements Observer,WindowListener {
 
         Dimension screenSize = Toolkit.getDefaultToolkit().getScreenSize();
 
-        frame.setJMenuBar(menubar);
-
-        refreshTitle();
+        rebuildMenuAndTooblar();
 
         frame.getContentPane().add(toolbar,BorderLayout.NORTH);
         frame.getContentPane().add(splitpane,BorderLayout.CENTER);
@@ -1756,17 +1740,9 @@ public class StudioPanel extends JPanel implements Observer,WindowListener {
             return;
         }
 
-        refreshAction.setEnabled(false);
-        stopAction.setEnabled(true);
-        executeAction.setEnabled(false);
-        executeCurrentLineAction.setEnabled(false);
-        exportAction.setEnabled(false);
-        chartAction.setEnabled(false);
-        openInExcel.setEnabled(false);
-
         executeK4Query(text);
-
         lastQuery = text;
+        refreshActionState();
     }
 
     public JFrame getFrame() {
@@ -1885,60 +1861,23 @@ public class StudioPanel extends JPanel implements Observer,WindowListener {
             }
         }
 
-        TabPanel tab = null;
-        if (error == null) {
-            tab = new TabPanel(queryResult);
-
-            exportAction.setEnabled(true);
-            KTableModel model = null;
-            if (tab.getTable() != null) {
-                model = (KTableModel) tab.getTable().getModel();
-            }
-            if (model != null) {
-                boolean dictModel = model instanceof DictModel;
-                boolean listModel = model instanceof ListModel;
-                boolean tableModel = ! (dictModel || listModel);
-                openInExcel.setEnabled(true);
-                chartAction.setEnabled(tableModel);
-            } else {
-                chartAction.setEnabled(false);
-                openInExcel.setEnabled(false);
-            }
-        } else if (error instanceof c.K4Exception ) {
-            JTextPane pane = new JTextPane();
-            String hint = QErrors.lookup(error.getMessage());
-            hint = hint == null ? "" : "\nStudio Hint: Possibly this error refers to " + hint;
-            pane.setText("An error occurred during execution of the query.\nThe server sent the response:\n" + error.getMessage() + hint);
-            pane.setForeground(Color.RED);
-
-            JScrollPane scrollpane = new JScrollPane(pane);
-
-            tab = new TabPanel("Error Details ",
-                    Util.ERROR_SMALL_ICON,
-                    scrollpane);
-        } else {
+        if (error != null && ! (error instanceof c.K4Exception)) {
             String message = error.getMessage();
-
             if ((message == null) || (message.length() == 0))
                 message = "No message with exception. Exception is " + error.toString();
-
             JOptionPane.showMessageDialog(textArea,
                     "\nAn unexpected error occurred whilst communicating with " + server.getHost() + ":" + server.getPort() + "\n\nError detail is\n\n" + message + "\n\n",
                     "Studio for kdb+",
                     JOptionPane.ERROR_MESSAGE,
                     Util.ERROR_ICON);
-        }
-
-        if (tab != null) {
+        } else {
+            TabPanel tab = new TabPanel(queryResult);
             if(tabbedPane.getTabCount()>= Config.getInstance().getResultTabsCount()) {
                 tabbedPane.remove(0);
             }
             tab.addInto(tabbedPane);
         }
-        stopAction.setEnabled(false);
-        executeAction.setEnabled(true);
-        executeCurrentLineAction.setEnabled(true);
-        refreshAction.setEnabled(true);
+        refreshActionState();
     }
 
     public void windowClosing(WindowEvent e) {

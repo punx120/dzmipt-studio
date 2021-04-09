@@ -44,6 +44,10 @@ public class QueryExecutor implements ProgressCallback {
         worker = null;
     }
 
+    public boolean running() {
+        return worker != null && ! worker.isDone();
+    }
+
     @Override
     public void setCompressed(boolean compressed) {
         this.compressed = compressed;
