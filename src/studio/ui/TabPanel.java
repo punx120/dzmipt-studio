@@ -4,6 +4,7 @@ import org.netbeans.editor.Utilities;
 import studio.kdb.*;
 import studio.kdb.ListModel;
 import studio.qeditor.QKit;
+import studio.ui.action.QueryResult;
 
 import javax.swing.*;
 import javax.swing.border.EtchedBorder;
@@ -17,7 +18,8 @@ public class TabPanel extends JPanel {
 
     private JToolBar toolbar = null;
     private JToggleButton tglBtnComma;
-    private K.KBase result = null;
+    private QueryResult queryResult;
+    private K.KBase result;
     private JEditorPane textArea = null;
     private QGrid grid = null;
     private KFormatContext formatContext = new KFormatContext(KFormatContext.DEFAULT);
@@ -29,8 +31,9 @@ public class TabPanel extends JPanel {
         initComponents();
     }
 
-    public TabPanel(K.KBase result) {
-        this.result = result;
+    public TabPanel(QueryResult queryResult) {
+        this.queryResult = queryResult;
+        this.result = queryResult.getResult();
         initComponents();
     }
 

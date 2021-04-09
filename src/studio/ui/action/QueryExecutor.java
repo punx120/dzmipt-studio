@@ -146,10 +146,10 @@ public class QueryExecutor implements ProgressCallback {
             }
             try {
                 if (isCancelled()) {
-                    studioPanel.queryExecutionComplete(-1, null, null);
+                    studioPanel.queryExecutionComplete(QueryExecutor.this, new QueryResult(server, query));
                 } else {
                     QueryResult result = get();
-                    studioPanel.queryExecutionComplete(result.getExecutionTime(), result.getResult(), result.getError());
+                    studioPanel.queryExecutionComplete(QueryExecutor.this, result);
                 }
             } catch (Exception e) {
                 log.error("Ops... It wasn't expected", e);

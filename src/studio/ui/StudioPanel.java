@@ -39,6 +39,7 @@ import studio.qeditor.QSettingsInitializer;
 import studio.kdb.*;
 import studio.ui.action.QPadImport;
 import studio.ui.action.QueryExecutor;
+import studio.ui.action.QueryResult;
 import studio.utils.BrowserLaunch;
 import studio.utils.HistoricalList;
 import studio.utils.OSXAdapter;
@@ -60,10 +61,10 @@ public class StudioPanel extends JPanel implements Observer,WindowListener {
         Settings.reset();
     }
 
-    public static final String TITLE = "title";
-    public static final String FILENAME = "filename";
-    public static final String SERVER = "server";
-    public static final String MODIFIED = "modified";
+    private static final String TITLE = "title";
+    private static final String FILENAME = "filename";
+    private static final String SERVER = "server";
+    private static final String MODIFIED = "modified";
 
     private JComboBox<String> comboServer;
     private JTextField txtServer;
@@ -117,8 +118,6 @@ public class StudioPanel extends JPanel implements Observer,WindowListener {
     private JFrame frame;
 
     private static JFileChooser fileChooser;
-
-    private QueryExecutor queryExecutor;
 
     private static List<StudioPanel> allPanels = new ArrayList<>();
 
@@ -181,6 +180,7 @@ public class StudioPanel extends JPanel implements Observer,WindowListener {
 
     private JEditorPane createTextArea() {
         JEditorPane textArea = new JEditorPane(QKit.CONTENT_TYPE,"");
+        textArea.putClientProperty(QueryExecutor.class, new QueryExecutor(this));
         overrideDefaultKeymap(textArea, toggleCommaFormatAction, newTabAction, closeTabAction);
         Document doc = textArea.getDocument();
         doc.putProperty(MODIFIED, false);
@@ -928,7 +928,7 @@ public class StudioPanel extends JPanel implements Observer,WindowListener {
                 KeyEvent.VK_E, null, e -> new LineChart((KTableModel) getSelectedTable().getModel()));
 
         stopAction = UserAction.create(I18n.getString("Stop"), Util.STOP_ICON, "Stop the query",
-                KeyEvent.VK_S, null, e -> queryExecutor.cancel());
+                KeyEvent.VK_S, null, e -> getQueryExecutor(textArea).cancel());
 
         openInExcel = UserAction.create(I18n.getString("OpenInExcel"), Util.EXCEL_ICON, "Open in Excel",
                 KeyEvent.VK_O, null, e -> {
@@ -1638,7 +1638,7 @@ public class StudioPanel extends JPanel implements Observer,WindowListener {
         tabbedEditors = new JTabbedPane();
         tabbedEditors.addChangeListener(e->{
             if ( tabbedEditors.getSelectedIndex() == -1) return;
-            textArea = (JEditorPane) ((JComponent)tabbedEditors.getSelectedComponent()).getClientProperty(JTextComponent.class);
+            textArea = getTextArea(tabbedEditors.getSelectedIndex());
             setServer((Server) textArea.getDocument().getProperty(SERVER));
             refreshTitle();
         });
@@ -1703,7 +1703,6 @@ public class StudioPanel extends JPanel implements Observer,WindowListener {
           }
         });
         dividerLastPosition=splitpane.getDividerLocation();
-        queryExecutor = new QueryExecutor(this);
     }
 
     public void update(Observable obs,Object obj) {
@@ -1782,10 +1781,6 @@ public class StudioPanel extends JPanel implements Observer,WindowListener {
         executeK4Query(text);
 
         lastQuery = text;
-    }
-
-    public JEditorPane getTextArea() {
-        return textArea;
     }
 
     public JFrame getFrame() {
@@ -1871,19 +1866,42 @@ public class StudioPanel extends JPanel implements Observer,WindowListener {
 
     public void executeK4Query(final String text) {
         textArea.setCursor(waitCursor);
-        queryExecutor.execute(text);
+        getQueryExecutor(textArea).execute(text);
+    }
+
+    private QueryExecutor getQueryExecutor(JEditorPane textArea) {
+        return (QueryExecutor) textArea.getClientProperty(QueryExecutor.class);
+    }
+
+    private JEditorPane getTextArea(int index) {
+        return (JEditorPane) ((JComponent) tabbedEditors.getComponent(index)).getClientProperty(JTextComponent.class);
+    }
+
+    private JEditorPane findTextEditor(QueryExecutor queryExecutor) {
+        int count = tabbedEditors.getComponentCount();
+        for (int index = 0; index<count; index++) {
+            JEditorPane textArea = getTextArea(index);
+            QueryExecutor aQueryExecutor = getQueryExecutor(textArea);
+            if (aQueryExecutor == queryExecutor) return textArea;
+        }
+        return null;
     }
 
     // if the query is canceld execTime=-1, result and error are null's
-    public void queryExecutionComplete(long execTime, K.KBase result, Throwable error) {
-        textArea.setCursor(textCursor);
-        if (execTime >=0) {
-            Utilities.setStatusText(textArea, "Last execution time:" + (execTime > 0 ? "" + execTime : "<1") + " mS");
+    public void queryExecutionComplete(QueryExecutor queryExecutor, QueryResult queryResult) {
+        long execTime = queryResult.getExecutionTime();
+        Throwable error = queryResult.getError();
+        JEditorPane textArea = findTextEditor(queryExecutor);
+        if (textArea != null) {
+            textArea.setCursor(textCursor);
+            if (execTime >= 0) {
+                Utilities.setStatusText(textArea, "Last execution time:" + (execTime > 0 ? "" + execTime : "<1") + " mS");
+            }
         }
 
         TabPanel tab = null;
-        if (result != null) {
-            tab = new TabPanel(result);
+        if (error == null) {
+            tab = new TabPanel(queryResult);
 
             exportAction.setEnabled(true);
             KTableModel model = null;
@@ -1912,7 +1930,7 @@ public class StudioPanel extends JPanel implements Observer,WindowListener {
             tab = new TabPanel("Error Details ",
                     Util.ERROR_SMALL_ICON,
                     scrollpane);
-        } else if (error != null){
+        } else {
             String message = error.getMessage();
 
             if ((message == null) || (message.length() == 0))
