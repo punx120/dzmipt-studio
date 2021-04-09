@@ -208,13 +208,6 @@ public class StudioPanel extends JPanel implements Observer,WindowListener {
     }
 
     private void refreshActionState() {
-        cleanAction.setEnabled(true);
-        arrangeAllAction.setEnabled(true);
-        openFileAction.setEnabled(true);
-        serverListAction.setEnabled(true);
-        newWindowAction.setEnabled(true);
-        saveFileAction.setEnabled(true);
-        saveAsFileAction.setEnabled(true);
         exportAction.setEnabled(false);
         chartAction.setEnabled(false);
         openInExcel.setEnabled(false);
@@ -222,11 +215,6 @@ public class StudioPanel extends JPanel implements Observer,WindowListener {
         executeAction.setEnabled(true);
         executeCurrentLineAction.setEnabled(true);
         refreshAction.setEnabled(false);
-
-//        helpAction.setEnabled(true);
-        aboutAction.setEnabled(true);
-        exitAction.setEnabled(true);
-        settingsAction.setEnabled(true);
     }
 
     private String chooseFilename() {
@@ -1451,7 +1439,6 @@ public class StudioPanel extends JPanel implements Observer,WindowListener {
             toolbar.removeAll();
             toolbarAddServerSelection();
             if (server == null) {
-                addServerAction.setEnabled(true);
                 editServerAction.setEnabled(false);
                 removeServerAction.setEnabled(false);
                 stopAction.setEnabled(false);
@@ -1475,7 +1462,6 @@ public class StudioPanel extends JPanel implements Observer,WindowListener {
             toolbar.add(saveFileAction);
             toolbar.add(saveAsFileAction);
             toolbar.addSeparator();
-//            toolbar.add(importAction);
             toolbar.add(openInExcel);
             toolbar.addSeparator();
             toolbar.add(exportAction);
