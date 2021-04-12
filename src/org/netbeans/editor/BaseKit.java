@@ -2116,6 +2116,9 @@ public class BaseKit extends DefaultEditorKit
                 try
                 {
                     int dot = Utilities.getWordEnd(target, caret.getDot());
+                    if (dot == -1) { // If nothing is found, then it is the last word in the document
+                        dot = target.getDocument().getLength();
+                    }
                     if (select)
                     {
                         caret.moveDot(dot);
