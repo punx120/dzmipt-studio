@@ -59,6 +59,10 @@ public class QPadConverterTest {
         server = QPadConverter.convert("`:server.uk.db.com:11223:user`name","auth", cred);
         assertEquals("", server.getPassword());
         assertEquals("user", server.getUsername());
+
+        server = QPadConverter.convert("`:server.uk.db.com:11223`folder``server","auth", cred);
+        assertEquals("[empty]", server.getFolder().getFolder());
+
     }
 
 }

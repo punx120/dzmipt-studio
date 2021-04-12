@@ -546,6 +546,14 @@ public class Config {
         if (AuthenticationManager.getInstance().lookup(server.getAuthenticationMechanism()) == null) {
             throw new IllegalArgumentException("Unknown Authentication Mechanism: " + server.getAuthenticationMechanism());
         }
+
+        TreeNode[] path = server.getFolder().getPath();
+        for (int index = 1; index<path.length; index++) {
+            ServerTreeNode node = (ServerTreeNode) path[index];
+            if (node.getFolder().trim().length() == 0) {
+                throw new IllegalArgumentException("Folder name can't be empty");
+            }
+        }
         servers.put(fullName, server);
         serverNames.add(fullName);
     }

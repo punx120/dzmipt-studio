@@ -83,6 +83,8 @@ public class QPadConverter {
         TreeNode[] folderNodes = Stream.concat(
                     Stream.of(""),
                     Stream.of(items).skip(1).limit(items.length-2))
+                        .map(String::trim)
+                        .map(folder -> folder.length()==0 ? "[empty]" : folder )
                         .map(ServerTreeNode::new).toArray(TreeNode[]:: new);
         ServerTreeNode folder = root.findPath(folderNodes, true);
         folder.add(server);
