@@ -31,6 +31,7 @@ import studio.kdb.K;
 public class c {
     DataInputStream inputStream;
     OutputStream outputStream;
+    Socket s;
     byte[] b, B;
     int j;
     int J;
@@ -47,6 +48,8 @@ public class c {
 
     public void close() {
         // this will force k() to break out i hope
+        if (closed) return;
+
         closed = true;
         if (inputStream != null)
             try {
@@ -56,28 +59,20 @@ public class c {
             try {
                 outputStream.close();
             } catch (IOException e) {}
-    }
-
-    public c() {
+        if (s != null) {
+            try {
+                s.close();
+            } catch (IOException e) {}
+        }
     }
 
     public void setEncoding(String encoding) {
         this.encoding = encoding;
     }
 
-    /*    public c(Socket s) throws IOException {
-            io(s);
-            inputStream.read(b = new byte[99]);
-            outputStream.write(b,0,1);
-        }
-
-        public c(ServerSocket s) throws IOException {
-            this(s.accept());
-        }
-    */
-    public static class K4AccessException extends Exception {
-        K4AccessException(String s) {
-            super(s);
+    public static class K4AccessException extends K4Exception {
+        K4AccessException() {
+            super("Authentication failed");
         }
     }
 
@@ -87,8 +82,8 @@ public class c {
         return closed;
     }
 
-    public void reconnect(boolean retry) throws IOException, K4Exception {
-        Socket s = new Socket();
+    private void connect(boolean retry) throws IOException, K4AccessException {
+        s = new Socket();
         s.setReceiveBufferSize(1024 * 1024);
         s.connect(new InetSocketAddress(host, port));
 
@@ -111,9 +106,9 @@ public class c {
         byte[] bytes = new byte[2 + up.getBytes().length];
         if (1 != inputStream.read(bytes, 0, 1))
             if (retry)
-                reconnect(false);
+                connect(false);
             else
-                throw new K4Exception("Authentication failed");
+                throw new K4AccessException();
         closed = false;
     }
 
@@ -542,57 +537,60 @@ public class c {
     }
 
 
-    private synchronized K.KBase k(ProgressCallback progress) throws K4Exception, IOException {
+    private K.KBase k(ProgressCallback progress) throws K4Exception, IOException {
+        boolean firstMessage = true;
         boolean responseMsg = false;
         boolean c = false;
-        synchronized (inputStream) {
-            while (!responseMsg) { // throw away incoming aync, and error out on incoming sync
+        while (!responseMsg) { // throw away incoming aync, and error out on incoming sync
+            if (firstMessage) {
+                firstMessage = false;
+            } else {
                 inputStream.readFully(b = new byte[8]);
-                a = b[0] == 1;
-                c = b[2] == 1;
-                byte msgType = b[1];
-                if (msgType == 1) {
-                    close();
-                    throw new IOException("Cannot process sync msg from remote");
-                }
-                responseMsg = msgType == 2;
-                j = 4;
-
-                final int msgLength = ri() - 8;
-
-                if (progress!=null) {
-                    progress.setCompressed(c);
-                    progress.setMsgLength(msgLength);
-                }
-
-                b = new byte[msgLength];
-                int total = 0;
-                int packetSize = 1 + msgLength / 100;
-                if (packetSize < rxBufferSize)
-                    packetSize = rxBufferSize;
-
-                while (total < msgLength) {
-                    int remainder = msgLength - total;
-                    if (remainder < packetSize)
-                        packetSize = remainder;
-
-                    int count = inputStream.read(b, total, packetSize);
-                    if (count < 0) throw new EOFException("Connection is broken");
-                    total += count;
-                    if (progress != null) progress.setCurrentProgress(total);
-                }
             }
-            if (c)
-                u();
-            else
-                j = 0;
-
-            if (b[0] == -128) {
-                j = 1;
-                throw new K4Exception(rs().toString());
+            a = b[0] == 1;
+            c = b[2] == 1;
+            byte msgType = b[1];
+            if (msgType == 1) {
+                close();
+                throw new IOException("Cannot process sync msg from remote");
             }
-            return r();
+            responseMsg = msgType == 2;
+            j = 4;
+
+            final int msgLength = ri() - 8;
+
+            if (progress!=null) {
+                progress.setCompressed(c);
+                progress.setMsgLength(msgLength);
+            }
+
+            b = new byte[msgLength];
+            int total = 0;
+            int packetSize = 1 + msgLength / 100;
+            if (packetSize < rxBufferSize)
+                packetSize = rxBufferSize;
+
+            while (total < msgLength) {
+                int remainder = msgLength - total;
+                if (remainder < packetSize)
+                    packetSize = remainder;
+
+                int count = inputStream.read(b, total, packetSize);
+                if (count < 0) throw new EOFException("Connection is broken");
+                total += count;
+                if (progress != null) progress.setCurrentProgress(total);
+            }
         }
+        if (c)
+            u();
+        else
+            j = 0;
+
+        if (b[0] == -128) {
+            j = 1;
+            throw new K4Exception(rs().toString());
+        }
+        return r();
     }
 
     private void u() {
@@ -633,9 +631,21 @@ public class c {
         j = 8;
     }
 
-    public K.KBase k(K.KBase x, ProgressCallback progress) throws K4Exception, IOException {
-        w(1, x);
+    public synchronized K.KBase k(K.KBase x, ProgressCallback progress) throws K4Exception, IOException {
         try {
+
+            if (isClosed()) connect(true);
+            try {
+                w(1, x);
+                inputStream.readFully(b = new byte[8]);
+            } catch (IOException e) {
+                close();
+                // may be the socket was closed on the server side?
+                connect(true);
+                w(1, x);
+                inputStream.readFully(b = new byte[8]);
+            }
+
             return k(progress);
         } catch (IOException e) {
             close();

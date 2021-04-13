@@ -117,12 +117,12 @@ public class QueryExecutor implements ProgressCallback {
             long startTime = System.currentTimeMillis();
             try {
                 c = ConnectionPool.getInstance().leaseConnection(server);
-                ConnectionPool.getInstance().checkConnected(c);
                 K.KBase response = c.k(new K.KCharacterVector(query), QueryExecutor.this);
                 result.setResult(response);
             } catch (Throwable e) {
                 if (! (e instanceof kx.c.K4Exception)) {
                     log.error("Error occurred during query execution",e);
+                    if (c != null) c.close();
                 }
                 result.setError(e);
             } finally {
