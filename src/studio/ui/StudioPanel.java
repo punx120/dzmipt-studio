@@ -30,7 +30,9 @@ import org.apache.logging.log4j.LogManager;
 import org.apache.logging.log4j.Logger;
 import org.netbeans.editor.*;
 import org.netbeans.editor.Utilities;
+import studio.core.AuthenticationManager;
 import studio.core.Credentials;
+import studio.core.Studio;
 import studio.kdb.ListModel;
 import studio.qeditor.QKit;
 import org.netbeans.editor.ext.ExtKit;
@@ -149,6 +151,7 @@ public class StudioPanel extends JPanel implements Observer,WindowListener {
     }
 
     private String getFilename() {
+        if (textArea == null) return null;
         return (String) textArea.getDocument().getProperty(FILENAME);
     }
 
@@ -201,18 +204,27 @@ public class StudioPanel extends JPanel implements Observer,WindowListener {
         return textArea;
     }
 
+    private void setActionsEnabled(boolean value, Action... actions) {
+        for (Action action: actions) {
+            if (action != null) {
+                action.setEnabled(value);
+            }
+        }
+    }
+
     private void refreshActionState() {
-        if (tabbedPane == null) return; // not fully initialized
+        if (textArea == null || tabbedPane == null) {
+            setActionsEnabled(false, undoAction, redoAction, stopAction, executeAction,
+                                          executeCurrentLineAction, refreshAction);
+            return;
+        }
 
         editServerAction.setEnabled(server != null);
         removeServerAction.setEnabled(server != null);
 
         TabPanel tab = (TabPanel) tabbedPane.getSelectedComponent();
         if (tab == null) {
-            exportAction.setEnabled(false);
-            chartAction.setEnabled(false);
-            openInExcel.setEnabled(false);
-            refreshAction.setEnabled(false);
+            setActionsEnabled(false, exportAction, chartAction, openInExcel, refreshAction);
         } else {
             exportAction.setEnabled(tab.isTable());
             chartAction.setEnabled(tab.getType() == TabPanel.ResultType.TABLE);
@@ -624,15 +636,17 @@ public class StudioPanel extends JPanel implements Observer,WindowListener {
     }
 
     public boolean loadFile(String filename) {
+        String content = "";
         try {
-            String content = getContents(filename);
-            setFilename(filename);
-            initTextArea(content);
+            content = getContents(filename);
             return true;
         } catch (IOException e) {
             log.error("Failed to load file {}", filename, e);
             JOptionPane.showMessageDialog(frame, "Failed to load file "+filename + ".\n" + e.getMessage(),
                             "Error in file load", JOptionPane.ERROR_MESSAGE);
+        } finally {
+            setFilename(filename);
+            initTextArea(content);
         }
         return false;
     }
@@ -836,7 +850,7 @@ public class StudioPanel extends JPanel implements Observer,WindowListener {
 
         newWindowAction = UserAction.create(I18n.getString("NewWindow"), Util.BLANK_ICON, "Open a new window",
                 KeyEvent.VK_N, KeyStroke.getKeyStroke(KeyEvent.VK_N, menuShortcutKeyMask | InputEvent.SHIFT_MASK),
-                e -> new StudioPanel(server, null) );
+                e -> new StudioPanel().addTab(server, null) );
 
         newTabAction = UserAction.create("New Tab", Util.BLANK_ICON, "Open a new tab", KeyEvent.VK_T,
                 KeyStroke.getKeyStroke(KeyEvent.VK_N, menuShortcutKeyMask),
@@ -1068,6 +1082,7 @@ public class StudioPanel extends JPanel implements Observer,WindowListener {
     }
 
     public boolean quit() {
+        saveWorkspace();
         for(StudioPanel panel: allPanels.toArray(new StudioPanel[0])) {
             if (!panel.closeWindow())
                 return false;
@@ -1588,10 +1603,11 @@ public class StudioPanel extends JPanel implements Observer,WindowListener {
             initTextArea("");
         }
         textArea.getDocument().addDocumentListener(new MarkingDocumentListener());
+        textArea.requestFocus();
+        refreshActionState();
     }
 
-    public StudioPanel(Server server,String filename) {
-
+    public StudioPanel() {
         registerForMacOSXEvents();
         initActions();
         serverHistory = new HistoricalList<>(Config.getInstance().getServerHistoryDepth(),
@@ -1613,7 +1629,6 @@ public class StudioPanel extends JPanel implements Observer,WindowListener {
         splitpane.setTopComponent(tabbedEditors);
         splitpane.setDividerLocation(0.5);
 
-        addTab(server, filename);
         toolbar = new JToolBar();
         toolbar.setLayout(new BoxLayout(toolbar, BoxLayout.X_AXIS));
         toolbar.setFloatable(false);
@@ -1629,7 +1644,7 @@ public class StudioPanel extends JPanel implements Observer,WindowListener {
             Component divider = ((BasicSplitPaneUI) splitpane.getUI()).getDivider();
 
             divider.addMouseListener(new MouseAdapter() {
-                
+
                                      public void mouseClicked(MouseEvent event) {
                                          if (event.getClickCount() == 2)
                                              toggleDividerOrientation();
@@ -1662,7 +1677,6 @@ public class StudioPanel extends JPanel implements Observer,WindowListener {
         frame.setVisible(true);
         splitpane.setDividerLocation(0.5);
 
-        textArea.requestFocus();
         splitpane.addPropertyChangeListener(JSplitPane.DIVIDER_LOCATION_PROPERTY,new PropertyChangeListener(){
           public void propertyChange(PropertyChangeEvent pce){
             String s=splitpane.getDividerLocation()>=splitpane.getMaximumDividerLocation()?I18n.getString("MinimizeEditorPane"):splitpane.getDividerLocation()<=splitpane.getMinimumDividerLocation()?I18n.getString("RestoreEditorPane"):I18n.getString("MaximizeEditorPane");
@@ -1697,25 +1711,57 @@ public class StudioPanel extends JPanel implements Observer,WindowListener {
             }
     }
 
-    public static void init(String[] args) {
-        String filename = null;
-
-        String[] mruFiles = Config.getInstance().getMRUFiles();
-        if(args.length>0){
-            File f=new File(args[0]);
-            if(f.exists())
-                filename=args[0];
-        } else if (mruFiles.length > 0) {
-            File f = new File(mruFiles[0]);
-            if (f.exists())
-                filename = mruFiles[0];
-        }
-
-        Locale.setDefault(Locale.US);
-
+    private static void init(String filename) {
         List<Server> serverHistory = Config.getInstance().getServerHistory();
         Server s = serverHistory.size() == 0 ? null : serverHistory.get(0);
-        new StudioPanel(s,filename);
+        new StudioPanel().addTab(s, filename);
+    }
+
+    public static void init(String[] args) {
+        if (args.length > 0) {
+            init(args[0]);
+            return;
+        }
+
+        Workspace workspace = Config.getInstance().loadWorkspace();
+        if (workspace.getWindows().length == 0) {
+            String[] mruFiles = Config.getInstance().getMRUFiles();
+            String filename = mruFiles.length == 0 ? null : mruFiles[0];
+            init(filename);
+            return;
+        }
+
+        for (Workspace.Window window: workspace.getWindows()) {
+            Workspace.Tab[] tabs = window.getTabs();
+            if (tabs.length == 0) {
+                log.info("Strange: a window has zero tabs. Skipping initialization");
+                continue;
+            }
+
+            StudioPanel panel = new StudioPanel();
+            for (Workspace.Tab tab: tabs) {
+                String serverFullname = tab.getServerFullName();
+                Server server = Config.getInstance().getServer(serverFullname);
+                if (server == null) {
+                    server = Config.getInstance().getServerByConnectionString(tab.getServerConnection());
+                    String auth = tab.getServerAuth();
+                    if (AuthenticationManager.getInstance().lookup(auth) != null) {
+                        server.setAuthenticationMechanism(auth);
+                    }
+                }
+                panel.addTab(server, tab.getFilename());
+                panel.textArea.setText(tab.getContent());
+                panel.setModified(tab.isModified());
+            }
+            if (window.getSelectedTab() != -1) {
+                panel.tabbedEditors.setSelectedIndex(window.getSelectedTab());
+            }
+        }
+
+        if (workspace.getSelectedWindow() != -1) {
+            allPanels.get(workspace.getSelectedWindow()).frame.toFront();
+        }
+
     }
 
     public void refreshQuery() {
@@ -1878,6 +1924,37 @@ public class StudioPanel extends JPanel implements Observer,WindowListener {
             tab.addInto(tabbedPane);
         }
         refreshActionState();
+    }
+
+    private void saveWorkspace() {
+        try {
+            Window activeWindow = KeyboardFocusManager.getCurrentKeyboardFocusManager().getActiveWindow();
+
+            Workspace workspace = new Workspace();
+            for (StudioPanel panel : allPanels) {
+                Workspace.Window window = workspace.addWindow(panel.getFrame() == activeWindow);
+
+                int count = panel.tabbedEditors.getComponentCount();
+                for (int index = 0; index < count; index++) {
+                    Document document = panel.getTextArea(index).getDocument();
+                    Server server = (Server) document.getProperty(SERVER);
+                    String filename = (String) document.getProperty(FILENAME);
+                    boolean modified = (Boolean) document.getProperty(MODIFIED);
+                    String content = document.getText(0, document.getLength());
+
+                    window.addTab(index == panel.tabbedEditors.getSelectedIndex())
+                            .addFilename(filename)
+                            .addServer(server)
+                            .addContent(content)
+                            .setModified(modified);
+                }
+
+            }
+
+            Config.getInstance().saveWorkspace(workspace);
+        } catch (BadLocationException e) {
+            log.error("Workspace wasn't save. This one is unexpected", e);
+        }
     }
 
     public void windowClosing(WindowEvent e) {

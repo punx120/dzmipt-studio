@@ -56,8 +56,8 @@ public class Studio {
         UIManager.put("Table.font",new javax.swing.plaf.FontUIResource("Monospaced",Font.PLAIN,UIManager.getFont("Table.font").getSize()));
         System.setProperty("awt.useSystemAAFontSettings","on");
         System.setProperty("swing.aatext", "true");
-     
-        ThreadGroup exceptionThreadGroup = new ExceptionGroup();
+
+        Locale.setDefault(Locale.US);
 
         SwingUtilities.invokeLater( ()-> {
                 log.info("Start Studio with args {}", Arrays.asList(args));
