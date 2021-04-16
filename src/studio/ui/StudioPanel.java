@@ -42,6 +42,7 @@ import studio.kdb.*;
 import studio.ui.action.QPadImport;
 import studio.ui.action.QueryExecutor;
 import studio.ui.action.QueryResult;
+import studio.ui.action.WorkspaceSaver;
 import studio.utils.BrowserLaunch;
 import studio.utils.HistoricalList;
 import studio.utils.OSXAdapter;
@@ -1082,10 +1083,13 @@ public class StudioPanel extends JPanel implements Observer,WindowListener {
     }
 
     public boolean quit() {
-        saveWorkspace();
+        WorkspaceSaver.save(getWorkspace());
+        WorkspaceSaver.setEnabled(false);
         for(StudioPanel panel: allPanels.toArray(new StudioPanel[0])) {
-            if (!panel.closeWindow())
+            if (!panel.closeWindow()) {
+                WorkspaceSaver.setEnabled(true);
                 return false;
+            }
         }
         //closing the last window would exit the application
         return true;
@@ -1589,7 +1593,7 @@ public class StudioPanel extends JPanel implements Observer,WindowListener {
         splitpane.setDividerLocation(0.5);
     }
 
-    private void addTab(Server server, String filename) {
+    public void addTab(Server server, String filename) {
         JEditorPane textArea = createTextArea();
         JComponent component = Utilities.getEditorUI(textArea).getExtComponent();
         tabbedEditors.add(component);
@@ -1711,26 +1715,30 @@ public class StudioPanel extends JPanel implements Observer,WindowListener {
             }
     }
 
-    private static void init(String filename) {
-        List<Server> serverHistory = Config.getInstance().getServerHistory();
-        Server s = serverHistory.size() == 0 ? null : serverHistory.get(0);
-        new StudioPanel().addTab(s, filename);
+    private static Server getServer(Workspace.Tab tab) {
+        Server server = null;
+        String serverFullname = tab.getServerFullName();
+        if (serverFullname != null) {
+            server = Config.getInstance().getServer(serverFullname);
+        }
+        if (server != null) return server;
+
+        String connectionString = tab.getServerConnection();
+        if (connectionString != null) {
+            server = Config.getInstance().getServerByConnectionString(connectionString);
+        }
+        if (server == null) return null;
+
+        String auth = tab.getServerAuth();
+        if (auth == null) return server;
+
+        if (AuthenticationManager.getInstance().lookup(auth) != null) {
+            server.setAuthenticationMechanism(auth);
+        }
+        return server;
     }
 
-    public static void init(String[] args) {
-        if (args.length > 0) {
-            init(args[0]);
-            return;
-        }
-
-        Workspace workspace = Config.getInstance().loadWorkspace();
-        if (workspace.getWindows().length == 0) {
-            String[] mruFiles = Config.getInstance().getMRUFiles();
-            String filename = mruFiles.length == 0 ? null : mruFiles[0];
-            init(filename);
-            return;
-        }
-
+    public static void loadWorkspace(Workspace workspace) {
         for (Workspace.Window window: workspace.getWindows()) {
             Workspace.Tab[] tabs = window.getTabs();
             if (tabs.length == 0) {
@@ -1740,19 +1748,7 @@ public class StudioPanel extends JPanel implements Observer,WindowListener {
 
             StudioPanel panel = new StudioPanel();
             for (Workspace.Tab tab: tabs) {
-                String serverFullname = tab.getServerFullName();
-                Server server = null;
-                if (serverFullname != null) {
-                    server = Config.getInstance().getServer(serverFullname);
-                    if (server == null) {
-                        server = Config.getInstance().getServerByConnectionString(tab.getServerConnection());
-                        String auth = tab.getServerAuth();
-                        if (AuthenticationManager.getInstance().lookup(auth) != null) {
-                            server.setAuthenticationMechanism(auth);
-                        }
-                    }
-                }
-                panel.addTab(server, tab.getFilename());
+                panel.addTab(getServer(tab), tab.getFilename());
                 panel.textArea.setText(tab.getContent());
                 panel.setModified(tab.isModified());
             }
@@ -1764,7 +1760,6 @@ public class StudioPanel extends JPanel implements Observer,WindowListener {
         if (workspace.getSelectedWindow() != -1) {
             allPanels.get(workspace.getSelectedWindow()).frame.toFront();
         }
-
     }
 
     public void refreshQuery() {
@@ -1929,11 +1924,11 @@ public class StudioPanel extends JPanel implements Observer,WindowListener {
         refreshActionState();
     }
 
-    private void saveWorkspace() {
+    public static Workspace getWorkspace() {
+        Workspace workspace = new Workspace();
         try {
             Window activeWindow = KeyboardFocusManager.getCurrentKeyboardFocusManager().getActiveWindow();
 
-            Workspace workspace = new Workspace();
             for (StudioPanel panel : allPanels) {
                 Workspace.Window window = workspace.addWindow(panel.getFrame() == activeWindow);
 
@@ -1953,11 +1948,10 @@ public class StudioPanel extends JPanel implements Observer,WindowListener {
                 }
 
             }
-
-            Config.getInstance().saveWorkspace(workspace);
         } catch (BadLocationException e) {
             log.error("Workspace wasn't save. This one is unexpected", e);
         }
+        return workspace;
     }
 
     public void windowClosing(WindowEvent e) {

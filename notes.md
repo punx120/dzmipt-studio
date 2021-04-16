@@ -1,4 +1,6 @@
-* Show About dialog on start up if release notes are changed
+* Restoring windows and tabs from previous application run
+    * The state is also persisted every minute  
+* Show an About dialog on start up if release notes are changed
 * Options to execute all script when nothing is selected. The default option is to ask
     * The option is added to Settings
 * Add notes into About dialog

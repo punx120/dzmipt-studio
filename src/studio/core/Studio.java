@@ -3,6 +3,7 @@ package studio.core;
 import java.awt.*;
 import java.io.PrintStream;
 import java.util.Arrays;
+import java.util.List;
 import java.util.Locale;
 
 import org.apache.logging.log4j.Level;
@@ -11,8 +12,10 @@ import org.apache.logging.log4j.Logger;
 import org.apache.logging.log4j.io.IoBuilder;
 import studio.kdb.Config;
 import studio.kdb.Lm;
-import studio.ui.ExceptionGroup;
+import studio.kdb.Server;
+import studio.kdb.Workspace;
 import studio.ui.StudioPanel;
+import studio.ui.action.WorkspaceSaver;
 
 import java.util.TimeZone;
 import javax.swing.*;
@@ -59,14 +62,37 @@ public class Studio {
 
         Locale.setDefault(Locale.US);
 
-        SwingUtilities.invokeLater( ()-> {
-                log.info("Start Studio with args {}", Arrays.asList(args));
-                StudioPanel.init(args);
-                String hash = Lm.getNotesHash();
-                if (! Config.getInstance().getNotesHash().equals(hash) ) {
-                    StudioPanel.getPanels()[0].about();
-                    Config.getInstance().setNotesHash(hash);
-                }
-            } );
+        SwingUtilities.invokeLater( ()-> init(args) );
+    }
+
+    private static Server getInitServer() {
+        List<Server> serverHistory = Config.getInstance().getServerHistory();
+        return serverHistory.size() == 0 ? null : serverHistory.get(0);
+    }
+
+    //Executed on the Event Dispatcher Thread
+    private static void init(String[] args) {
+        log.info("Start Studio with args {}", Arrays.asList(args));
+
+        if (args.length > 0) {
+            new StudioPanel().addTab(getInitServer(), args[0]);
+        } else {
+            Workspace workspace = Config.getInstance().loadWorkspace();
+            if (workspace.getWindows().length == 0) {
+                String[] mruFiles = Config.getInstance().getMRUFiles();
+                String filename = mruFiles.length == 0 ? null : mruFiles[0];
+                new StudioPanel().addTab(getInitServer(), filename);
+            } else {
+                StudioPanel.loadWorkspace(workspace);
+            }
+        }
+
+        WorkspaceSaver.init();
+
+        String hash = Lm.getNotesHash();
+        if (! Config.getInstance().getNotesHash().equals(hash) ) {
+            StudioPanel.getPanels()[0].about();
+            Config.getInstance().setNotesHash(hash);
+        }
     }
 }
