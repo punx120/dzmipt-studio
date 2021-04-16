@@ -147,6 +147,8 @@ public class Workspace {
         }
 
         public Tab addServer(Server server) {
+            if (server == null) return this;
+
             if (server.getFolder() == null) {
                 serverFullName = null;
             } else {

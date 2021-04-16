@@ -1741,12 +1741,15 @@ public class StudioPanel extends JPanel implements Observer,WindowListener {
             StudioPanel panel = new StudioPanel();
             for (Workspace.Tab tab: tabs) {
                 String serverFullname = tab.getServerFullName();
-                Server server = Config.getInstance().getServer(serverFullname);
-                if (server == null) {
-                    server = Config.getInstance().getServerByConnectionString(tab.getServerConnection());
-                    String auth = tab.getServerAuth();
-                    if (AuthenticationManager.getInstance().lookup(auth) != null) {
-                        server.setAuthenticationMechanism(auth);
+                Server server = null;
+                if (serverFullname != null) {
+                    server = Config.getInstance().getServer(serverFullname);
+                    if (server == null) {
+                        server = Config.getInstance().getServerByConnectionString(tab.getServerConnection());
+                        String auth = tab.getServerAuth();
+                        if (AuthenticationManager.getInstance().lookup(auth) != null) {
+                            server.setAuthenticationMechanism(auth);
+                        }
                     }
                 }
                 panel.addTab(server, tab.getFilename());
