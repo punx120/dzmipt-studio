@@ -50,6 +50,15 @@ import studio.utils.OSXAdapter;
 public class StudioPanel extends JPanel implements Observer,WindowListener {
 
     private static final Logger log = LogManager.getLogger();
+    private static final Action editorUndoAction;
+    private static final Action editorRedoAction;
+    private static final Action editorCutAction;
+    private static final Action editorCopyAction;
+    private static final Action editorPasteAction;
+    private static final Action editorSelectAllAction;
+    private static final Action editorFindAction;
+    private static final Action editorReplaceAction;
+
     static {
 
         // Register us
@@ -62,6 +71,18 @@ public class StudioPanel extends JPanel implements Observer,WindowListener {
 
         Settings.addInitializer(new QSettingsInitializer());
         Settings.reset();
+
+        // Action name will be used for text in menu items. Kit's actions have internal names.
+        // We will create new actions for menu/toolbar and use kit's actions as action itself.
+        BaseKit kit = (BaseKit) JEditorPane.createEditorKitForContentType(QKit.CONTENT_TYPE);
+        editorCopyAction = kit.getActionByName(BaseKit.copyAction);
+        editorCutAction = kit.getActionByName(BaseKit.cutAction);
+        editorPasteAction = kit.getActionByName(BaseKit.pasteAction);
+        editorFindAction = kit.getActionByName(ExtKit.findAction);
+        editorReplaceAction = kit.getActionByName(ExtKit.replaceAction);
+        editorSelectAllAction = kit.getActionByName(BaseKit.selectAllAction);
+        editorUndoAction = kit.getActionByName(BaseKit.undoAction);
+        editorRedoAction = kit.getActionByName(BaseKit.redoAction);
     }
 
     private static final String TITLE = "title";
@@ -201,7 +222,6 @@ public class StudioPanel extends JPanel implements Observer,WindowListener {
         doc.putProperty(BaseDocument.UNDO_MANAGER_PROP,um);
         doc.addUndoableEditListener(um);
 
-        initTextAction((BaseKit) textArea.getEditorKit());
         return textArea;
     }
 
@@ -213,7 +233,7 @@ public class StudioPanel extends JPanel implements Observer,WindowListener {
         }
     }
 
-    private void refreshActionState() {
+    public void refreshActionState() {
         if (textArea == null || tabbedPane == null) {
             setActionsEnabled(false, undoAction, redoAction, stopAction, executeAction,
                                           executeCurrentLineAction, refreshAction);
@@ -732,7 +752,7 @@ public class StudioPanel extends JPanel implements Observer,WindowListener {
         }
         return false;
     }
-    //   private boolean wasLoaded=false;
+
     // returns true if saved, false if error or cancelled
     public boolean saveFile(String filename,boolean force) {
         if (filename == null)
@@ -987,64 +1007,30 @@ public class StudioPanel extends JPanel implements Observer,WindowListener {
                         JOptionPane.showMessageDialog(null, "Error attempting to launch web browser:\n" + ex.getLocalizedMessage());
                     }
                 });
-    }
 
-    private void initTextAction(BaseKit baseKit) {
-        copyAction = baseKit.getActionByName(BaseKit.copyAction);
-        copyAction.putValue(Action.SHORT_DESCRIPTION,"Copy the selected text to the clipboard");
-        copyAction.putValue(Action.SMALL_ICON,Util.COPY_ICON);
-        copyAction.putValue(Action.NAME,I18n.getString("Copy"));
-        copyAction.putValue(Action.MNEMONIC_KEY, KeyEvent.VK_C);
-        copyAction.putValue(Action.ACCELERATOR_KEY,KeyStroke.getKeyStroke(KeyEvent.VK_C,menuShortcutKeyMask));
+        copyAction = UserAction.create(I18n.getString("Copy"), Util.COPY_ICON, "Copy the selected text to the clipboard",
+                KeyEvent.VK_C, KeyStroke.getKeyStroke(KeyEvent.VK_C,menuShortcutKeyMask), editorCopyAction);
 
-        cutAction = baseKit.getActionByName(BaseKit.cutAction);
-        cutAction.putValue(Action.SHORT_DESCRIPTION,"Cut the selected text");
-        cutAction.putValue(Action.SMALL_ICON,Util.CUT_ICON);
-        cutAction.putValue(Action.NAME,I18n.getString("Cut"));
-        cutAction.putValue(Action.MNEMONIC_KEY, KeyEvent.VK_T);
-        cutAction.putValue(Action.ACCELERATOR_KEY,KeyStroke.getKeyStroke(KeyEvent.VK_X,menuShortcutKeyMask));
+        cutAction = UserAction.create(I18n.getString("Cut"), Util.CUT_ICON, "Cut the selected text",
+                KeyEvent.VK_T, KeyStroke.getKeyStroke(KeyEvent.VK_X,menuShortcutKeyMask), editorCutAction);
 
-        pasteAction = baseKit.getActionByName(BaseKit.pasteAction);
-        pasteAction.putValue(Action.SHORT_DESCRIPTION,"Paste text from the clipboard");
-        pasteAction.putValue(Action.SMALL_ICON,Util.PASTE_ICON);
-        pasteAction.putValue(Action.NAME,I18n.getString("Paste"));
-        pasteAction.putValue(Action.MNEMONIC_KEY, KeyEvent.VK_P);
-        pasteAction.putValue(Action.ACCELERATOR_KEY,KeyStroke.getKeyStroke(KeyEvent.VK_V,menuShortcutKeyMask));
+        pasteAction = UserAction.create(I18n.getString("Paste"), Util.PASTE_ICON, "Paste text from the clipboard",
+                KeyEvent.VK_P, KeyStroke.getKeyStroke(KeyEvent.VK_V,menuShortcutKeyMask), editorPasteAction);
 
-        findAction = baseKit.getActionByName(ExtKit.findAction);
-        findAction.putValue(Action.SHORT_DESCRIPTION,"Find text in the document");
-        findAction.putValue(Action.SMALL_ICON,Util.FIND_ICON);
-        findAction.putValue(Action.NAME,I18n.getString("Find"));
-        findAction.putValue(Action.MNEMONIC_KEY, KeyEvent.VK_F);
-        findAction.putValue(Action.ACCELERATOR_KEY,KeyStroke.getKeyStroke(KeyEvent.VK_F,menuShortcutKeyMask));
+        findAction = UserAction.create(I18n.getString("Find"), Util.FIND_ICON, "Find text in the document",
+                KeyEvent.VK_F, KeyStroke.getKeyStroke(KeyEvent.VK_F,menuShortcutKeyMask), editorFindAction);
 
-        replaceAction = baseKit.getActionByName(ExtKit.replaceAction);
-        replaceAction.putValue(Action.SHORT_DESCRIPTION,"Replace text in the document");
-        replaceAction.putValue(Action.SMALL_ICON,Util.REPLACE_ICON);
-        replaceAction.putValue(Action.NAME,I18n.getString("Replace"));
-        replaceAction.putValue(Action.MNEMONIC_KEY, KeyEvent.VK_R);
-        replaceAction.putValue(Action.ACCELERATOR_KEY,KeyStroke.getKeyStroke(KeyEvent.VK_R,menuShortcutKeyMask));
+        replaceAction = UserAction.create(I18n.getString("Replace"), Util.REPLACE_ICON, "Replace text in the document",
+                KeyEvent.VK_R, KeyStroke.getKeyStroke(KeyEvent.VK_R,menuShortcutKeyMask), editorReplaceAction);
 
-        selectAllAction = baseKit.getActionByName(BaseKit.selectAllAction);
-        selectAllAction.putValue(Action.SHORT_DESCRIPTION,"Select all text in the document");
-        selectAllAction.putValue(Action.SMALL_ICON,null);
-        selectAllAction.putValue(Action.NAME,I18n.getString("SelectAll"));
-        selectAllAction.putValue(Action.MNEMONIC_KEY, KeyEvent.VK_A);
-        selectAllAction.putValue(Action.ACCELERATOR_KEY,KeyStroke.getKeyStroke(KeyEvent.VK_A,menuShortcutKeyMask));
+        selectAllAction = UserAction.create(I18n.getString("SelectAll"), "Select all text in the document",
+                KeyEvent.VK_A, KeyStroke.getKeyStroke(KeyEvent.VK_A,menuShortcutKeyMask), editorSelectAllAction);
 
-        undoAction = baseKit.getActionByName(BaseKit.undoAction);
-        undoAction.putValue(Action.SHORT_DESCRIPTION,"Undo the last change to the document");
-        undoAction.putValue(Action.SMALL_ICON,Util.UNDO_ICON);
-        undoAction.putValue(Action.NAME,I18n.getString("Undo"));
-        undoAction.putValue(Action.MNEMONIC_KEY, KeyEvent.VK_U);
-        undoAction.putValue(Action.ACCELERATOR_KEY,KeyStroke.getKeyStroke(KeyEvent.VK_Z,menuShortcutKeyMask));
+        undoAction = UserAction.create(I18n.getString("Undo"), Util.UNDO_ICON, "Undo the last change to the document",
+                KeyEvent.VK_U, KeyStroke.getKeyStroke(KeyEvent.VK_Z,menuShortcutKeyMask), editorUndoAction);
 
-        redoAction = baseKit.getActionByName(BaseKit.redoAction);
-        redoAction.putValue(Action.SHORT_DESCRIPTION,"Redo the last change to the document");
-        redoAction.putValue(Action.SMALL_ICON,Util.REDO_ICON);
-        redoAction.putValue(Action.NAME,I18n.getString("Redo"));
-        redoAction.putValue(Action.MNEMONIC_KEY, KeyEvent.VK_R);
-        redoAction.putValue(Action.ACCELERATOR_KEY,KeyStroke.getKeyStroke(KeyEvent.VK_Y,menuShortcutKeyMask));
+        redoAction = UserAction.create(I18n.getString("Redo"), Util.REDO_ICON, "Redo the last change to the document",
+                KeyEvent.VK_R, KeyStroke.getKeyStroke(KeyEvent.VK_Y,menuShortcutKeyMask), editorRedoAction);
     }
 
     public void settings() {
