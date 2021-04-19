@@ -1233,8 +1233,8 @@ public class StudioPanel extends JPanel implements Observer,WindowListener {
 
             int i = 0;
             for (StudioPanel panel: allPanels) {
+                EditorTab editor = panel.editor;
                 String t = "unknown";
-
                 String filename = editor.getFilename();
 
                 if (filename != null)
