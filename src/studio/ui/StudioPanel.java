@@ -1063,9 +1063,6 @@ public class StudioPanel extends JPanel implements Observer,WindowListener {
             frame.dispose();
             allPanels.remove(this);
             rebuildAll();
-            if (allPanels.size() == 0) {
-                System.exit(0);
-            }
         }
 
         return true;
