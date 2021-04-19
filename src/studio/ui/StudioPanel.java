@@ -25,6 +25,7 @@ import javax.swing.text.*;
 import javax.swing.undo.CannotRedoException;
 import javax.swing.undo.CannotUndoException;
 import javax.swing.undo.UndoManager;
+
 import kx.c;
 import org.apache.logging.log4j.LogManager;
 import org.apache.logging.log4j.Logger;
@@ -85,18 +86,13 @@ public class StudioPanel extends JPanel implements Observer,WindowListener {
         editorRedoAction = kit.getActionByName(BaseKit.redoAction);
     }
 
-    private static final String TITLE = "title";
-    private static final String FILENAME = "filename";
-    private static final String SERVER = "server";
-    private static final String MODIFIED = "modified";
-
     private JComboBox<String> comboServer;
     private JTextField txtServer;
     private String exportFilename;
     private String lastQuery = null;
     private JToolBar toolbar;
     private JTabbedPane tabbedEditors;
-    private JEditorPane textArea;
+    private EditorTab editor;
     private JSplitPane splitpane;
     private JTabbedPane tabbedPane;
     private ServerList serverList;
@@ -137,7 +133,6 @@ public class StudioPanel extends JPanel implements Observer,WindowListener {
     private UserAction addServerAction;
     private UserAction removeServerAction;
     private UserAction toggleCommaFormatAction;
-    private static int scriptNumber = 0;
     private JFrame frame;
 
     private static JFileChooser fileChooser;
@@ -152,41 +147,13 @@ public class StudioPanel extends JPanel implements Observer,WindowListener {
 
     private final static int MAX_SERVERS_TO_CLONE = 20;
 
-    private String getTabTitle() {
-        if (getFilename() != null) return getTitle();
-        if (server == null) return getTitle();
-
-        if (server.getName().length() > 0) return server.getName();
-        return server.getHost() + ":" + server.getPort();
-    }
-
-    private String getTitle() {
-        return (String) textArea.getDocument().getProperty(TITLE);
-    }
-
     public void refreshTitle() {
-        frame.setTitle(getTitle() + (getModified() ? " (not saved) " : "") + (server!=null?" @"+server.toString():"") +" Studio for kdb+ " + Lm.version);
+        Server server = editor.getServer();
+        frame.setTitle(editor.getTitle() + (editor.isModified() ? " (not saved) " : "") + (server!=null?" @"+server.toString():"") +" Studio for kdb+ " + Lm.version);
         int index = tabbedEditors.getSelectedIndex();
         if (index != -1) {
-            tabbedEditors.setTitleAt(index, getTabTitle());
+            tabbedEditors.setTitleAt(index, editor.getTabTitle());
         }
-    }
-
-    private String getFilename() {
-        if (textArea == null) return null;
-        return (String) textArea.getDocument().getProperty(FILENAME);
-    }
-
-    private void setFilename(String filename) {
-        textArea.getDocument().putProperty(FILENAME, filename);
-        String title;
-        if (filename == null) {
-            title = "Script" + scriptNumber++;
-        } else {
-            title = new File(filename).getName();
-        }
-        textArea.getDocument().putProperty(TITLE, title);
-        refreshTitle();
     }
 
     //@TODO: Should we have a generic code which override or remove all our actions from the netbeans JEditorPane
@@ -195,34 +162,6 @@ public class StudioPanel extends JPanel implements Observer,WindowListener {
             component.getInputMap().put(action.getKeyStroke(), action.getText());
             component.getActionMap().put(action.getText(), action);
         }
-    }
-
-    private JEditorPane createTextArea() {
-        JEditorPane textArea = new JEditorPane(QKit.CONTENT_TYPE,"");
-        textArea.putClientProperty(QueryExecutor.class, new QueryExecutor(this));
-        overrideDefaultKeymap(textArea, toggleCommaFormatAction, newTabAction, closeTabAction);
-        Document doc = textArea.getDocument();
-        doc.putProperty(MODIFIED, false);
-        UndoManager um = new UndoManager() {
-            public void undoableEditHappened(UndoableEditEvent e) {
-                super.undoableEditHappened(e);
-                refreshActionState();
-            }
-
-            public synchronized void redo() throws CannotRedoException {
-                super.redo();
-                refreshActionState();
-            }
-
-            public synchronized void undo() throws CannotUndoException {
-                super.undo();
-                refreshActionState();
-            }
-        };
-        doc.putProperty(BaseDocument.UNDO_MANAGER_PROP,um);
-        doc.addUndoableEditListener(um);
-
-        return textArea;
     }
 
     private void setActionsEnabled(boolean value, Action... actions) {
@@ -234,12 +173,13 @@ public class StudioPanel extends JPanel implements Observer,WindowListener {
     }
 
     public void refreshActionState() {
-        if (textArea == null || tabbedPane == null) {
+        if (editor.getTextArea() == null || tabbedPane == null) {
             setActionsEnabled(false, undoAction, redoAction, stopAction, executeAction,
                                           executeCurrentLineAction, refreshAction);
             return;
         }
 
+        Server server = editor.getServer();
         editServerAction.setEnabled(server != null);
         removeServerAction.setEnabled(server != null);
 
@@ -253,11 +193,11 @@ public class StudioPanel extends JPanel implements Observer,WindowListener {
             refreshAction.setEnabled(true);
         }
 
-        UndoManager um = (UndoManager) textArea.getDocument().getProperty(BaseDocument.UNDO_MANAGER_PROP);
+        UndoManager um = editor.getUndoManager();
         undoAction.setEnabled(um.canUndo());
         redoAction.setEnabled(um.canRedo());
 
-        boolean queryRunning = getQueryExecutor(textArea).running();
+        boolean queryRunning = editor.getQueryExecutor().running();
         stopAction.setEnabled(queryRunning);
         executeAction.setEnabled(!queryRunning);
         executeCurrentLineAction.setEnabled(!queryRunning);
@@ -274,7 +214,7 @@ public class StudioPanel extends JPanel implements Observer,WindowListener {
             fileChooser.setFileFilter(ff);
         }
 
-        String filename = getFilename();
+        String filename = editor.getFilename();
         if (filename != null) {
             fileChooser.setCurrentDirectory(new File(new File(filename).getPath()));
         }
@@ -567,19 +507,17 @@ public class StudioPanel extends JPanel implements Observer,WindowListener {
     }
 
     public void newFile() {
-        String filename = getFilename();
-        if (!saveIfModified(filename))
+        if (!saveIfModified())
             return;
-        setFilename(null);
+        editor.setFilename(null);
         initTextArea("");
     }
 
     public void openFile() {
-        String filename = getFilename();
-        if (!saveIfModified(filename))
+        if (!saveIfModified())
             return;
 
-        filename = chooseFilename();
+        String filename = chooseFilename();
 
         if (filename != null) {
             if (! loadFile(filename)) return;
@@ -587,8 +525,9 @@ public class StudioPanel extends JPanel implements Observer,WindowListener {
         }
     }
     // returns true to continue
-    public boolean saveIfModified(String filename) {
-        if (getModified()) {
+    public boolean saveIfModified() {
+        String filename = editor.getFilename();
+        if (editor.isModified()) {
             int choice = JOptionPane.showOptionDialog(frame,
                                                       "Changes not saved.\nSave now?",
                                                       "Save changes?",
@@ -615,13 +554,14 @@ public class StudioPanel extends JPanel implements Observer,WindowListener {
         return true;
     }
 
-    public void loadMRUFile(String filename,String oldFilename) {
-        if (!saveIfModified(oldFilename))
+    public void loadMRUFile(String filename) {
+        if (!saveIfModified())
             return;
 
         if (!loadFile(filename)) return;
         addToMruFiles(filename);
-        setServer(server);
+        refreshTitle();
+        rebuildAll();
     }
 
     private void addToMruFiles(String filename) {
@@ -666,7 +606,7 @@ public class StudioPanel extends JPanel implements Observer,WindowListener {
             JOptionPane.showMessageDialog(frame, "Failed to load file "+filename + ".\n" + e.getMessage(),
                             "Error in file load", JOptionPane.ERROR_MESSAGE);
         } finally {
-            setFilename(filename);
+            editor.setFilename(filename);
             initTextArea(content);
         }
         return false;
@@ -674,10 +614,11 @@ public class StudioPanel extends JPanel implements Observer,WindowListener {
 
     private void initTextArea(String content) {
         try {
+            JEditorPane textArea = editor.getTextArea();
             textArea.getDocument().remove(0, textArea.getDocument().getLength());
             textArea.getDocument().insertString(0, content,null);
             textArea.setCaretPosition(0);
-            setModified(false);
+            editor.setModified(false);
             UndoManager um = (UndoManager) textArea.getDocument().getProperty(BaseDocument.UNDO_MANAGER_PROP);
             um.discardAllEdits();
             rebuildAll();
@@ -712,7 +653,7 @@ public class StudioPanel extends JPanel implements Observer,WindowListener {
 
         chooser.setFileFilter(ff);
 
-        String filename = getFilename();
+        String filename = editor.getFilename();
         if (filename != null) {
             File file = new File(filename);
             File dir = new File(file.getPath());
@@ -760,13 +701,13 @@ public class StudioPanel extends JPanel implements Observer,WindowListener {
 
         try {
             if (!force)
-                if (null == getFilename())
+                if (null == editor.getFilename())
                     return saveAsFile();
 
-            textArea.write(new BufferedWriter(new OutputStreamWriter(new FileOutputStream(filename), "UTF-8")));
-            setFilename(filename);
+            editor.getTextArea().write(new BufferedWriter(new OutputStreamWriter(new FileOutputStream(filename), "UTF-8")));
+            editor.setFilename(filename);
             rebuildAll();
-            setModified(false);
+            editor.setModified(false);
             addToMruFiles(filename);
             return true;
         }
@@ -807,38 +748,9 @@ public class StudioPanel extends JPanel implements Observer,WindowListener {
         }
     }
 
-    private void setModified(boolean value) {
-        if (textArea != null) {
-            Document doc = textArea.getDocument();
-            doc.putProperty(MODIFIED, value);
-            refreshTitle();
-        }
-    }
-
-    private boolean getModified() {
-        //@TODO can textArea be null? Likely the "if" is redundant
-        if (textArea != null) {
-            Document doc = textArea.getDocument();
-            return (Boolean)doc.getProperty(MODIFIED);
-        }
-
-        return false;
-    }
-
     private void setServer(Server server) {
-        if (server == null)
-            return;
-
-        this.server = server;
-
-        if (textArea != null) {
-            Document doc = textArea.getDocument();
-
-            if (doc != null)
-                doc.putProperty(SERVER,server);
-            Utilities.getEditorUI(textArea).getComponent().setBackground(server.getBackgroundColor());
-        }
-
+        if (server == null) return;
+        editor.setServer(server);
         Config.getInstance().addServerToHistory(server);
         serverHistory.add(server);
 
@@ -871,11 +783,11 @@ public class StudioPanel extends JPanel implements Observer,WindowListener {
 
         newWindowAction = UserAction.create(I18n.getString("NewWindow"), Util.BLANK_ICON, "Open a new window",
                 KeyEvent.VK_N, KeyStroke.getKeyStroke(KeyEvent.VK_N, menuShortcutKeyMask | InputEvent.SHIFT_MASK),
-                e -> new StudioPanel().addTab(server, null) );
+                e -> new StudioPanel().addTab(editor.getServer(), null) );
 
         newTabAction = UserAction.create("New Tab", Util.BLANK_ICON, "Open a new tab", KeyEvent.VK_T,
                 KeyStroke.getKeyStroke(KeyEvent.VK_N, menuShortcutKeyMask),
-                e -> addTab(server, null));
+                e -> addTab(editor.getServer(), null));
 
         serverListAction = UserAction.create(I18n.getString("ServerList"), Util.TEXT_TREE_ICON, "Show sever list",
                 KeyEvent.VK_L, KeyStroke.getKeyStroke(KeyEvent.VK_L, menuShortcutKeyMask | InputEvent.SHIFT_MASK),
@@ -890,7 +802,7 @@ public class StudioPanel extends JPanel implements Observer,WindowListener {
 
         editServerAction = UserAction.create(I18n.getString("Edit"), Util.SERVER_INFORMATION_ICON, "Edit the server details",
                 KeyEvent.VK_E, null, e -> {
-                    Server s = new Server(server);
+                    Server s = new Server(editor.getServer());
 
                     EditServerForm f = new EditServerForm(frame, s);
                     f.alignAndShow();
@@ -898,8 +810,8 @@ public class StudioPanel extends JPanel implements Observer,WindowListener {
                         if (stopAction.isEnabled())
                             stopAction.actionPerformed(e);
 
-                        ConnectionPool.getInstance().purge(server);
-                        Config.getInstance().removeServer(server);
+                        ConnectionPool.getInstance().purge(editor.getServer());
+                        Config.getInstance().removeServer(editor.getServer());
 
                         s = f.getServer();
                         Config.getInstance().addServer(s);
@@ -925,7 +837,7 @@ public class StudioPanel extends JPanel implements Observer,WindowListener {
         removeServerAction = UserAction.create(I18n.getString("Remove"), Util.DELETE_SERVER_ICON, "Remove this server",
                 KeyEvent.VK_R, null, e -> {
                     int choice = JOptionPane.showOptionDialog(frame,
-                            "Remove server " + server.getFullName() + " from list?",
+                            "Remove server " + editor.getServer().getFullName() + " from list?",
                             "Remove server?",
                             JOptionPane.YES_NO_CANCEL_OPTION,
                             JOptionPane.QUESTION_MESSAGE,
@@ -934,7 +846,7 @@ public class StudioPanel extends JPanel implements Observer,WindowListener {
                             null);      // no default selection
 
                     if (choice == 0) {
-                        Config.getInstance().removeServer(server);
+                        Config.getInstance().removeServer(editor.getServer());
 
                         Server[] servers = Config.getInstance().getServers();
 
@@ -948,7 +860,7 @@ public class StudioPanel extends JPanel implements Observer,WindowListener {
 
         saveFileAction = UserAction.create(I18n.getString("Save"), Util.DISKS_ICON, "Save the script",
                 KeyEvent.VK_S, KeyStroke.getKeyStroke(KeyEvent.VK_S, menuShortcutKeyMask),
-                e -> saveFile(getFilename(), false));
+                e -> saveFile(editor.getFilename(), false));
 
         saveAsFileAction = UserAction.create(I18n.getString("SaveAs"), Util.SAVE_AS_ICON, "Save script as",
                 KeyEvent.VK_A, null, e -> saveAsFile());
@@ -960,7 +872,7 @@ public class StudioPanel extends JPanel implements Observer,WindowListener {
                 KeyEvent.VK_E, null, e -> new LineChart((KTableModel) getSelectedTable().getModel()));
 
         stopAction = UserAction.create(I18n.getString("Stop"), Util.STOP_ICON, "Stop the query",
-                KeyEvent.VK_S, null, e -> getQueryExecutor(textArea).cancel());
+                KeyEvent.VK_S, null, e -> editor.getQueryExecutor().cancel());
 
         openInExcel = UserAction.create(I18n.getString("OpenInExcel"), Util.EXCEL_ICON, "Open in Excel",
                 KeyEvent.VK_O, null, e -> {
@@ -1090,16 +1002,16 @@ public class StudioPanel extends JPanel implements Observer,WindowListener {
     }
 
     public boolean closeTab() {
-        if (getModified()) {
+        if (editor.isModified()) {
             int choice = JOptionPane.showOptionDialog(frame,
-                    getTitle() + " is changed. Save changes?","Save changes?",
+                    editor.getTitle() + " is changed. Save changes?","Save changes?",
                     JOptionPane.YES_NO_CANCEL_OPTION, JOptionPane.QUESTION_MESSAGE, Util.QUESTION_ICON,
                                                       null, // use standard button titles
                                                       null);      // no default selection
 
             if (choice == JOptionPane.YES_OPTION)
                 try {
-                    if (!saveFile(getFilename(),false))
+                    if (!saveFile(editor.getFilename(),false))
                         // was cancelled so return
                         return false;
                 }
@@ -1184,7 +1096,7 @@ public class StudioPanel extends JPanel implements Observer,WindowListener {
                 item.addActionListener(new ActionListener() {
                     
                                        public void actionPerformed(ActionEvent e) {
-                                           loadMRUFile(filename,getFilename());
+                                           loadMRUFile(filename);
                                        }
                                    });
                 menu.add(item);
@@ -1221,6 +1133,7 @@ public class StudioPanel extends JPanel implements Observer,WindowListener {
         menu.add(new JMenuItem(editServerAction));
         menu.add(new JMenuItem(removeServerAction));
 
+        Server server = editor.getServer();
         Server[] servers = Config.getInstance().getServers();
         if (servers.length > 0) {
             JMenu subMenu = new JMenu(I18n.getString("Clone"));
@@ -1288,13 +1201,13 @@ public class StudioPanel extends JPanel implements Observer,WindowListener {
             for (StudioPanel panel: allPanels) {
                 String t = "unknown";
 
-                String filename = panel.getFilename();
+                String filename = editor.getFilename();
 
                 if (filename != null)
                     t = filename.replace('\\','/');
 
-                if (panel.server != null)
-                    t = t + "[" + panel.server.getFullName() + "]";
+                if (editor.getServer() != null)
+                    t = t + "[" + editor.getServer().getFullName() + "]";
                 else
                     t = t + "[no server]";
 
@@ -1336,6 +1249,7 @@ public class StudioPanel extends JPanel implements Observer,WindowListener {
     private void selectConnectionString() {
         String connection = txtServer.getText().trim();
         if (connection.length() == 0) return;
+        Server server = editor.getServer();
         if (server != null && server.getConnectionString(false).equals(connection)) return;
 
         try {
@@ -1369,7 +1283,7 @@ public class StudioPanel extends JPanel implements Observer,WindowListener {
                 serverList.align();
             }
         }
-        serverList.updateServerTree(Config.getInstance().getServerTree(), server);
+        serverList.updateServerTree(Config.getInstance().getServerTree(), editor.getServer());
         serverList.updateServerHistory(serverHistory);
         serverList.selectHistoryTab(selectHistory);
         serverList.setVisible(true);
@@ -1379,7 +1293,7 @@ public class StudioPanel extends JPanel implements Observer,WindowListener {
         Config.getInstance().setServerListBounds(bounds);
 
         Server selectedServer = serverList.getSelectedServer();
-        if (selectedServer == null || selectedServer.equals(server)) return;
+        if (selectedServer == null || selectedServer.equals(editor.getServer())) return;
 
         setServer(selectedServer);
         rebuildToolbar();
@@ -1397,6 +1311,7 @@ public class StudioPanel extends JPanel implements Observer,WindowListener {
     }
 
     private void refreshConnection() {
+        Server server = editor.getServer();
         if (server == null) {
             txtServer.setText("");
             txtServer.setToolTipText("Select connection details");
@@ -1407,6 +1322,7 @@ public class StudioPanel extends JPanel implements Observer,WindowListener {
     }
 
     private void toolbarAddServerSelection() {
+        Server server = editor.getServer();
         Collection<String> names = Config.getInstance().getServerNames();
         String name = server == null ? "" : server.getFullName();
         if (!names.contains(name)) {
@@ -1579,9 +1495,12 @@ public class StudioPanel extends JPanel implements Observer,WindowListener {
         splitpane.setDividerLocation(0.5);
     }
 
-    public void addTab(Server server, String filename) {
-        JEditorPane textArea = createTextArea();
+    public EditorTab addTab(Server server, String filename) {
+        editor = new EditorTab(this);
+        JEditorPane textArea = editor.init();
+        overrideDefaultKeymap(textArea, toggleCommaFormatAction, newTabAction, closeTabAction);
         JComponent component = Utilities.getEditorUI(textArea).getExtComponent();
+        component.putClientProperty(EditorTab.class, editor);
         tabbedEditors.add(component);
         tabbedEditors.setSelectedIndex(tabbedEditors.getTabCount()-1);
         setServer(server);
@@ -1589,15 +1508,17 @@ public class StudioPanel extends JPanel implements Observer,WindowListener {
         if (filename != null) {
             loadFile(filename);
         } else {
-            setFilename(null);
+            editor.setFilename(null);
             initTextArea("");
         }
         textArea.getDocument().addDocumentListener(new MarkingDocumentListener());
         textArea.requestFocus();
         refreshActionState();
+        return editor;
     }
 
     public StudioPanel() {
+        editor = new EditorTab(this);
         registerForMacOSXEvents();
         initActions();
         serverHistory = new HistoricalList<>(Config.getInstance().getServerHistoryDepth(),
@@ -1610,8 +1531,8 @@ public class StudioPanel extends JPanel implements Observer,WindowListener {
         tabbedEditors = new JTabbedPane();
         tabbedEditors.addChangeListener(e->{
             if ( tabbedEditors.getSelectedIndex() == -1) return;
-            textArea = getTextArea(tabbedEditors.getSelectedIndex());
-            setServer((Server) textArea.getDocument().getProperty(SERVER));
+            editor = getEditor(tabbedEditors.getSelectedIndex());
+            setServer(editor.getServer());
             lastQuery = null;
             refreshTitle();
             refreshActionState();
@@ -1734,9 +1655,9 @@ public class StudioPanel extends JPanel implements Observer,WindowListener {
 
             StudioPanel panel = new StudioPanel();
             for (Workspace.Tab tab: tabs) {
-                panel.addTab(getServer(tab), tab.getFilename());
-                panel.textArea.setText(tab.getContent());
-                panel.setModified(tab.isModified());
+                EditorTab editor = panel.addTab(getServer(tab), tab.getFilename());
+                editor.getTextArea().setText(tab.getContent());
+                editor.setModified(tab.isModified());
             }
             if (window.getSelectedTab() != -1) {
                 panel.tabbedEditors.setSelectedIndex(window.getSelectedTab());
@@ -1753,11 +1674,11 @@ public class StudioPanel extends JPanel implements Observer,WindowListener {
     }
 
     public void executeQueryCurrentLine() {
-        executeQuery(getCurrentLineEditorText(textArea));
+        executeQuery(getCurrentLineEditorText(editor.getTextArea()));
     }
 
     public void executeQuery() {
-        executeQuery(getEditorText(textArea));
+        executeQuery(getEditorText(editor.getTextArea()));
     }
 
     private void executeQuery(String text) {
@@ -1780,7 +1701,7 @@ public class StudioPanel extends JPanel implements Observer,WindowListener {
     }
 
     public Server getServer() {
-        return server;
+        return editor.getServer();
     }
 
     private String getEditorText(JEditorPane editor) {
@@ -1854,27 +1775,21 @@ public class StudioPanel extends JPanel implements Observer,WindowListener {
         return tab.getTable();
     }
 
-    private Server server = null;
-
     public void executeK4Query(final String text) {
-        textArea.setCursor(waitCursor);
-        getQueryExecutor(textArea).execute(text);
+        editor.getTextArea().setCursor(waitCursor);
+        editor.getQueryExecutor().execute(text);
     }
 
-    private QueryExecutor getQueryExecutor(JEditorPane textArea) {
-        return (QueryExecutor) textArea.getClientProperty(QueryExecutor.class);
+    private EditorTab getEditor(int index) {
+        return (EditorTab) ((JComponent) tabbedEditors.getComponent(index)).getClientProperty(EditorTab.class);
     }
 
-    private JEditorPane getTextArea(int index) {
-        return (JEditorPane) ((JComponent) tabbedEditors.getComponent(index)).getClientProperty(JTextComponent.class);
-    }
-
-    private JEditorPane findTextEditor(QueryExecutor queryExecutor) {
+    private EditorTab findTextEditor(QueryExecutor queryExecutor) {
         int count = tabbedEditors.getComponentCount();
         for (int index = 0; index<count; index++) {
-            JEditorPane textArea = getTextArea(index);
-            QueryExecutor aQueryExecutor = getQueryExecutor(textArea);
-            if (aQueryExecutor == queryExecutor) return textArea;
+            EditorTab editor = getEditor(index);
+            QueryExecutor aQueryExecutor = editor.getQueryExecutor();
+            if (aQueryExecutor == queryExecutor) return editor;
         }
         return null;
     }
@@ -1883,12 +1798,12 @@ public class StudioPanel extends JPanel implements Observer,WindowListener {
     public void queryExecutionComplete(QueryExecutor queryExecutor, QueryResult queryResult) {
         long execTime = queryResult.getExecutionTime();
         Throwable error = queryResult.getError();
-        JEditorPane textArea = findTextEditor(queryExecutor);
-        if (textArea != null) {
-            textArea.setCursor(textCursor);
-            if (execTime >= 0) {
-                Utilities.setStatusText(textArea, "Last execution time:" + (execTime > 0 ? "" + execTime : "<1") + " mS");
-            }
+        EditorTab editor = findTextEditor(queryExecutor);
+        if (editor == null) return;
+        JEditorPane textArea = editor.getTextArea();
+        textArea.setCursor(textCursor);
+        if (execTime >= 0) {
+            Utilities.setStatusText(textArea, "Last execution time:" + (execTime > 0 ? "" + execTime : "<1") + " mS");
         }
 
         if (error != null && ! (error instanceof c.K4Exception)) {
@@ -1896,7 +1811,9 @@ public class StudioPanel extends JPanel implements Observer,WindowListener {
             if ((message == null) || (message.length() == 0))
                 message = "No message with exception. Exception is " + error.toString();
             JOptionPane.showMessageDialog(textArea,
-                    "\nAn unexpected error occurred whilst communicating with " + server.getHost() + ":" + server.getPort() + "\n\nError detail is\n\n" + message + "\n\n",
+                    "\nAn unexpected error occurred whilst communicating with " +
+                            editor.getServer().getConnectionString(false) +
+                            "\n\nError detail is\n\n" + message + "\n\n",
                     "Studio for kdb+",
                     JOptionPane.ERROR_MESSAGE,
                     Util.ERROR_ICON);
@@ -1912,30 +1829,26 @@ public class StudioPanel extends JPanel implements Observer,WindowListener {
 
     public static Workspace getWorkspace() {
         Workspace workspace = new Workspace();
-        try {
-            Window activeWindow = KeyboardFocusManager.getCurrentKeyboardFocusManager().getActiveWindow();
+        Window activeWindow = KeyboardFocusManager.getCurrentKeyboardFocusManager().getActiveWindow();
 
-            for (StudioPanel panel : allPanels) {
-                Workspace.Window window = workspace.addWindow(panel.getFrame() == activeWindow);
+        for (StudioPanel panel : allPanels) {
+            Workspace.Window window = workspace.addWindow(panel.getFrame() == activeWindow);
 
-                int count = panel.tabbedEditors.getComponentCount();
-                for (int index = 0; index < count; index++) {
-                    Document document = panel.getTextArea(index).getDocument();
-                    Server server = (Server) document.getProperty(SERVER);
-                    String filename = (String) document.getProperty(FILENAME);
-                    boolean modified = (Boolean) document.getProperty(MODIFIED);
-                    String content = document.getText(0, document.getLength());
+            int count = panel.tabbedEditors.getComponentCount();
+            for (int index = 0; index < count; index++) {
+                EditorTab editor = panel.getEditor(index);
+                Server server = editor.getServer();
+                String filename = editor.getFilename();
+                boolean modified = editor.isModified();
+                String content = editor.getTextArea().getText();
 
-                    window.addTab(index == panel.tabbedEditors.getSelectedIndex())
-                            .addFilename(filename)
-                            .addServer(server)
-                            .addContent(content)
-                            .setModified(modified);
-                }
-
+                window.addTab(index == panel.tabbedEditors.getSelectedIndex())
+                        .addFilename(filename)
+                        .addServer(server)
+                        .addContent(content)
+                        .setModified(modified);
             }
-        } catch (BadLocationException e) {
-            log.error("Workspace wasn't save. This one is unexpected", e);
+
         }
         return workspace;
     }
@@ -1972,7 +1885,7 @@ public class StudioPanel extends JPanel implements Observer,WindowListener {
 
     private class MarkingDocumentListener implements DocumentListener {
         private void update() {
-            setModified(true);
+            editor.setModified(true);
         }
         public void changedUpdate(DocumentEvent evt) { update(); }
         public void insertUpdate(DocumentEvent evt) {
