@@ -981,19 +981,41 @@ public class StudioPanel extends JPanel implements Observer,WindowListener {
     }
 
     public boolean quit() {
-        WorkspaceSaver.save(getWorkspace());
         WorkspaceSaver.setEnabled(false);
-        for(StudioPanel panel: allPanels.toArray(new StudioPanel[0])) {
-            if (!panel.closeWindow()) {
-                WorkspaceSaver.setEnabled(true);
-                return false;
+        try {
+            for (StudioPanel panel : allPanels.toArray(new StudioPanel[0])) {
+                panel.getFrame().toFront();
+                JTabbedPane tabbedEditors = panel.tabbedEditors;
+                int selectedTab = tabbedEditors.getSelectedIndex();
+                try {
+                    int count = tabbedEditors.getTabCount();
+                    for (int index = 0; index < count; index++) {
+                        EditorTab editor = panel.getEditor(index);
+                        if (editor.isModified()) {
+                            tabbedEditors.setSelectedIndex(index);
+                            if (!checkAndSaveTab(editor)) {
+                                return false;
+                            }
+                        }
+                    }
+                } finally {
+                    tabbedEditors.setSelectedIndex(selectedTab);
+                }
             }
+        } finally {
+            frame.toFront();
+            WorkspaceSaver.setEnabled(true);
         }
-        //closing the last window would exit the application
+        WorkspaceSaver.save(getWorkspace());
+        log.info("Shutting down");
+        System.exit(0);
         return true;
     }
 
     private boolean closeWindow() {
+        // If this is the last window, we need to properly persist workspace
+        if (allPanels.size() == 1) return quit();
+
         while (tabbedEditors.getTabCount() > 0) {
             if (! closeTab()) return false;
         }
@@ -1001,13 +1023,13 @@ public class StudioPanel extends JPanel implements Observer,WindowListener {
         return true;
     }
 
-    public boolean closeTab() {
+    private boolean checkAndSaveTab(EditorTab editor) {
         if (editor.isModified()) {
-            int choice = JOptionPane.showOptionDialog(frame,
+            int choice = JOptionPane.showOptionDialog(editor.getTextArea(),
                     editor.getTitle() + " is changed. Save changes?","Save changes?",
                     JOptionPane.YES_NO_CANCEL_OPTION, JOptionPane.QUESTION_MESSAGE, Util.QUESTION_ICON,
-                                                      null, // use standard button titles
-                                                      null);      // no default selection
+                    null, // use standard button titles
+                    null);      // no default selection
 
             if (choice == JOptionPane.YES_OPTION)
                 try {
@@ -1021,6 +1043,18 @@ public class StudioPanel extends JPanel implements Observer,WindowListener {
                 }
             else if ((choice == JOptionPane.CANCEL_OPTION) || (choice == JOptionPane.CLOSED_OPTION))
                 return false;
+        }
+        return true;
+    }
+
+    public boolean closeTab() {
+        if (!checkAndSaveTab(editor)) return false;
+
+        if (tabbedEditors.getTabCount() == 1 && allPanels.size() == 1) {
+            WorkspaceSaver.save(getWorkspace());
+            log.info("Closed the last tab. Shutting down");
+            System.exit(0);
+            return true;
         }
 
         tabbedEditors.remove(tabbedEditors.getSelectedIndex());
