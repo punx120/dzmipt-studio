@@ -1548,6 +1548,15 @@ public class StudioPanel extends JPanel implements Observer,WindowListener {
         return editor;
     }
 
+    private void refreshEditor() {
+        if ( tabbedEditors.getSelectedIndex() == -1) return;
+        editor = getEditor(tabbedEditors.getSelectedIndex());
+        setServer(editor.getServer());
+        lastQuery = null;
+        refreshTitle();
+        refreshActionState();
+    }
+
     public StudioPanel() {
         editor = new EditorTab(this);
         registerForMacOSXEvents();
@@ -1560,13 +1569,16 @@ public class StudioPanel extends JPanel implements Observer,WindowListener {
         allPanels.add(this);
 
         tabbedEditors = new JTabbedPane();
-        tabbedEditors.addChangeListener(e->{
-            if ( tabbedEditors.getSelectedIndex() == -1) return;
-            editor = getEditor(tabbedEditors.getSelectedIndex());
-            setServer(editor.getServer());
-            lastQuery = null;
-            refreshTitle();
-            refreshActionState();
+        tabbedEditors.addChangeListener(e -> refreshEditor() );
+        tabbedEditors.addContainerListener(new ContainerListener() {
+            @Override
+            public void componentAdded(ContainerEvent e) {
+                refreshEditor();
+            }
+            @Override
+            public void componentRemoved(ContainerEvent e) {
+                refreshEditor();
+            }
         });
         splitpane.setTopComponent(tabbedEditors);
         splitpane.setDividerLocation(0.5);
