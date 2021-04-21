@@ -11,6 +11,7 @@ import javax.swing.border.EtchedBorder;
 import java.awt.*;
 
 public class TabPanel extends JPanel {
+    private final StudioPanel panel;
     private JComponent component = null;
 
     private JToolBar toolbar = null;
@@ -22,7 +23,8 @@ public class TabPanel extends JPanel {
     private KFormatContext formatContext = new KFormatContext(KFormatContext.DEFAULT);
     private ResultType type;
 
-    public TabPanel(QueryResult queryResult) {
+    public TabPanel(StudioPanel panel, QueryResult queryResult) {
+        this.panel = panel;
         this.queryResult = queryResult;
         this.result = queryResult.getResult();
         initComponents();
@@ -36,7 +38,7 @@ public class TabPanel extends JPanel {
         if (result != null) {
             KTableModel model = KTableModel.getModel(result);
             if (model != null) {
-                grid = new QGrid(model);
+                grid = new QGrid(panel, model);
                 component = grid;
                 if (model instanceof DictModel) {
                     type = ResultType.DICT;

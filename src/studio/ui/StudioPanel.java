@@ -1856,7 +1856,7 @@ public class StudioPanel extends JPanel implements Observer,WindowListener {
                     JOptionPane.ERROR_MESSAGE,
                     Util.ERROR_ICON);
         } else {
-            TabPanel tab = new TabPanel(queryResult);
+            TabPanel tab = new TabPanel(this, queryResult);
             if(tabbedPane.getTabCount()>= Config.getInstance().getResultTabsCount()) {
                 tabbedPane.remove(0);
             }

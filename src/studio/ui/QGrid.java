@@ -1,9 +1,6 @@
 package studio.ui;
 
-import studio.kdb.K;
-import studio.kdb.KFormatContext;
-import studio.kdb.TableHeaderRenderer;
-import studio.kdb.TableRowHeader;
+import studio.kdb.*;
 import studio.ui.action.CopyTableSelectionAction;
 
 import javax.swing.*;
@@ -11,13 +8,13 @@ import javax.swing.event.ChangeEvent;
 import javax.swing.event.ChangeListener;
 import javax.swing.table.*;
 import java.awt.*;
-import java.awt.event.ActionEvent;
 import java.awt.event.KeyEvent;
 import java.awt.event.MouseAdapter;
 import java.awt.event.MouseEvent;
 
 //@TODO: Should it be really a JPanel? It looks it should be just a JTabel. And anyway any additional components could be added to TabPanel
 public class QGrid extends JPanel {
+    private final StudioPanel panel;
     private final TableModel model;
     private final JTable table;
     private CellRenderer cellRenderer;
@@ -27,14 +24,13 @@ public class QGrid extends JPanel {
         return table;
     }
 
-
-    public static String newline = System.getProperty("line.separator");
-
     public int getRowCount() {
         return model.getRowCount();
     }
 
     private final JPopupMenu popupMenu = new JPopupMenu();
+    private final UserAction copyExcelFormatAction;
+    private final UserAction copyHtmlFormatAction;
 
     static class MYJTable extends JTable {
         public MYJTable(TableModel m) {
@@ -87,7 +83,8 @@ public class QGrid extends JPanel {
         table.repaint();
     }
 
-    public QGrid(TableModel model) {
+    public QGrid(StudioPanel panel, TableModel model) {
+        this.panel = panel;
         this.model = model;
         table = new MYJTable(model);
 
@@ -161,12 +158,12 @@ public class QGrid extends JPanel {
         setLayout(new BorderLayout());
         this.add(scrollPane, BorderLayout.CENTER);
 
-        UserAction copyExcelFormatAction = UserAction.create("Copy (Excel format)",
+        copyExcelFormatAction = UserAction.create("Copy (Excel format)",
                 Util.COPY_ICON,"Copy the selected cells to the clipboard using Excel format",
                 KeyEvent.VK_E,null,
                 new CopyTableSelectionAction(CopyTableSelectionAction.Format.Excel, table));
 
-        UserAction copyHtmlFormatAction = UserAction.create("Copy (HTML)",
+        copyHtmlFormatAction = UserAction.create("Copy (HTML)",
                 Util.COPY_ICON, "Copy the selected cells to the clipboard using HTML",
                 KeyEvent.VK_H, null,
                 new CopyTableSelectionAction(CopyTableSelectionAction.Format.Html, table));
@@ -184,9 +181,10 @@ public class QGrid extends JPanel {
             }
 
             private void maybeShowPopup(MouseEvent e) {
-                if (e.isPopupTrigger())
-                    popupMenu.show(e.getComponent(),
-                            e.getX(), e.getY());
+                if (!e.isPopupTrigger()) return;
+
+                JPopupMenu popupMenu = getPopupMenu(e.getPoint());
+                popupMenu.show(e.getComponent(), e.getX(), e.getY());
             }
 
             @Override
@@ -202,9 +200,27 @@ public class QGrid extends JPanel {
         });
     }
 
-    private boolean isTableSelectionValid() {
-        int numcols = table.getSelectedColumnCount();
-        int numrows = table.getSelectedRowCount();
-        return numrows>0 && numcols>0;
+    private JPopupMenu getPopupMenu(Point point) {
+        int row = table.rowAtPoint(point);
+        int col = table.columnAtPoint(point);
+        if (row == -1 || col == -1) return popupMenu;
+
+        String[] connections = Config.getInstance().getTableConnExtractor().getConnections(table.getModel(), row, col);
+        if (connections.length == 0) return popupMenu;
+
+        JPopupMenu popupMenu = new JPopupMenu();
+        for (String connection: connections) {
+            Server server = Config.getInstance().getServerByConnectionString(connection);
+            String name = server.getName().length() == 0 ? connection : server.getName();
+            Action action = UserAction.create("Open " + connection,
+                    "Open in a new tab " + name, 0,
+                    e -> panel.addTab(server, null) );
+            popupMenu.add(action);
+        }
+        popupMenu.add(new JSeparator());
+        popupMenu.add(copyExcelFormatAction);
+        popupMenu.add(copyHtmlFormatAction);
+        return popupMenu;
     }
+
 }

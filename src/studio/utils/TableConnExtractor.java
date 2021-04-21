@@ -1,5 +1,8 @@
 package studio.utils;
 
+import studio.kdb.K;
+import studio.kdb.KFormatContext;
+
 import javax.swing.table.TableModel;
 import java.util.*;
 import java.util.regex.Pattern;
@@ -54,6 +57,10 @@ public class TableConnExtractor {
         return pattern.matcher(value).matches();
     }
 
+    private static String getValue(TableModel model, int row, int col) {
+        return ((K.KBase)model.getValueAt(row, col)).toString(KFormatContext.NO_TYPE);
+    }
+
     public String[] getConnections(TableModel model, int row, int col) {
         List<String> conns = new ArrayList<>();
         List<String> hosts = new ArrayList<>();
@@ -62,7 +69,7 @@ public class TableConnExtractor {
         int count = model.getColumnCount();
         for (int aCol = 0; aCol<count; aCol++) {
             String header = model.getColumnName(aCol).toLowerCase();
-            String value = model.getValueAt(row, aCol).toString();
+            String value = getValue(model, row, aCol);
 
             if (contains(header, connWords) && match(connectionPattern, value)) {
                 conns.add(value);
@@ -79,7 +86,7 @@ public class TableConnExtractor {
 
         Set<String> result = new LinkedHashSet<>();
 
-        String value = model.getValueAt(row, col).toString();
+        String value = getValue(model, row, col);
         if (match(connectionPattern, value)) {
             result.add(value);
         }
