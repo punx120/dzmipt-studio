@@ -1,3 +1,5 @@
+* Pop up menu in result table can include actions to open servers
+    * The decision is made by values in current row and selected cell 
 * Restoring windows and tabs from previous application run
     * The state is also persisted every minute  
 * Show an About dialog on start up if release notes are changed
