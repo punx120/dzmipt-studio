@@ -15,15 +15,12 @@ import static studio.ui.EscapeDialog.DialogResult.CANCELLED;
 
 import javax.swing.event.DocumentEvent;
 import javax.swing.event.DocumentListener;
-import javax.swing.event.UndoableEditEvent;
 import javax.swing.filechooser.FileFilter;
 import javax.swing.filechooser.FileNameExtensionFilter;
 import javax.swing.filechooser.FileView;
 import javax.swing.plaf.basic.BasicSplitPaneUI;
 import javax.swing.table.TableModel;
 import javax.swing.text.*;
-import javax.swing.undo.CannotRedoException;
-import javax.swing.undo.CannotUndoException;
 import javax.swing.undo.UndoManager;
 
 import kx.c;
@@ -33,8 +30,6 @@ import org.netbeans.editor.*;
 import org.netbeans.editor.Utilities;
 import studio.core.AuthenticationManager;
 import studio.core.Credentials;
-import studio.core.Studio;
-import studio.kdb.ListModel;
 import studio.qeditor.QKit;
 import org.netbeans.editor.ext.ExtKit;
 import org.netbeans.editor.ext.ExtSettingsInitializer;

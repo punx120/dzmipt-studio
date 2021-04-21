@@ -7,6 +7,7 @@ import studio.core.Credentials;
 import studio.core.DefaultAuthenticationMechanism;
 import studio.ui.ServerList;
 import studio.utils.HistoricalList;
+import studio.utils.TableConnExtractor;
 
 import javax.swing.tree.TreeNode;
 import java.io.*;
@@ -42,6 +43,12 @@ public class Config {
     private ServerTreeNode serverTree;
     private HistoricalList<Server> serverHistory;
 
+    private static final String CONN_COL_WORDS = "server, host, connection, handle";
+    private static final String HOST_COL_WORDS = "server, host";
+    private static final String PORT_COL_WORDS = "port";
+
+    private TableConnExtractor tableConnExtractor;
+
     private final static Map<String, Config> instances = new ConcurrentHashMap<>();
 
     public enum ExecAllOption {Execute, Ask, Ignore};
@@ -74,6 +81,66 @@ public class Config {
         } catch (IOException e) {
             log.error("Error during workspace save", e);
         }
+    }
+
+    private String[] getWords(String value) {
+        return Stream.of(value.split(","))
+                        .map(String::trim)
+                        .map(String::toLowerCase)
+                        .toArray(String[]::new);
+    }
+
+    private void initTableConnExtractor() {
+        tableConnExtractor = new TableConnExtractor();
+        tableConnExtractor.setMaxConn(getTableMaxConnectionPopup());
+        tableConnExtractor.setConnWords(getWords(getConnColWords()));
+        tableConnExtractor.setHostWords(getWords(getHostColWords()));
+        tableConnExtractor.setPortWords(getWords(getPortColWords()));
+    }
+
+    public TableConnExtractor getTableConnExtractor() {
+        return tableConnExtractor;
+    }
+
+    public int getTableMaxConnectionPopup() {
+        return Integer.parseInt(p.getProperty("tableMaxConnectionPopup","5"));
+    }
+
+    public String getConnColWords() {
+        return p.getProperty("connColWords", CONN_COL_WORDS);
+    }
+
+    public String getHostColWords() {
+        return p.getProperty("hostColWords", HOST_COL_WORDS);
+
+    }
+
+    public String getPortColWords() {
+        return p.getProperty("portColWords", PORT_COL_WORDS);
+    }
+
+    public void setTableMaxConnectionPopup(int maxConn) {
+        p.setProperty("tableMaxConnectionPopup", "" + maxConn);
+        save();
+        initTableConnExtractor();
+    }
+
+    public void setConnColWords(String words) {
+        p.setProperty("connColWords", words);
+        save();
+        initTableConnExtractor();
+    }
+
+    public void setHostColWords(String words) {
+        p.setProperty("hostColWords", words);
+        save();
+        initTableConnExtractor();
+    }
+
+    public void setPortColWords(String words) {
+        p.setProperty("portColWords", words);
+        save();
+        initTableConnExtractor();
     }
 
     public ExecAllOption getExecAllOption() {
@@ -171,6 +238,7 @@ public class Config {
         checkForUpgrade();
         initServers();
         initServerHistory();
+        initTableConnExtractor();
     }
 
     public String getFilename() {

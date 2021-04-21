@@ -3,6 +3,7 @@ package studio.kdb;
 import org.junit.jupiter.api.BeforeEach;
 import org.junit.jupiter.api.Test;
 import studio.core.DefaultAuthenticationMechanism;
+import studio.utils.TableConnExtractor;
 
 import java.awt.*;
 import java.io.*;
@@ -210,5 +211,27 @@ public class ConfigTest {
 
         assertEquals(Config.ExecAllOption.Ask, newConfig.getExecAllOption());
 
+    }
+
+    @Test
+    public void testConnExractor() throws IOException {
+        TableConnExtractor extractor = config.getTableConnExtractor();
+        assertNotNull(extractor);
+
+        String conn = "someWords, words";
+        String host = "hostWords, words";
+        String port = "someWords, ports";
+
+        config.setConnColWords(conn);
+        config.setHostColWords(host);
+        config.setPortColWords(port);
+        config.setTableMaxConnectionPopup(100);
+        assertNotEquals(extractor, config.getTableConnExtractor());
+
+        Config newConfig = copyConfig(config, p -> {});
+        assertEquals(conn, newConfig.getConnColWords());
+        assertEquals(host, newConfig.getHostColWords());
+        assertEquals(port, newConfig.getPortColWords());
+        assertEquals(100, newConfig.getTableMaxConnectionPopup());
     }
 }
