@@ -1552,6 +1552,31 @@ public class StudioPanel extends JPanel implements Observer,WindowListener {
         refreshActionState();
     }
 
+    private JPopupMenu createTabbedPopupMenu(int index) {
+        UserAction closeAction = UserAction.create("Close", "Close current tab",
+                0, e -> tabbedPane.removeTabAt(index));
+
+        UserAction closeOthersAction = UserAction.create("Close others tab", "Close others tab",
+                0, e -> {
+                    for (int count = index; count>0; count--) tabbedPane.removeTabAt(0);
+                    while (tabbedPane.getTabCount() > 1) tabbedPane.removeTabAt(1);
+                });
+
+        UserAction closeRightsAction = UserAction.create("Close tabs to the right", "Close tabs to the right",
+                0, e -> {
+                    while (tabbedPane.getTabCount() > index+1) tabbedPane.removeTabAt(index+1);
+                });
+
+        closeOthersAction.setEnabled(tabbedPane.getTabCount()>1);
+        closeRightsAction.setEnabled(tabbedPane.getTabCount()>index+1);
+
+        JPopupMenu popup = new JPopupMenu();
+        popup.add(closeAction);
+        popup.add(closeOthersAction);
+        popup.add(closeRightsAction);
+        return popup;
+    }
+
     public StudioPanel() {
         editor = new EditorTab(this);
         registerForMacOSXEvents();
@@ -1585,6 +1610,23 @@ public class StudioPanel extends JPanel implements Observer,WindowListener {
 
         tabbedPane = new JTabbedPane(JTabbedPane.TOP);
         tabbedPane.addChangeListener(e->refreshActionState());
+        Stream.of(tabbedPane.getMouseListeners()).forEach(tabbedPane::removeMouseListener);
+        tabbedPane.addMouseListener(new MouseAdapter() {
+            @Override
+            public void mousePressed(MouseEvent e) {
+                int tabIndex = tabbedPane.indexAtLocation(e.getX(), e.getY());
+                if (tabIndex == -1) return;
+
+                if (SwingUtilities.isLeftMouseButton(e)) {
+                    tabbedPane.setSelectedIndex(tabIndex);
+                } else if (SwingUtilities.isRightMouseButton(e)) {
+                    JPopupMenu popup = createTabbedPopupMenu(tabIndex);
+                    popup.show(e.getComponent(), e.getX(), e.getY());
+                } else if (SwingUtilities.isMiddleMouseButton(e)) {
+                    tabbedPane.removeTabAt(tabIndex);
+                }
+            }
+        });
 
         splitpane.setBottomComponent(tabbedPane);
         splitpane.setOneTouchExpandable(true);
