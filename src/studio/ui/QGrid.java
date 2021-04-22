@@ -213,7 +213,7 @@ public class QGrid extends JPanel {
             Server server = Config.getInstance().getServerByConnectionString(connection);
             String name = server.getName().length() == 0 ? connection : server.getName();
             Action action = UserAction.create("Open " + connection,
-                    "Open in a new tab " + name, 0,
+                    "Open " + name + " in a new tab", 0,
                     e -> panel.addTab(server, null) );
             popupMenu.add(action);
         }
