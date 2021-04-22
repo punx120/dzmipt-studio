@@ -1563,7 +1563,10 @@ public class StudioPanel extends JPanel implements Observer,WindowListener {
         frame = new JFrame();
         allPanels.add(this);
 
-        tabbedEditors = new JTabbedPane();
+        tabbedEditors = new ClosableTabbedPane(index -> {
+            tabbedEditors.setSelectedIndex(index);
+            return closeTab();
+        });
         tabbedEditors.addChangeListener(e -> refreshEditor() );
         tabbedEditors.addContainerListener(new ContainerListener() {
             @Override

@@ -1,4 +1,4 @@
-* Ability to manually close result tabs
+* Manually closure of tabs
     * Middle-click to close tab or right-click for a popup menu  
 * Pop up menu in the result table can include actions to open servers
     * The decision is made by values in current row and selected cell 
