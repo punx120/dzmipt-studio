@@ -3,6 +3,7 @@ package studio.utils;
 
 import org.junit.jupiter.api.BeforeEach;
 import org.junit.jupiter.api.Test;
+import studio.kdb.K;
 
 import javax.swing.table.DefaultTableModel;
 import javax.swing.table.TableModel;
@@ -12,18 +13,30 @@ import static org.junit.jupiter.api.Assertions.assertArrayEquals;
 public class TableConnExtractorTest {
 
     private TableModel table = new DefaultTableModel(
-            new String[][] {
-                    {"server.com","1234","$something","$something"},
-                    {"1.2.3.4","1234","$something","$something"},
-                    {"1.2.3.4","1234","`:abc:1111","xyz"},
-                    {"1.2.3.4","1234","abc","xyz"},
-                    {"server.com","port","$something","$something"},
-                    {"server.com","aHost:1050","$something","$something"},
-            },
-            new String[] {"aHost","aPort","Connection","Handle"});
+            getTable(
+                new String[][] {
+                        {"server.com","1234","$something","$something"},
+                        {"1.2.3.4","1234","$something","$something"},
+                        {"1.2.3.4","1234","`:abc:1111","xyz"},
+                        {"1.2.3.4","1234","abc","xyz"},
+                        {"server.com","port","$something","$something"},
+                        {"server.com","aHost:1050","$something","$something"},
+                }
+            ), new String[] {"aHost","aPort","Connection","Handle"});
 
     private static TableConnExtractor extractor1;
     private static TableConnExtractor extractor2;
+
+    private Object[][] getTable(String[][] values) {
+        Object[][] res = new Object[values.length][];
+        for (int row=0; row<values.length; row++) {
+            res[row] = new K.KCharacterVector[values[row].length];
+            for (int col=0; col<values[row].length; col++) {
+                res[row][col] = new K.KCharacterVector(values[row][col]);
+            }
+        }
+        return res;
+    }
 
     @BeforeEach
     public void init() {
