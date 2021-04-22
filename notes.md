@@ -1,4 +1,6 @@
-* Pop up menu in result table can include actions to open servers
+* Ability to manually close result tabs
+    * Middle-click to close tab or right-click for a popup menu  
+* Pop up menu in the result table can include actions to open servers
     * The decision is made by values in current row and selected cell 
 * Restoring windows and tabs from previous application run
     * The state is also persisted every minute  
