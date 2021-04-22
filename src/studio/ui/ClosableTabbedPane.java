@@ -34,11 +34,6 @@ public class ClosableTabbedPane extends JTabbedPane {
 
     }
 
-    private boolean close(int index) {
-        setSelectedIndex(index);
-        return closeTabAction.close(index);
-    }
-
     private JPopupMenu createTabbedPopupMenu(int index) {
         UserAction closeAction = UserAction.create("Close", "Close current tab",
                 0, e -> removeTabAt(index));
@@ -46,17 +41,17 @@ public class ClosableTabbedPane extends JTabbedPane {
         UserAction closeOthersAction = UserAction.create("Close others tab", "Close others tab",
                 0, e -> {
                     for (int count = index; count>0; count--) {
-                        if (! close(0)) return;
+                        if (! closeTabAction.close(0)) return;
                     }
                     while (getTabCount() > 1) {
-                        if (! close(1)) return;
+                        if (! closeTabAction.close(1)) return;
                     }
                 });
 
         UserAction closeRightsAction = UserAction.create("Close tabs to the right", "Close tabs to the right",
                 0, e -> {
                     while (getTabCount() > index+1) {
-                        if (! close(index+1)) return;
+                        if (! closeTabAction.close(index+1)) return;
                     }
                 });
 
