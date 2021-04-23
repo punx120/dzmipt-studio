@@ -27,7 +27,7 @@ public class ClosableTabbedPane extends JTabbedPane {
                     JPopupMenu popup = createTabbedPopupMenu(tabIndex);
                     popup.show(e.getComponent(), e.getX(), e.getY());
                 } else if (SwingUtilities.isMiddleMouseButton(e)) {
-                    removeTabAt(tabIndex);
+                    closeTabAction.close(tabIndex);
                 }
             }
         });
