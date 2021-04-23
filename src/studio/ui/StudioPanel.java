@@ -1366,7 +1366,10 @@ public class StudioPanel extends JPanel implements Observer,WindowListener {
         comboServer.setVisible(Config.getInstance().isShowServerComboBox());
 
         txtServer = new JTextField(32);
-        txtServer.addActionListener(e -> selectConnectionString());
+        txtServer.addActionListener(e -> {
+            selectConnectionString();
+            editor.getTextArea().requestFocus();
+        });
         txtServer.addFocusListener(new FocusAdapter() {
             @Override
             public void focusLost(FocusEvent e) {
