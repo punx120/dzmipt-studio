@@ -1,3 +1,5 @@
+`dz1.9` 2021.04.28
+-----
 * Manually closure of tabs
     * Middle-click to close tab or right-click for a popup menu  
 * Pop up menu in the result table can include actions to open servers
