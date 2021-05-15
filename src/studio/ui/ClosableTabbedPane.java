@@ -3,7 +3,6 @@ package studio.ui;
 import javax.swing.*;
 import java.awt.event.MouseAdapter;
 import java.awt.event.MouseEvent;
-import java.util.stream.Stream;
 
 public class ClosableTabbedPane extends JTabbedPane {
     public interface CloseTabAction {
@@ -14,16 +13,13 @@ public class ClosableTabbedPane extends JTabbedPane {
 
     public ClosableTabbedPane(CloseTabAction closeTabAction) {
         this.closeTabAction = closeTabAction;
-        Stream.of(getMouseListeners()).forEach(this::removeMouseListener);
         addMouseListener(new MouseAdapter() {
             @Override
             public void mousePressed(MouseEvent e) {
                 int tabIndex = indexAtLocation(e.getX(), e.getY());
                 if (tabIndex == -1) return;
 
-                if (SwingUtilities.isLeftMouseButton(e)) {
-                    setSelectedIndex(tabIndex);
-                } else if (SwingUtilities.isRightMouseButton(e)) {
+                if (e.isPopupTrigger()) {
                     JPopupMenu popup = createTabbedPopupMenu(tabIndex);
                     popup.show(e.getComponent(), e.getX(), e.getY());
                 } else if (SwingUtilities.isMiddleMouseButton(e)) {
@@ -36,7 +32,7 @@ public class ClosableTabbedPane extends JTabbedPane {
 
     private JPopupMenu createTabbedPopupMenu(int index) {
         UserAction closeAction = UserAction.create("Close", "Close current tab",
-                0, e -> removeTabAt(index));
+                0, e-> closeTabAction.close(index) );
 
         UserAction closeOthersAction = UserAction.create("Close others tab", "Close others tab",
                 0, e -> {
