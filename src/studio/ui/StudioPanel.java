@@ -1566,7 +1566,8 @@ public class StudioPanel extends JPanel implements Observer,WindowListener {
         frame = new JFrame();
         allPanels.add(this);
 
-        tabbedEditors = new ClosableTabbedPane(index -> {
+        tabbedEditors = new JTabbedPane();
+        ClosableTabbedPane.makeCloseable(tabbedEditors, index -> {
             tabbedEditors.setSelectedIndex(index);
             return closeTab();
         });
@@ -1589,11 +1590,11 @@ public class StudioPanel extends JPanel implements Observer,WindowListener {
         toolbar.setFloatable(false);
 
 
-        tabbedPane = new ClosableTabbedPane(index -> {
+        tabbedPane = new JTabbedPane(JTabbedPane.TOP);
+        ClosableTabbedPane.makeCloseable(tabbedPane, index -> {
             tabbedPane.removeTabAt(index);
             return true;
         });
-        tabbedPane.setTabPlacement(JTabbedPane.TOP);
         tabbedPane.addChangeListener(e->refreshActionState());
 
         splitpane.setBottomComponent(tabbedPane);

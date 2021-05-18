@@ -4,23 +4,21 @@ import javax.swing.*;
 import java.awt.event.MouseAdapter;
 import java.awt.event.MouseEvent;
 
-public class ClosableTabbedPane extends JTabbedPane {
+public class ClosableTabbedPane {
     public interface CloseTabAction {
         boolean close(int index);
     }
 
-    private final CloseTabAction closeTabAction;
 
-    public ClosableTabbedPane(CloseTabAction closeTabAction) {
-        this.closeTabAction = closeTabAction;
-        addMouseListener(new MouseAdapter() {
+    public static void makeCloseable(JTabbedPane tabbedPane, CloseTabAction closeTabAction) {
+        tabbedPane.addMouseListener(new MouseAdapter() {
             @Override
             public void mousePressed(MouseEvent e) {
-                int tabIndex = indexAtLocation(e.getX(), e.getY());
+                int tabIndex = tabbedPane.indexAtLocation(e.getX(), e.getY());
                 if (tabIndex == -1) return;
 
                 if (e.isPopupTrigger()) {
-                    JPopupMenu popup = createTabbedPopupMenu(tabIndex);
+                    JPopupMenu popup = createTabbedPopupMenu(tabbedPane, closeTabAction, tabIndex);
                     popup.show(e.getComponent(), e.getX(), e.getY());
                 } else if (SwingUtilities.isMiddleMouseButton(e)) {
                     closeTabAction.close(tabIndex);
@@ -30,7 +28,7 @@ public class ClosableTabbedPane extends JTabbedPane {
 
     }
 
-    private JPopupMenu createTabbedPopupMenu(int index) {
+    private static JPopupMenu createTabbedPopupMenu(JTabbedPane tabbedPane, CloseTabAction closeTabAction, int index) {
         UserAction closeAction = UserAction.create("Close", "Close current tab",
                 0, e-> closeTabAction.close(index) );
 
@@ -39,20 +37,20 @@ public class ClosableTabbedPane extends JTabbedPane {
                     for (int count = index; count>0; count--) {
                         if (! closeTabAction.close(0)) return;
                     }
-                    while (getTabCount() > 1) {
+                    while (tabbedPane.getTabCount() > 1) {
                         if (! closeTabAction.close(1)) return;
                     }
                 });
 
         UserAction closeRightsAction = UserAction.create("Close tabs to the right", "Close tabs to the right",
                 0, e -> {
-                    while (getTabCount() > index+1) {
+                    while (tabbedPane.getTabCount() > index+1) {
                         if (! closeTabAction.close(index+1)) return;
                     }
                 });
 
-        closeOthersAction.setEnabled(getTabCount()>1);
-        closeRightsAction.setEnabled(getTabCount()>index+1);
+        closeOthersAction.setEnabled(tabbedPane.getTabCount() > 1);
+        closeRightsAction.setEnabled(tabbedPane.getTabCount() > index+1);
 
         JPopupMenu popup = new JPopupMenu();
         popup.add(closeAction);
