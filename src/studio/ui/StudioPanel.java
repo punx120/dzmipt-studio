@@ -1833,28 +1833,17 @@ public class StudioPanel extends JPanel implements Observer,WindowListener {
         return (EditorTab) ((JComponent) tabbedEditors.getComponent(index)).getClientProperty(EditorTab.class);
     }
 
-    private EditorTab findTextEditor(QueryExecutor queryExecutor) {
-        int count = tabbedEditors.getComponentCount();
-        for (int index = 0; index<count; index++) {
-            EditorTab editor = getEditor(index);
-            QueryExecutor aQueryExecutor = editor.getQueryExecutor();
-            if (aQueryExecutor == queryExecutor) return editor;
-        }
-        return null;
-    }
-
     // if the query is canceld execTime=-1, result and error are null's
-    public void queryExecutionComplete(QueryExecutor queryExecutor, QueryResult queryResult) {
+    public static void queryExecutionComplete(EditorTab editor, QueryResult queryResult) {
         long execTime = queryResult.getExecutionTime();
         Throwable error = queryResult.getError();
-        EditorTab editor = findTextEditor(queryExecutor);
-        if (editor == null) return;
         JEditorPane textArea = editor.getTextArea();
         textArea.setCursor(textCursor);
         if (execTime >= 0) {
             Utilities.setStatusText(textArea, "Last execution time:" + (execTime > 0 ? "" + execTime : "<1") + " mS");
         }
 
+        StudioPanel panel = editor.getPanel();
         if (error != null && ! (error instanceof c.K4Exception)) {
             String message = error.getMessage();
             if ((message == null) || (message.length() == 0))
@@ -1867,13 +1856,14 @@ public class StudioPanel extends JPanel implements Observer,WindowListener {
                     JOptionPane.ERROR_MESSAGE,
                     Util.ERROR_ICON);
         } else {
-            TabPanel tab = new TabPanel(this, queryResult);
+            JTabbedPane tabbedPane = panel.tabbedPane;
+            TabPanel tab = new TabPanel(panel, queryResult);
             if(tabbedPane.getTabCount()>= Config.getInstance().getResultTabsCount()) {
                 tabbedPane.remove(0);
             }
             tab.addInto(tabbedPane);
         }
-        refreshActionState();
+        panel.refreshActionState();
     }
 
     public static Workspace getWorkspace() {

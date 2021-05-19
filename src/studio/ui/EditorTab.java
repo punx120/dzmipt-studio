@@ -34,7 +34,7 @@ public class EditorTab {
         if (textArea != null) throw new IllegalStateException("The EditorTab has been already initialized");
 
         textArea = new JEditorPane(QKit.CONTENT_TYPE,"");
-        textArea.putClientProperty(QueryExecutor.class, new QueryExecutor(panel));
+        textArea.putClientProperty(QueryExecutor.class, new QueryExecutor(this));
         Document doc = textArea.getDocument();
         doc.putProperty(MODIFIED, false);
         UndoManager um = new UndoManager() {

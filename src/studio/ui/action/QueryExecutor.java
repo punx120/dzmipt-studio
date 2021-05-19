@@ -1,10 +1,10 @@
 package studio.ui.action;
 
 import kx.ProgressCallback;
-import kx.c;
 import org.apache.logging.log4j.LogManager;
 import org.apache.logging.log4j.Logger;
 import studio.kdb.*;
+import studio.ui.EditorTab;
 import studio.ui.StudioPanel;
 
 import javax.swing.*;
@@ -17,7 +17,7 @@ public class QueryExecutor implements ProgressCallback {
     private static final AtomicInteger queryIndex = new AtomicInteger(1);
 
     private Worker worker = null;
-    private final StudioPanel studioPanel;
+    private final EditorTab editor;
 
     private volatile ProgressMonitor pm;
     private boolean compressed;
@@ -27,12 +27,12 @@ public class QueryExecutor implements ProgressCallback {
     private static final double[] factor = {1, 1024, 1024*1024};
     private int progressNoteIndex = 0;
 
-    public QueryExecutor(StudioPanel studioPanel) {
-        this.studioPanel = studioPanel;
+    public QueryExecutor(EditorTab editor) {
+        this.editor = editor;
     }
 
     public void execute(String query) {
-        worker = new Worker(queryIndex.getAndIncrement(), studioPanel.getServer(), query);
+        worker = new Worker(queryIndex.getAndIncrement(), editor.getServer(), query);
         worker.execute();
     }
 
@@ -70,7 +70,7 @@ public class QueryExecutor implements ProgressCallback {
         else progressNoteIndex = 2;
 
         UIManager.put("ProgressMonitor.progressText", "Studio for kdb+");
-        pm = new ProgressMonitor(studioPanel, "Receiving " + (compressed ? "compressed " : "") + "data ...",
+        pm = new ProgressMonitor(editor.getTextArea(), "Receiving " + (compressed ? "compressed " : "") + "data ...",
                                     formatProgressNote(0), 0, msgLength);
         SwingUtilities.invokeLater( () -> {
             pm.setMillisToDecideToPopup(300);
@@ -149,12 +149,8 @@ public class QueryExecutor implements ProgressCallback {
                 pm.close();
             }
             try {
-                if (isCancelled()) {
-                    studioPanel.queryExecutionComplete(QueryExecutor.this, new QueryResult(server, query));
-                } else {
-                    QueryResult result = get();
-                    studioPanel.queryExecutionComplete(QueryExecutor.this, result);
-                }
+                QueryResult result = isCancelled() ? new QueryResult(server, query) : get();
+                StudioPanel.queryExecutionComplete(editor, result);
             } catch (Exception e) {
                 log.error("Ops... It wasn't expected", e);
             }
