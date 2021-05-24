@@ -23,7 +23,7 @@ public class EditorTab {
 
     private static int scriptNumber = 0;
 
-    private final StudioPanel panel;
+    private StudioPanel panel;
     private JEditorPane textArea;
 
     public EditorTab(StudioPanel panel) {
@@ -60,6 +60,10 @@ public class EditorTab {
 
     public StudioPanel getPanel() {
         return panel;
+    }
+
+    public void setPanel(StudioPanel panel) {
+        this.panel = panel;
     }
 
     public JEditorPane getTextArea() {
