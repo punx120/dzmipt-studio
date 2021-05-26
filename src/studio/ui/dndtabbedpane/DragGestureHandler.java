@@ -1,5 +1,7 @@
 package studio.ui.dndtabbedpane;
 
+import studio.ui.Util;
+
 import java.awt.*;
 import java.awt.datatransfer.Transferable;
 import java.awt.dnd.DragGestureEvent;
@@ -9,6 +11,9 @@ import java.awt.image.BufferedImage;
 
 class DragGestureHandler implements DragGestureListener {
     private final DraggableTabbedPane pane;
+
+    private static final Cursor dragCursor = Cursor.getPredefinedCursor(Cursor.HAND_CURSOR);
+
     DragGestureHandler(DraggableTabbedPane pane) {
         this.pane = pane;
     }
@@ -31,10 +36,15 @@ class DragGestureHandler implements DragGestureListener {
 
         Transferable t = new TabbedPaneTransferable(pane, index);
         DragSource ds = dge.getDragSource();
+
+        //That's odd. However Mac and Windows behavior opposite. We need to correct.
+        int correction = Util.MAC_OS_X ? -1 : 1;
+        Point dragOffset = new Point(correction * (location.x - r.x),correction * (location.y - r.y));
+
         ds.startDrag(
                 dge,
-                null,
-                image, new Point(r.x - location.x,r.y - location.y),
+                dragCursor,
+                image, dragOffset,
                 t,
                 new DragSourceHandler());
 
