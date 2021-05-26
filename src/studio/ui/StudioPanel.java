@@ -1551,6 +1551,7 @@ public class StudioPanel extends JPanel implements Observer,WindowListener {
         if ( tabbedEditors.getSelectedIndex() == -1) return;
         editor = getEditor(tabbedEditors.getSelectedIndex());
         editor.setPanel(this);
+        setServer(editor.getServer());
         lastQuery = null;
         refreshTitle();
         refreshActionState();
