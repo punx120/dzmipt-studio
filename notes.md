@@ -1,3 +1,5 @@
+* Drag and Drop editor and result tabs
+
 `dz1.9` 2021.04.28
 -----
 * Manually closure of tabs
