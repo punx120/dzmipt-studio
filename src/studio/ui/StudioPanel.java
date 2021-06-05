@@ -36,7 +36,6 @@ import org.netbeans.editor.ext.ExtSettingsInitializer;
 import studio.qeditor.QSettingsInitializer;
 import studio.kdb.*;
 import studio.ui.action.QPadImport;
-import studio.ui.action.QueryExecutor;
 import studio.ui.action.QueryResult;
 import studio.ui.action.WorkspaceSaver;
 import studio.ui.dndtabbedpane.DraggableTabbedPane;
@@ -87,7 +86,7 @@ public class StudioPanel extends JPanel implements Observer,WindowListener {
     private String exportFilename;
     private String lastQuery = null;
     private JToolBar toolbar;
-    private JTabbedPane tabbedEditors;
+    private DraggableTabbedPane tabbedEditors;
     private EditorTab editor;
     private JSplitPane splitpane;
     private JTabbedPane tabbedPane;
@@ -776,7 +775,7 @@ public class StudioPanel extends JPanel implements Observer,WindowListener {
                 KeyStroke.getKeyStroke(KeyEvent.VK_W, menuShortcutKeyMask), e -> closeTab());
 
         closeFileAction = UserAction.create("Close Window", Util.BLANK_ICON, "Close current window (close all tabs)",
-                KeyEvent.VK_C, null, e -> closeWindow());
+                KeyEvent.VK_C, null, e -> closePanel());
 
         openFileAction = UserAction.create(I18n.getString("Open"), Util.FOLDER_ICON, "Open a script", KeyEvent.VK_O,
                 KeyStroke.getKeyStroke(KeyEvent.VK_O, menuShortcutKeyMask), e -> openFile());
@@ -1012,7 +1011,7 @@ public class StudioPanel extends JPanel implements Observer,WindowListener {
         return true;
     }
 
-    private boolean closeWindow() {
+    private boolean closePanel() {
         // If this is the last window, we need to properly persist workspace
         if (allPanels.size() == 1) return quit();
 
@@ -1047,7 +1046,18 @@ public class StudioPanel extends JPanel implements Observer,WindowListener {
         return true;
     }
 
-    public boolean closeTab() {
+    private void closeFrame() {
+        frame.dispose();
+        allPanels.remove(this);
+        rebuildAll();
+    }
+
+    private void closeIfEmpty() {
+        if (tabbedEditors.getTabCount()>0) return;
+        closeFrame();
+    }
+
+    private boolean closeTab() {
         if (!checkAndSaveTab(editor)) return false;
 
         if (tabbedEditors.getTabCount() == 1 && allPanels.size() == 1) {
@@ -1058,13 +1068,7 @@ public class StudioPanel extends JPanel implements Observer,WindowListener {
         }
 
         tabbedEditors.remove(tabbedEditors.getSelectedIndex());
-
-        if (tabbedEditors.getTabCount() == 0) {
-            frame.dispose();
-            allPanels.remove(this);
-            rebuildAll();
-        }
-
+        closeIfEmpty();
         return true;
     }
 
@@ -1588,6 +1592,7 @@ public class StudioPanel extends JPanel implements Observer,WindowListener {
                 refreshEditor();
             }
         });
+        tabbedEditors.addDragListener(success -> closeIfEmpty() );
         splitpane.setTopComponent(tabbedEditors);
         splitpane.setDividerLocation(0.5);
 
@@ -1899,7 +1904,7 @@ public class StudioPanel extends JPanel implements Observer,WindowListener {
     }
 
     public void windowClosing(WindowEvent e) {
-        closeWindow();
+        closePanel();
     }
 
 

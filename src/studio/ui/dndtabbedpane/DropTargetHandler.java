@@ -133,24 +133,18 @@ class DropTargetHandler implements DropTargetListener {
         TabbedPaneTransferable data = getTransferable(dtde.getTransferable());
         if (data == null) return;
 
-        JTabbedPane srcPane = data.getPane();
+        DraggableTabbedPane source = data.getPane();
         int srcIndex = data.getIndex();
-        boolean updateSelection = srcPane == pane && srcPane.getSelectedIndex() == srcIndex;
-        dtde.acceptDrop(DnDConstants.ACTION_COPY_OR_MOVE);
-
         if (! before) index++;
+        if (pane == source && index>srcIndex) index--;
 
-        String title = srcPane.getTitleAt(srcIndex);
-        Component component = srcPane.getComponentAt(srcIndex);
-        Icon icon = srcPane.getIconAt(srcIndex);
-        String tip = srcPane.getToolTipTextAt(srcIndex);
-        srcPane.removeTabAt(srcIndex);
-
-        if (pane == srcPane && index>srcIndex) index--;
-
-        pane.insertTab(title, icon, component, tip, index);
-        if (updateSelection) pane.setSelectedIndex(index);
-        dtde.dropComplete(true);
+        boolean success = source.dragTab(srcIndex, pane, index);
+        if (success) {
+            dtde.acceptDrop(DnDConstants.ACTION_COPY_OR_MOVE);
+        } else {
+            dtde.rejectDrop();
+        }
+        dtde.dropComplete(success);
     }
 
 }

@@ -4,7 +4,6 @@ import javax.swing.*;
 import javax.swing.plaf.TabbedPaneUI;
 import java.awt.*;
 import java.awt.dnd.DnDConstants;
-import java.awt.dnd.DragGestureRecognizer;
 import java.awt.dnd.DragSource;
 import java.awt.dnd.DropTarget;
 import java.util.Objects;
@@ -28,17 +27,47 @@ public class DraggableTabbedPane extends JTabbedPane {
         this.dragID = dragID;
     }
 
+    public void addDragListener(DragListener listener) {
+        listenerList.add(DragListener.class, listener);
+    }
+
+    public void removeDragListener(DragListener listener) {
+        listenerList.remove(DragListener.class, listener);
+    }
+
+    protected void fireDragComplete(boolean success) {
+        DragListener[] listeners = listenerList.getListeners(DragListener.class);
+        for (DragListener listener: listeners) {
+            listener.dragComplete(success);
+        }
+    }
+
+    protected boolean dragTab(int sourceIndex, DraggableTabbedPane target, int targetIndex) {
+        if (target == null) return false;
+
+        boolean updateSelection = this == target && getSelectedIndex() == sourceIndex;
+
+        String title = getTitleAt(sourceIndex);
+        Component component = getComponentAt(sourceIndex);
+        Icon icon = getIconAt(sourceIndex);
+        String tip = getToolTipTextAt(sourceIndex);
+        removeTabAt(sourceIndex);
+
+        target.insertTab(title, icon, component, tip, targetIndex);
+        if (updateSelection) target.setSelectedIndex(targetIndex);
+
+        return true;
+    }
+
     private void initDnD() {
-        DragGestureRecognizer dgr = DragSource.getDefaultDragSource().createDefaultDragGestureRecognizer(
+        DragSource.getDefaultDragSource().createDefaultDragGestureRecognizer(
                 this,
-                //@TODO: validate the constant
                 DnDConstants.ACTION_COPY_OR_MOVE,
                 new DragGestureHandler(this));
 
 
-        DropTarget dt = new DropTarget(
+        new DropTarget(
                 this,
-                //@TODO: v1alidate the constant
                 DnDConstants.ACTION_COPY_OR_MOVE,
                 new DropTargetHandler(this),
                 true);
