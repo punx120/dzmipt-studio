@@ -1,7 +1,7 @@
 package studio.kdb;
 
 public class DictTableModel extends KTableModel {
-    private K.Dict dict;
+    private final K.Dict dict;
 
     public DictTableModel(K.Dict obj) {
         this.dict = obj;
@@ -26,18 +26,18 @@ public class DictTableModel extends KTableModel {
             col -= ((K.Flip) dict.x).x.getLength();
             v = ((K.Flip) dict.y).x;
         }
-        return ((K.KSymbol)v.at(col)).s;
+        return v.at(col).s;
     }
 
-    public K.KBaseVector getColumn(int col) {
+    public K.KBaseVector<? extends K.KBase> getColumn(int col) {
         K.Flip f = (K.Flip) dict.x;
-        K.KBaseVector v = null;
+        K.KBaseVector<? extends K.KBase> v = null;
 
         if (col >= f.x.getLength()) {
             col -= f.x.getLength();
             f = (K.Flip) dict.y;
         }
 
-        return (K.KBaseVector) f.y.at(col);
+        return (K.KBaseVector<? extends K.KBase>) f.y.at(col);
     }
 };

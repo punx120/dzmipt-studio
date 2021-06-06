@@ -98,7 +98,7 @@ public class LineChart {
                             K.KDateVector dates = (K.KDateVector) table.getColumn(0);
 
                             for (int row = 0; row < dates.getLength(); row++) {
-                                K.KDate date = (K.KDate) dates.at(row);
+                                K.KDate date = dates.at(row);
                                 Day day = new Day(date.toDate(), tz);
                                 addOrUpdate(table, series, row, col, day);
                             }
@@ -107,7 +107,7 @@ public class LineChart {
 
                             K.KTimeVector times = (K.KTimeVector) table.getColumn(0);
                             for (int row = 0; row < table.getRowCount(); row++) {
-                                K.KTime time = (K.KTime) times.at(row);
+                                K.KTime time = times.at(row);
                                 Millisecond ms = new Millisecond(time.toTime(), tz);
                                 addOrUpdate(table, series, row, col, ms);
                             }
@@ -116,7 +116,7 @@ public class LineChart {
                             K.KTimestampVector dates = (K.KTimestampVector) table.getColumn(0);
 
                             for (int row = 0; row < dates.getLength(); row++) {
-                                K.KTimestamp date = (K.KTimestamp) dates.at(row);
+                                K.KTimestamp date = dates.at(row);
                                 Millisecond day = new Millisecond(new java.util.Date(date.toTimestamp().getTime()), tz);
                                 addOrUpdate(table, series, row, col, day);
                             }
@@ -125,7 +125,7 @@ public class LineChart {
 
                             K.KTimespanVector times = (K.KTimespanVector) table.getColumn(0);
                             for (int row = 0; row < table.getRowCount(); row++) {
-                                K.KTimespan time = (K.KTimespan) times.at(row);
+                                K.KTimespan time = times.at(row);
                                 Millisecond ms = new Millisecond(time.toTime(), tz);
                                 addOrUpdate(table, series, row, col, ms);
                             }
@@ -134,7 +134,7 @@ public class LineChart {
                             K.KDatetimeVector times = (K.KDatetimeVector) table.getColumn(0);
 
                             for (int row = 0; row < table.getRowCount(); row++) {
-                                K.KDatetime time = (K.KDatetime) times.at(row);
+                                K.KDatetime time = times.at(row);
                                 Millisecond ms = new Millisecond(time.toTimestamp(), tz);
                                 addOrUpdate(table, series, row, col, ms);
                             }
@@ -142,7 +142,7 @@ public class LineChart {
                             series = new TimeSeries(table.getColumnName(col), Month.class);
                             K.KMonthVector times = (K.KMonthVector) table.getColumn(0);
                             for (int row = 0; row < table.getRowCount(); row++) {
-                                K.Month time = (K.Month) times.at(row);
+                                K.Month time = times.at(row);
                                 int m = time.i + 24000;
                                 int y = m / 12;
                                 m = 1 + m % 12;
@@ -153,7 +153,7 @@ public class LineChart {
                             series = new TimeSeries(table.getColumnName(col), Second.class);
                             K.KSecondVector times = (K.KSecondVector) table.getColumn(0);
                             for (int row = 0; row < table.getRowCount(); row++) {
-                                K.Second time = (K.Second) times.at(row);
+                                K.Second time = times.at(row);
                                 Second second = new Second(time.i % 60, time.i / 60, 0, 1, 1, 2001);
                                 addOrUpdate(table, series, row, col, second);
                             }
@@ -161,7 +161,7 @@ public class LineChart {
                             series = new TimeSeries(table.getColumnName(col), Minute.class);
                             K.KMinuteVector times = (K.KMinuteVector) table.getColumn(0);
                             for (int row = 0; row < table.getRowCount(); row++) {
-                                K.Minute time = (K.Minute) times.at(row);
+                                K.Minute time = times.at(row);
                                 Minute minute = new Minute(time.i % 60, time.i / 60, 1, 1, 2001);
                                 addOrUpdate(table, series, row, col, minute);
                             }

@@ -2,7 +2,7 @@ package studio.kdb;
 
 public class DictModel extends KTableModel {
 
-    private K.Dict dict;
+    private final K.Dict dict;
 
     public DictModel(K.Dict dict) {
         this.dict = dict;
@@ -14,8 +14,8 @@ public class DictModel extends KTableModel {
     }
 
     @Override
-    public K.KBaseVector getColumn(int col) {
-        return (K.KBaseVector) (col == 0 ? dict.x : dict.y);
+    public K.KBaseVector<? extends K.KBase> getColumn(int col) {
+        return (K.KBaseVector<? extends K.KBase>) (col == 0 ? dict.x : dict.y);
     }
 
     @Override

@@ -62,7 +62,7 @@ public class QCompletionQuery implements CompletionQuery
 
                                  for (int i = 0; i < tables.getLength(); i++)
                                  {
-                                     result.add(new BooleanAttribItem(((K.KSymbol)tables.at(i)).s, offset, 0, false));
+                                     result.add(new BooleanAttribItem(tables.at(i).s, offset, 0, false));
                                  }
 
                                  currentIcon= Util.COLUMN_ICON;
@@ -79,7 +79,7 @@ public class QCompletionQuery implements CompletionQuery
 
                                  for(int i = 0; i < tables.getLength(); i++)
                                  {
-                                     result.add(new BooleanAttribItem(((K.KSymbol)tables.at(i)).s, offset, 0, false));
+                                     result.add(new BooleanAttribItem(tables.at(i).s, offset, 0, false));
                                  }
 
                                  currentIcon= Util.TABLE_ICON;

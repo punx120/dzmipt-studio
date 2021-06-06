@@ -18,8 +18,8 @@ public class KTest {
     }
 
 
-    private K.KBaseVector vector(Class clazz, Object... values) throws Exception {
-        K.KBaseVector baseVector = (K.KBaseVector) clazz.getConstructor(int.class).newInstance(values.length);
+    private K.KBaseVector<? extends K.KBase> vector(Class clazz, Object... values) throws Exception {
+        K.KBaseVector<? extends K.KBase> baseVector = (K.KBaseVector<? extends K.KBase>) clazz.getConstructor(int.class).newInstance(values.length);
         Object anArray = baseVector.getArray();
         for (int index=0; index < values.length; index++) {
             Array.set(anArray, index, values[index]);

@@ -5,7 +5,7 @@ import javax.swing.table.AbstractTableModel;
 public abstract class KTableModel extends AbstractTableModel {
 
     public abstract boolean isKey(int column);
-    public abstract K.KBaseVector getColumn(int col);
+    public abstract K.KBaseVector<? extends K.KBase> getColumn(int col);
     public abstract String getColumnName(int col) ;
 
     public static KTableModel getModel(K.KBase obj) {
@@ -26,7 +26,7 @@ public abstract class KTableModel extends AbstractTableModel {
         }
 
         if ((obj instanceof K.KBaseVector) && obj.getType() != 10 && obj.getType() != 4) {
-            return new ListModel((K.KBaseVector)obj);
+            return new ListModel((K.KBaseVector<? extends K.KBase>)obj);
         }
         return null;
     }
@@ -45,7 +45,7 @@ public abstract class KTableModel extends AbstractTableModel {
 
     public void desc(int col) {
         sortIndex = null;
-        K.KBaseVector v = getColumn(col);
+        K.KBaseVector<? extends K.KBase> v = getColumn(col);
         sortIndex = v.gradeDown();
         sorted = -1;
         sortedByColumn = col;
@@ -75,7 +75,7 @@ public abstract class KTableModel extends AbstractTableModel {
 
     public Object getValueAt(int row,int col) {
         row = (sortIndex == null) ? row : sortIndex[row];
-        K.KBaseVector v = getColumn(col);
+        K.KBaseVector<? extends K.KBase> v = getColumn(col);
         return v.at(row);
     }
 

@@ -497,6 +497,18 @@ public class K {
             super.serialise(o);
             write(o, j);
         }
+
+        @Override
+        public int hashCode() {
+            return Long.hashCode(j);
+        }
+
+        @Override
+        public boolean equals(Object obj) {
+            if (! (obj instanceof K.KLong)) return false;
+
+            return j == ((K.KLong)obj).j;
+        }
     }
 
     public static class KCharacter extends KBase {
@@ -810,12 +822,12 @@ public class K {
         }
 
         public K.KSymbolVector x;
-        public K.KBaseVector y;
+        public K.KBaseVector<? extends KBase> y;
 
         public Flip(Dict X) {
             super(98);
             x = (K.KSymbolVector) X.x;
-            y = (K.KBaseVector) X.y;
+            y = (K.KBaseVector<? extends KBase>) X.y;
         }
 
         @Override
@@ -837,6 +849,7 @@ public class K {
         }
     }
 
+    //@TODO: renamte to KMonth
     public static class Month extends KBase {
         public String getDataType() {
             return "Month";
@@ -878,6 +891,7 @@ public class K {
         }
     }
 
+    //@TODO: renamte to Minute
     public static class Minute extends KBase {
         public String getDataType() {
             return "Minute";
@@ -911,6 +925,7 @@ public class K {
         }
     }
 
+    //@TODO: rename to KSecond
     public static class Second extends KBase {
         public String getDataType() {
             return "Second";
@@ -1000,8 +1015,7 @@ public class K {
         return i2Formatter.format(i);
     }
 
-    //@TODO: Implement as generic to avoid casting calling at method
-    public static abstract class KBaseVector extends KBase {
+    public static abstract class KBaseVector<E extends KBase> extends KBase {
         protected Object array;
         private int length;
         private byte attr;
@@ -1017,7 +1031,7 @@ public class K {
             this.typeChar = typeChar;
         }
 
-        public abstract KBase at(int i);
+        public abstract E at(int i);
 
         public byte getAttr() {
             return attr;
@@ -1032,6 +1046,7 @@ public class K {
             return getLength();
         }
 
+        //@TODO: replace with count()
         public int getLength() {
             return length;
         }
@@ -1073,7 +1088,7 @@ public class K {
         }
     }
 
-    public static class KShortVector extends KBaseVector {
+    public static class KShortVector extends KBaseVector<KShort> {
         public String getDataType() {
             return "Short Vector";
         }
@@ -1082,12 +1097,12 @@ public class K {
             super(short.class, length, 5, "short", "h");
         }
 
-        public KBase at(int i) {
+        public KShort at(int i) {
             return new KShort(Array.getShort(array, i));
         }
     }
 
-    public static class KIntVector extends KBaseVector {
+    public static class KIntVector extends KBaseVector<KInteger> {
         public String getDataType() {
             return "Int Vector";
         }
@@ -1096,12 +1111,12 @@ public class K {
             super(int.class, length, 6, "int", "i");
         }
 
-        public KBase at(int i) {
+        public KInteger at(int i) {
             return new KInteger(Array.getInt(array, i));
         }
     }
 
-    public static class KList extends KBaseVector {
+    public static class KList extends KBaseVector<KBase> {
         public String getDataType() {
             return "List";
         }
@@ -1127,7 +1142,7 @@ public class K {
         }
     }
 
-    public static class KDoubleVector extends KBaseVector {
+    public static class KDoubleVector extends KBaseVector<KDouble> {
         public String getDataType() {
             return "Double Vector";
         }
@@ -1136,12 +1151,12 @@ public class K {
             super(double.class, length, 9, "float", "f");
         }
 
-        public KBase at(int i) {
+        public KDouble at(int i) {
             return new KDouble(Array.getDouble(array, i));
         }
     }
 
-    public static class KFloatVector extends KBaseVector {
+    public static class KFloatVector extends KBaseVector<KFloat> {
         public String getDataType() {
             return "Float Vector";
         }
@@ -1150,13 +1165,13 @@ public class K {
             super(float.class, length, 8, "real", "e");
         }
 
-        public KBase at(int i) {
+        public KFloat at(int i) {
             return new KFloat(Array.getFloat(array, i));
-        }
+    }
 
     }
 
-    public static class KLongVector extends KBaseVector {
+    public static class KLongVector extends KBaseVector<KLong> {
         public String getDataType() {
             return "Long Vector";
         }
@@ -1165,12 +1180,12 @@ public class K {
             super(long.class, length, 7, "long", "");
         }
 
-        public KBase at(int i) {
+        public KLong at(int i) {
             return new KLong(Array.getLong(array, i));
         }
     }
 
-    public static class KMonthVector extends KBaseVector {
+    public static class KMonthVector extends KBaseVector<Month> {
         public String getDataType() {
             return "Month Vector";
         }
@@ -1179,12 +1194,12 @@ public class K {
             super(int.class, length, 13, "month", "m");
         }
 
-        public KBase at(int i) {
+        public Month at(int i) {
             return new Month(Array.getInt(array, i));
         }
     }
 
-    public static class KDateVector extends KBaseVector {
+    public static class KDateVector extends KBaseVector<KDate> {
         public String getDataType() {
             return "Date Vector";
         }
@@ -1193,12 +1208,12 @@ public class K {
             super(int.class, length, 14, "date", "");
         }
 
-        public KBase at(int i) {
+        public KDate at(int i) {
             return new KDate(Array.getInt(array, i));
         }
     }
 
-    public static class KGuidVector extends KBaseVector {
+    public static class KGuidVector extends KBaseVector<KGuid> {
         public String getDataType() {
             return "Guid Vector";
         }
@@ -1207,12 +1222,12 @@ public class K {
             super(UUID.class, length, 2, "guid", "");
         }
 
-        public KBase at(int i) {
+        public KGuid at(int i) {
             return new KGuid((UUID) Array.get(array, i));
         }
     }
 
-    public static class KMinuteVector extends KBaseVector {
+    public static class KMinuteVector extends KBaseVector<Minute> {
         public String getDataType() {
             return "Minute Vector";
         }
@@ -1221,12 +1236,12 @@ public class K {
             super(int.class, length, 17, "minute", "");
         }
 
-        public KBase at(int i) {
+        public Minute at(int i) {
             return new Minute(Array.getInt(array, i));
         }
     }
 
-    public static class KDatetimeVector extends KBaseVector {
+    public static class KDatetimeVector extends KBaseVector<KDatetime> {
         public String getDataType() {
             return "Datetime Vector";
         }
@@ -1235,12 +1250,12 @@ public class K {
             super(double.class, length, 15, "datetime", "z");
         }
 
-        public KBase at(int i) {
+        public KDatetime at(int i) {
             return new KDatetime(Array.getDouble(array, i));
         }
     }
 
-    public static class KTimestampVector extends KBaseVector {
+    public static class KTimestampVector extends KBaseVector<KTimestamp> {
         public String getDataType() {
             return "Timestamp Vector";
         }
@@ -1249,12 +1264,12 @@ public class K {
             super(long.class, length, 12, "timestamp", "");
         }
 
-        public KBase at(int i) {
+        public KTimestamp at(int i) {
             return new KTimestamp(Array.getLong(array, i));
         }
     }
 
-    public static class KTimespanVector extends KBaseVector {
+    public static class KTimespanVector extends KBaseVector<KTimespan> {
         public String getDataType() {
             return "Timespan Vector";
         }
@@ -1263,12 +1278,12 @@ public class K {
             super(long.class, length, 16, "timespan", "");
         }
 
-        public KBase at(int i) {
+        public KTimespan at(int i) {
             return new KTimespan(Array.getLong(array, i));
         }
     }
 
-    public static class KSecondVector extends KBaseVector {
+    public static class KSecondVector extends KBaseVector<Second> {
         public String getDataType() {
             return "Second Vector";
         }
@@ -1277,7 +1292,7 @@ public class K {
             super(int.class, length, 18, "second", "");
         }
 
-        public KBase at(int i) {
+        public Second at(int i) {
             return new Second(Array.getInt(array, i));
         }
 
@@ -1290,7 +1305,7 @@ public class K {
         }
     }
 
-    public static class KTimeVector extends KBaseVector {
+    public static class KTimeVector extends KBaseVector<KTime> {
         public String getDataType() {
             return "Time Vector";
         }
@@ -1299,7 +1314,7 @@ public class K {
             super(int.class, length, 19, "time", "");
         }
 
-        public KBase at(int i) {
+        public KTime at(int i) {
             return new KTime(Array.getInt(array, i));
         }
 
@@ -1312,7 +1327,7 @@ public class K {
         }
     }
 
-    public static class KBooleanVector extends KBaseVector {
+    public static class KBooleanVector extends KBaseVector<KBoolean> {
         public String getDataType() {
             return "Boolean Vector";
         }
@@ -1321,7 +1336,7 @@ public class K {
             super(boolean.class, length, 1, "boolean", "b");
         }
 
-        public KBase at(int i) {
+        public KBoolean at(int i) {
             return new KBoolean(Array.getBoolean(array, i));
         }
 
@@ -1346,7 +1361,7 @@ public class K {
         }
     }
 
-    public static class KByteVector extends KBaseVector {
+    public static class KByteVector extends KBaseVector<KByte> {
         public String getDataType() {
             return "Byte Vector";
         }
@@ -1355,7 +1370,7 @@ public class K {
             super(byte.class, length, 4, "byte", "x");
         }
 
-        public KBase at(int i) {
+        public KByte at(int i) {
             return new KByte(Array.getByte(array, i));
         }
 
@@ -1383,7 +1398,7 @@ public class K {
         }
     }
 
-    public static class KSymbolVector extends KBaseVector {
+    public static class KSymbolVector extends KBaseVector<KSymbol> {
         public String getDataType() {
             return "Symbol Vector";
         }
@@ -1392,7 +1407,7 @@ public class K {
             super(String.class, length, 11, "symbol", "s");
         }
 
-        public KBase at(int i) {
+        public KSymbol at(int i) {
             return new KSymbol((String) Array.get(array, i));
         }
 
@@ -1408,7 +1423,7 @@ public class K {
         }
     }
 
-    public static class KCharacterVector extends KBaseVector {
+    public static class KCharacterVector extends KBaseVector<KCharacter> {
         public String getDataType() {
             return "Character Vector";
         }
@@ -1423,7 +1438,7 @@ public class K {
             this(s.toCharArray());
         }
 
-        public KBase at(int i) {
+        public KCharacter at(int i) {
             return new KCharacter(Array.getChar(array, i));
         }
 
