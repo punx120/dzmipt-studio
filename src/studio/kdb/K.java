@@ -9,6 +9,7 @@ import java.text.DecimalFormat;
 import java.text.SimpleDateFormat;
 import java.util.Calendar;
 import java.util.Date;
+import java.util.Objects;
 import java.util.UUID;
 
 public class K {
@@ -60,6 +61,10 @@ public class K {
         }
 
         public void serialise(OutputStream o) throws IOException {
+            throw new IllegalStateException("The method is not implemented");
+        }
+
+        protected void serialiseType(OutputStream o) throws IOException {
             write(o, (byte) type);
         }
 
@@ -225,7 +230,7 @@ public class K {
 
         public Function(KCharacterVector body) {
             super(100);
-            this.body = new String((char[]) body.getArray(), 0, body.getLength());
+            this.body = body.getString();
         }
 
         @Override
@@ -494,7 +499,7 @@ public class K {
         }
 
         public void serialise(OutputStream o) throws IOException {
-            super.serialise(o);
+            serialiseType(o);
             write(o, j);
         }
 
@@ -536,7 +541,7 @@ public class K {
         }
 
         public void serialise(OutputStream o) throws IOException {
-            super.serialise(o);
+            serialiseType(o);
             write(o, (byte) c);
         }
     }
@@ -573,7 +578,7 @@ public class K {
         }
 
         public void serialise(OutputStream o) throws IOException {
-            super.serialise(o);
+            serialiseType(o);
             int i = Float.floatToIntBits(f);
             write(o, i);
         }
@@ -611,7 +616,7 @@ public class K {
         }
 
         public void serialise(OutputStream o) throws IOException {
-            super.serialise(o);
+            serialiseType(o);
             long j = Double.doubleToLongBits(d);
             write(o, j);
         }
@@ -1086,6 +1091,17 @@ public class K {
             if (context.showType() && attr <= sAttr.length) builder.append(sAttr[attr]);
             return formatVector(builder, context);
         }
+
+        @Override
+        public int hashCode() {
+            return length*getType();
+        }
+
+        @Override
+        public boolean equals(Object obj) {
+            if (! (obj instanceof KBaseVector)) return false;
+            return Objects.deepEquals(array, ((KBaseVector<? extends KBase>)obj).array);
+        }
     }
 
     public static class KShortVector extends KBaseVector<KShort> {
@@ -1297,7 +1313,7 @@ public class K {
         }
 
         public void serialise(OutputStream o) throws IOException {
-            super.serialise(o);
+            serialiseType(o);
             write(o, (byte) 0);
             write(o, getLength());
             for (int i = 0; i < getLength(); i++)
@@ -1319,7 +1335,7 @@ public class K {
         }
 
         public void serialise(OutputStream o) throws IOException {
-            super.serialise(o);
+            serialiseType(o);
             write(o, (byte) 0);
             write(o, getLength());
             for (int i = 0; i < getLength(); i++)
@@ -1341,7 +1357,7 @@ public class K {
         }
 
         public void serialise(OutputStream o) throws IOException {
-            super.serialise(o);
+            serialiseType(o);
             write(o, (byte) 0);
             write(o, getLength());
             for (int i = 0; i < getLength(); i++)
@@ -1375,7 +1391,7 @@ public class K {
         }
 
         public void serialise(OutputStream o) throws IOException {
-            super.serialise(o);
+            serialiseType(o);
             write(o, (byte) 0);
             write(o, getLength());
             for (int i = 0; i < getLength(); i++)
@@ -1442,9 +1458,13 @@ public class K {
             return new KCharacter(Array.getChar(array, i));
         }
 
+        public String getString() {
+            return new String((char[]) array);
+        }
+
         public void serialise(OutputStream o) throws IOException {
-            super.serialise(o);
-            byte[] b = new String((char[]) array).getBytes(Config.getInstance().getEncoding());
+            serialiseType(o);
+            byte[] b = getString().getBytes(Config.getInstance().getEncoding());
             write(o, (byte) 0);
             write(o, b.length);
             o.write(b);
@@ -1460,8 +1480,7 @@ public class K {
             }
 
             if (context.showType()) builder.append("\"");
-            for (int i = 0; i < getLength(); i++)
-                builder.append(Array.getChar(array, i));
+            builder.append(getString());
             if (context.showType()) builder.append("\"");
             return builder;
         }
