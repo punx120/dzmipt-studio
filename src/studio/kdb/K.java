@@ -349,6 +349,17 @@ public class K {
         public boolean toBoolean() {
             return b;
         }
+
+        @Override
+        public int hashCode() {
+            return Boolean.hashCode(b);
+        }
+
+        @Override
+        public boolean equals(Object obj) {
+            if (! (obj instanceof KBoolean)) return false;
+            return b == ((KBoolean)obj).b;
+        }
     }
 
     public static class KByte extends KBase implements ToDouble {
@@ -374,6 +385,18 @@ public class K {
                         .append(Integer.toHexString((b >> 4) & 0xf))
                         .append(Integer.toHexString(b & 0xf));
         }
+
+        @Override
+        public int hashCode() {
+            return Byte.hashCode(b);
+        }
+
+        @Override
+        public boolean equals(Object obj) {
+            if (! (obj instanceof KByte)) return false;
+            return b == ((KByte)obj).b;
+        }
+
     }
 
     public static class KShort extends KBase implements ToDouble {
@@ -406,6 +429,17 @@ public class K {
             if (context.showType()) builder.append("h");
             return builder;
         }
+
+        @Override
+        public int hashCode() {
+            return Short.hashCode(s);
+        }
+
+        @Override
+        public boolean equals(Object obj) {
+            if (! (obj instanceof KShort)) return false;
+            return s == ((KShort)obj).s;
+        }
     }
 
     public static class KInteger extends KBase implements ToDouble {
@@ -437,6 +471,17 @@ public class K {
             else builder.append(context.getNumberFormat().format(i));
             if (context.showType()) builder.append("i");
             return builder;
+        }
+
+        @Override
+        public int hashCode() {
+            return Integer.hashCode(i);
+        }
+
+        @Override
+        public boolean equals(Object obj) {
+            if (! (obj instanceof KInteger)) return false;
+            return i == ((KInteger)obj).i;
         }
     }
 
@@ -543,6 +588,17 @@ public class K {
         public void serialise(OutputStream o) throws IOException {
             serialiseType(o);
             write(o, (byte) c);
+        }
+
+        @Override
+        public int hashCode() {
+            return Character.hashCode(c);
+        }
+
+        @Override
+        public boolean equals(Object obj) {
+            if (! (obj instanceof KCharacter)) return false;
+            return c == ((KCharacter)obj).c;
         }
     }
 
