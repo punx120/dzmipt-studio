@@ -287,9 +287,9 @@ public class KTest {
 
     @Test
     public void testOtherToString() throws Exception {
-        K.Function funcUnary = new K.Function(new K.KCharacterVector("{1+x}"));
-        K.Function funcUnary2 = new K.Function(new K.KCharacterVector("{2*x}"));
-        K.Function funcBinary = new K.Function(new K.KCharacterVector("{x+y}"));
+        K.Function funcUnary = new K.Function("{1+x}");
+        K.Function funcUnary2 = new K.Function("{2*x}");
+        K.Function funcBinary = new K.Function("{x+y}");
 
         check(funcUnary,"{1+x}", "{1+x}");
         check(funcBinary,"{x+y}", "{x+y}");
@@ -301,7 +301,7 @@ public class KTest {
         check(new K.Fscan(funcBinary), "{x+y}\\", "{x+y}\\");
         check(new K.FPrior(funcBinary), "{x+y}':", "{x+y}':");
 
-        check(new K.FComposition(new Object[] {funcUnary, funcBinary}), "{1+x}{x+y}","{1+x}{x+y}");
+        check(new K.FComposition(new K.KBase[] {funcUnary, funcBinary}), "{1+x}{x+y}","{1+x}{x+y}");
         check(new K.Projection((K.KList)vector(K.KList.class, funcBinary, new K.KLong(1), new K.UnaryPrimitive(-1))), "{x+y}[1;]", "{x+y}[1;]");
         check(new K.Projection((K.KList)vector(K.KList.class, funcBinary, new K.UnaryPrimitive(-1), new K.KLong(1))), "{x+y}[;1]", "{x+y}[;1]");
 
@@ -320,8 +320,8 @@ public class KTest {
     }
 
     @Test void testComposition() {
-        K.KBase composition = new K.FComposition(new Object[] {new K.Function(new K.KCharacterVector("{2+x}")),
-                new K.Function(new K.KCharacterVector("{x+y}"))});
+        K.KBase composition = new K.FComposition(new K.KBase[] {new K.Function("{2+x}"),
+                new K.Function("{x+y}")});
         assertEquals("{2+x}{x+y}", composition.toString());
     }
 

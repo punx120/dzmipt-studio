@@ -143,7 +143,7 @@ public class LineChart {
                             K.KMonthVector times = (K.KMonthVector) table.getColumn(0);
                             for (int row = 0; row < table.getRowCount(); row++) {
                                 K.Month time = times.at(row);
-                                int m = time.i + 24000;
+                                int m = time.toInt() + 24000;
                                 int y = m / 12;
                                 m = 1 + m % 12;
                                 Month month = new Month(m, y);
@@ -154,7 +154,7 @@ public class LineChart {
                             K.KSecondVector times = (K.KSecondVector) table.getColumn(0);
                             for (int row = 0; row < table.getRowCount(); row++) {
                                 K.Second time = times.at(row);
-                                Second second = new Second(time.i % 60, time.i / 60, 0, 1, 1, 2001);
+                                Second second = new Second(time.toInt() % 60, time.toInt() / 60, 0, 1, 1, 2001);
                                 addOrUpdate(table, series, row, col, second);
                             }
                         } else if (klass == K.KMinuteVector.class) {
@@ -162,7 +162,7 @@ public class LineChart {
                             K.KMinuteVector times = (K.KMinuteVector) table.getColumn(0);
                             for (int row = 0; row < table.getRowCount(); row++) {
                                 K.Minute time = times.at(row);
-                                Minute minute = new Minute(time.i % 60, time.i / 60, 1, 1, 2001);
+                                Minute minute = new Minute(time.toInt() % 60, time.toInt() / 60, 1, 1, 2001);
                                 addOrUpdate(table, series, row, col, minute);
                             }
                         }

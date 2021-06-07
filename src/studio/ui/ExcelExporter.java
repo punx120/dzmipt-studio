@@ -160,13 +160,13 @@ class ExcelExporter {
                                 } else if (table.getColumnClass(j) == K.KBooleanVector.class) {
                                     writer.write("<ss:Cell><ss:Data ss:Type=\"Boolean\">" + (((K.KBoolean) b).b ? "1" : "0"));
                                 } else if (table.getColumnClass(j) == K.KDoubleVector.class) {
-                                    writer.write("<ss:Cell><ss:Data ss:Type=\"Number\">" + ((K.KDouble) b).d);
+                                    writer.write("<ss:Cell><ss:Data ss:Type=\"Number\">" + ((K.KDouble) b).toDouble());
                                 } else if (table.getColumnClass(j) == K.KFloatVector.class) {
                                     writer.write("<ss:Cell><ss:Data ss:Type=\"Number\">" + ((K.KFloat) b).f);
                                 } else if (table.getColumnClass(j) == K.KLongVector.class) {
-                                    writer.write("<ss:Cell><ss:Data ss:Type=\"Number\">" + ((K.KLong) b).j);
+                                    writer.write("<ss:Cell><ss:Data ss:Type=\"Number\">" + ((K.KLong) b).toLong());
                                 } else if (table.getColumnClass(j) == K.KIntVector.class) {
-                                    writer.write("<ss:Cell><ss:Data ss:Type=\"Number\">" + ((K.KInteger) b).i);
+                                    writer.write("<ss:Cell><ss:Data ss:Type=\"Number\">" + ((K.KInteger) b).toInt());
                                 } else if (table.getColumnClass(j) == K.KShortVector.class) {
                                     writer.write("<ss:Cell><ss:Data ss:Type=\"Number\">" + ((K.KShort) b).s);
                                 } else if (table.getColumnClass(j) == K.KCharacterVector.class) {

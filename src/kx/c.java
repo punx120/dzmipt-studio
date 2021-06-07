@@ -204,7 +204,7 @@ public class c {
 
     K.FComposition rcomposition() throws UnsupportedEncodingException {
         int n = ri();
-        Object[] objs = new Object[n];
+        K.KBase[] objs = new K.KBase[n];
         for (int i = 0; i < n; i++)
             objs[i] = r();
 
