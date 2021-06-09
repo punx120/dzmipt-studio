@@ -40,9 +40,7 @@ public class TabPanel extends JPanel {
             if (model != null) {
                 grid = new QGrid(panel, model);
                 component = grid;
-                if (model instanceof DictModel) {
-                    type = ResultType.DICT;
-                } else if (model instanceof ListModel) {
+                if (model instanceof ListModel) {
                     type = ResultType.LIST;
                 } else {
                     type = ResultType.TABLE;
@@ -138,7 +136,6 @@ public class TabPanel extends JPanel {
         ERROR("Error Details ", Util.ERROR_SMALL_ICON),
         TEXT(I18n.getString("ConsoleView"), Util.CONSOLE_ICON),
         LIST("List", Util.TABLE_ICON),
-        DICT("Dict", Util.TABLE_ICON),
         TABLE("Table", Util.TABLE_ICON);
 
         private final String title;

@@ -14,15 +14,7 @@ public abstract class KTableModel extends AbstractTableModel {
         }
 
         if (obj instanceof K.Dict) {
-            K.Dict d = (K.Dict) obj;
-
-            if ((d.x instanceof K.Flip) && (d.y instanceof K.Flip)) {
-                return new DictTableModel(d);
-            }
-
-            if ((d.x instanceof K.KBaseVector) && (d.y instanceof K.KBaseVector)) {
-                return new DictModel(d);
-            }
+            return new DictTableModel((K.Dict)obj);
         }
 
         if ((obj instanceof K.KBaseVector) && obj.getType() != 10 && obj.getType() != 4) {
@@ -37,7 +29,7 @@ public abstract class KTableModel extends AbstractTableModel {
 
     public void asc(int col) {
         sortIndex = null;
-        K.KBaseVector v = getColumn(col);
+        K.KBaseVector<? extends K.KBase>  v = getColumn(col);
         sortIndex = v.gradeUp();
         sorted = 1;
         sortedByColumn = col;
