@@ -35,20 +35,11 @@ public class KFomatingTest {
 
     @Test
     public void commaInList() {
-        K.KLongVector longVector = new K.KLongVector(4);
-        long[] array = (long[]) longVector.getArray();
-        array[0] = 1;
-        array[1] = 1234;
-        array[2] = Long.MAX_VALUE;
-        array[3] = Long.MIN_VALUE;
+        K.KLongVector longVector = new K.KLongVector(1, 1234, Long.MAX_VALUE, Long.MIN_VALUE);
         assertEquals("1 1,234 0W 0N", longVector.toString(comma));
 
-        K.KList list = new K.KList(4);
-        K.KBase[] arrayList = (K.KBase[]) list.getArray();
-        arrayList[0] = new K.KLong(12345);
-        arrayList[1] = new K.KSymbol("12345");
-        arrayList[2] = new K.KCharacterVector("12345");
-        arrayList[3] = new K.KDouble(12345.67);
+        K.KList list = new K.KList(new K.KLong(12345), new K.KSymbol("12345"),
+                new K.KCharacterVector("12345"), new K.KDouble(12345.67));
         assertEquals("(12,345;12345;12345;12,345.67)", list.toString(comma));
     }
 

@@ -225,12 +225,10 @@ public class c {
 
     K.Projection rproj() throws UnsupportedEncodingException {
         int n = ri();
-        K.KList list = new K.KList(n);
-        K.KBase[] array = (K.KBase[]) list.getArray();
+        K.KBase[] array = new K.KBase[n];
         for (int i = 0; i < n; i++)
             array[i] = r();
-
-        return new K.Projection(list);
+        return new K.Projection(array);
     }
 
     K.Minute ru() {
@@ -354,157 +352,156 @@ public class c {
         n = ri();
         switch (t) {
             case 0: {
-                K.KList L = new K.KList(n);
-                L.setAttr(attr);
-                K.KBase[] array = (K.KBase[]) L.getArray();
+                K.KBase[] array = new K.KBase[n];
                 for (; i < n; i++)
                     array[i] = r();
+                K.KList L = new K.KList(array);
+                L.setAttr(attr);
                 return L;
             }
             case 1: {
-                K.KBooleanVector B = new K.KBooleanVector(n);
-                B.setAttr(attr);
-                boolean[] array = (boolean[]) B.getArray();
+                boolean[] array = new boolean[n];
                 for (; i < n; i++)
                     array[i] = rb();
+                K.KBooleanVector B = new K.KBooleanVector(array);
+                B.setAttr(attr);
                 return B;
             }
             case 2: {
-                K.KGuidVector B = new K.KGuidVector(n);
-                B.setAttr(attr);
-                UUID[] array = (UUID[]) B.getArray();
+                UUID[] array = new UUID[n];
                 for (; i < n; i++)
                     array[i] = rg();
+                K.KGuidVector B = new K.KGuidVector(array);
+                B.setAttr(attr);
                 return B;
             }
             case 4: {
-                K.KByteVector G = new K.KByteVector(n);
-                G.setAttr(attr);
-                byte[] array = (byte[]) G.getArray();
+                byte[] array = new byte[n];
                 for (; i < n; i++)
                     array[i] = b[j++];
+                K.KByteVector G = new K.KByteVector(array);
+                G.setAttr(attr);
                 return G;
             }
             case 5: {
-                K.KShortVector H = new K.KShortVector(n);
-                H.setAttr(attr);
-                short[] array = (short[]) H.getArray();
+                short[] array = new short[n];
                 for (; i < n; i++)
                     array[i] = rh();
+                K.KShortVector H = new K.KShortVector(array);
+                H.setAttr(attr);
                 return H;
             }
             case 6: {
-                K.KIntVector I = new K.KIntVector(n);
-                I.setAttr(attr);
-                int[] array = (int[]) I.getArray();
+                int[] array = new int[n];
                 for (; i < n; i++)
                     array[i] = ri();
+                K.KIntVector I = new K.KIntVector(array);
+                I.setAttr(attr);
                 return I;
             }
             case 7: {
-                K.KLongVector J = new K.KLongVector(n);
-                J.setAttr(attr);
-                long[] array = (long[]) J.getArray();
+                long[] array = new long[n];
                 for (; i < n; i++)
                     array[i] = rj();
+                K.KLongVector J = new K.KLongVector(array);
+                J.setAttr(attr);
                 return J;
             }
             case 8: {
-                K.KFloatVector E = new K.KFloatVector(n);
-                E.setAttr(attr);
-                float[] array = (float[]) E.getArray();
+                float[] array = new float[n];
                 for (; i < n; i++)
                     array[i] = re();
+                K.KFloatVector E = new K.KFloatVector(array);
+                E.setAttr(attr);
                 return E;
             }
             case 9: {
-                K.KDoubleVector F = new K.KDoubleVector(n);
-                F.setAttr(attr);
-                double[] array = (double[]) F.getArray();
+                double[] array = new double[n];
                 for (; i < n; i++)
                     array[i] = rf();
+                K.KDoubleVector F = new K.KDoubleVector(array);
+                F.setAttr(attr);
                 return F;
             }
             case 10: {
-                K.KCharacterVector C = null;
-                char[] array = new String(b, j, n, encoding).toCharArray();
-                C = new K.KCharacterVector(array);
+                String value = new String(b, j, n, encoding);
+                K.KCharacterVector C = new K.KCharacterVector(value);
                 C.setAttr(attr);
                 j += n;
                 return C;
             }
             case 11: {
-                K.KSymbolVector S = new K.KSymbolVector(n);
-                S.setAttr(attr);
-                String[] array = (String[]) S.getArray();
+                String[] array = new String[n];
                 for (; i < n; i++)
                     array[i] = rs().s;
+                K.KSymbolVector S = new K.KSymbolVector(array);
+                S.setAttr(attr);
                 return S;
             }
             case 12: {
-                K.KTimestampVector P = new K.KTimestampVector(n);
-                P.setAttr(attr);
-                long[] array = (long[]) P.getArray();
+                long[] array = new long[n];
                 for (; i < n; i++) {
                     array[i] = rj();
                 }
+                K.KTimestampVector P = new K.KTimestampVector(array);
+                P.setAttr(attr);
                 return P;
             }
             case 13: {
-                K.KMonthVector M = new K.KMonthVector(n);
-                M.setAttr(attr);
-                int[] array = (int[]) M.getArray();
+                int[] array = new int[n];
                 for (; i < n; i++)
                     array[i] = ri();
+                K.KMonthVector M = new K.KMonthVector(array);
+                M.setAttr(attr);
                 return M;
             }
             case 14: {
-                K.KDateVector D = new K.KDateVector(n);
-                D.setAttr(attr);
-                int[] array = (int[]) D.getArray();
+                int[] array = new int[n];
                 for (; i < n; i++)
                     array[i] = ri();
+                K.KDateVector D = new K.KDateVector(array);
+                D.setAttr(attr);
                 return D;
             }
             case 15: {
-                K.KDatetimeVector Z = new K.KDatetimeVector(n);
-                Z.setAttr(attr);
-                double[] array = (double[]) Z.getArray();
+                double[] array = new double[n];
                 for (; i < n; i++)
                     array[i] = rf();
+                K.KDatetimeVector Z = new K.KDatetimeVector(array);
+                Z.setAttr(attr);
                 return Z;
             }
             case 16: {
-                K.KTimespanVector N = new K.KTimespanVector(n);
-                N.setAttr(attr);
-                long[] array = (long[]) N.getArray();
+                long[] array = new long[n];
                 for (; i < n; i++) {
                     array[i] = rj();
                 }
+                K.KTimespanVector N = new K.KTimespanVector(array);
+                N.setAttr(attr);
                 return N;
             }
             case 17: {
-                K.KMinuteVector U = new K.KMinuteVector(n);
-                U.setAttr(attr);
-                int[] array = (int[]) U.getArray();
+                int[] array = new int[n];
                 for (; i < n; i++)
                     array[i] = ri();
+                K.KMinuteVector U = new K.KMinuteVector(array);
+                U.setAttr(attr);
                 return U;
             }
             case 18: {
-                K.KSecondVector V = new K.KSecondVector(n);
-                V.setAttr(attr);
-                int[] array = (int[]) V.getArray();
+                int[] array = new int[n];
                 for (; i < n; i++)
                     array[i] = ri();
+                K.KSecondVector V = new K.KSecondVector(array);
+                V.setAttr(attr);
                 return V;
             }
             case 19: {
-                K.KTimeVector T = new K.KTimeVector(n);
-                T.setAttr(attr);
-                int[] array = (int[]) T.getArray();
+                int[] array = new int[n];
                 for (; i < n; i++)
                     array[i] = ri();
+                K.KTimeVector T = new K.KTimeVector(array);
+                T.setAttr(attr);
                 return T;
             }
         }

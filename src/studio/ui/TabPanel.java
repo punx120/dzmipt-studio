@@ -110,7 +110,7 @@ public class TabPanel extends JPanel {
         }
         if (type == ResultType.TEXT) {
             String text;
-            if ((result instanceof K.UnaryPrimitive&&0==((K.UnaryPrimitive)result).toInt())) text = "";
+            if ((result instanceof K.UnaryPrimitive) && ((K.UnaryPrimitive)result).isIdentity() ) text = "";
             else {
                 text = Util.limitString(result.toString(formatContext), Config.getInstance().getMaxCharsInResult());
             }

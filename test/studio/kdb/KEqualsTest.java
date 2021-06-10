@@ -205,13 +205,11 @@ public class KEqualsTest {
     @Test
     public void testComposition() {
         K.Function funcUnary = new K.Function("{1+x}");
-        K.Function funcUnary2 = new K.Function("{2*x}");
         K.Function funcBinary = new K.Function("{x+y}");
 
-        K.FComposition c0 = new K.FComposition(new K.KBase[] {funcUnary, funcBinary});
-        K.FComposition c1 = new K.FComposition(new K.KBase[] {funcUnary, funcBinary});
-        K.FComposition c2 = new K.FComposition(new K.KBase[] {new K.Function("{2+x}"),
-                new K.Function("{x+y}")});
+        K.FComposition c0 = new K.FComposition(funcUnary, funcBinary);
+        K.FComposition c1 = new K.FComposition(funcUnary, funcBinary);
+        K.FComposition c2 = new K.FComposition(new K.Function("{2+x}"), new K.Function("{x+y}"));
 
         testEquals(c0, c1);
         testNotEquals(c0, c2);
@@ -219,23 +217,13 @@ public class KEqualsTest {
 
     @Test
     public void testProjection() {
-        K.KList l1 = new K.KList(2);
-        K.KBase[] array1 = (K.KBase[]) l1.getArray();
-        array1[0] = new K.BinaryPrimitive(1);
-        array1[1] = new K.KLong(1);
+        K.KList l1 = new K.KList(new K.BinaryPrimitive(1), new K.KLong(1));
         K.Projection p1 = new K.Projection(l1);
 
-        K.KList l2 = new K.KList(2);
-        K.KBase[] array2 = (K.KBase[]) l2.getArray();
-        array2[0] = new K.BinaryPrimitive(1);
-        array2[1] = new K.KLong(1);
+        K.KList l2 = new K.KList(new K.BinaryPrimitive(1), new K.KLong(1));
         K.Projection p2 = new K.Projection(l2);
 
-        K.KList l3 = new K.KList(3);
-        K.KBase[] array3 = (K.KBase[]) l3.getArray();
-        array3[0] = new K.TernaryOperator(0);
-        array3[1] = new K.UnaryPrimitive(-1);
-        array3[2] = new K.UnaryPrimitive(-1);
+        K.KList l3 = new K.KList(new K.TernaryOperator(0), new K.UnaryPrimitive(-1), new K.UnaryPrimitive(-1));
         K.Projection p3 = new K.Projection(l3);
 
         testEquals(p1, p2);

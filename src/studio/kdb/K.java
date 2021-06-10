@@ -61,11 +61,12 @@ public class K {
         }
 
         public void serialise(OutputStream o) throws IOException {
-            throw new IllegalStateException("The method is not implemented");
+            write(o, (byte) type);
+            serialiseData(o);
         }
 
-        protected void serialiseType(OutputStream o) throws IOException {
-            write(o, (byte) type);
+        protected void serialiseData(OutputStream o) throws IOException {
+            throw new IllegalStateException("The method is not implemented");
         }
 
         public boolean isNull() {
@@ -87,6 +88,39 @@ public class K {
 
         public int count() {
             return 1;
+        }
+
+        @Override
+        public boolean equals(Object obj) {
+            return obj.getClass().equals(this.getClass());
+        }
+    }
+
+    private abstract static class KByteBase extends KBase implements ToDouble {
+        protected byte value;
+
+        KByteBase(int type, byte value) {
+            super(type);
+            this.value = value;
+        }
+        public double toDouble() {
+            return value;
+        }
+
+        @Override
+        protected void serialiseData(OutputStream o) throws IOException {
+            write(o, value);
+        }
+
+        @Override
+        public int hashCode() {
+            return Byte.hashCode(value);
+        }
+
+        @Override
+        public boolean equals(Object obj) {
+            if (!super.equals(obj)) return false;
+            return value == ((KByteBase)obj).value;
         }
 
     }
@@ -111,13 +145,18 @@ public class K {
         }
 
         @Override
+        public void serialiseData(OutputStream o) throws IOException {
+            write(o, value);
+        }
+
+        @Override
         public int hashCode() {
             return Integer.hashCode(value);
         }
 
         @Override
         public boolean equals(Object obj) {
-            if (! obj.getClass().equals(this.getClass())) return false;
+            if (!super.equals(obj)) return false;
             return value == ((KIntBase)obj).value;
         }
     }
@@ -139,6 +178,10 @@ public class K {
 
         public long toLong() {
             return value;
+        }
+        @Override
+        public void serialiseData(OutputStream o) throws IOException {
+            write(o, value);
         }
         @Override
         public int hashCode() {
@@ -169,14 +212,49 @@ public class K {
         }
 
         @Override
+        public void serialiseData(OutputStream o) throws IOException {
+            long j = Double.doubleToLongBits(value);
+            write(o, j);
+        }
+
+        @Override
         public int hashCode() {
             return Double.hashCode(value);
         }
 
         @Override
         public boolean equals(Object obj) {
-            if (! obj.getClass().equals(this.getClass())) return false;
+            if (!super.equals(obj)) return false;
             return Double.doubleToLongBits(value) == Double.doubleToLongBits(((KDoubleBase)obj).value);
+        }
+    }
+
+    private abstract static class KArrayBase extends KBase {
+        protected KBase[] array;
+
+        KArrayBase(int type, KBase[] array) {
+            super(type);
+            this.array = array;
+        }
+
+
+        @Override
+        public void serialiseData(OutputStream o) throws IOException {
+            write(o, array.length);
+            for (KBase obj: array) {
+                obj.serialise(o);
+            }
+        }
+
+        @Override
+        public int hashCode() {
+            return array.length;
+        }
+
+        @Override
+        public boolean equals(Object obj) {
+            if (! super.equals(obj)) return false;
+            return Objects.deepEquals(array, ((KArrayBase)obj).array);
         }
     }
 
@@ -185,31 +263,36 @@ public class K {
             return "Adverb";
         }
 
-        protected K.KBase o;
+        protected K.KBase obj;
 
         public Adverb(int type, K.KBase o) {
             super(type);
-            this.o = o;
+            this.obj = o;
         }
 
         public K.KBase getObject() {
-            return o;
+            return obj;
         }
 
         @Override
         public StringBuilder format(StringBuilder builder, KFormatContext context) {
-            return super.format(builder, context).append(o.toString(context));
+            return super.format(builder, context).append(obj.toString(context));
+        }
+
+        @Override
+        protected void serialiseData(OutputStream o) throws IOException {
+            obj.serialise(o);
         }
 
         @Override
         public int hashCode() {
-            return o.hashCode();
+            return obj.hashCode();
         }
 
         @Override
         public boolean equals(Object obj) {
-            if (! obj.getClass().equals(this.getClass())) return false;
-            return o.equals(((Adverb)obj).o);
+            if (!super.equals(obj)) return false;
+            return this.obj.equals(((Adverb)obj).obj);
         }
     }
 
@@ -224,42 +307,24 @@ public class K {
             super(102, ops, i);
         }
 
-        @Override
-        public StringBuilder format(StringBuilder builder, KFormatContext context) {
-            return super.format(builder, context).append(getPrimitive());
-        }
-
     }
 
-    public static class FComposition extends KBase {
-        private final KBase[] objs;
-
+    public static class FComposition extends KArrayBase {
         public String getDataType() {
             return "Function Composition";
         }
 
-        public FComposition(KBase[] objs) {
-            super(105);
-            this.objs = objs;
+        public FComposition(KBase... array) {
+            super(105, array);
         }
 
         @Override
         public StringBuilder format(StringBuilder builder, KFormatContext context) {
             builder = super.format(builder, context);
-            for (KBase arg: objs) {
+            for (KBase arg: array) {
                 arg.format(builder, context);
             }
             return builder;
-        }
-        @Override
-        public int hashCode() {
-            return objs.length;
-        }
-
-        @Override
-        public boolean equals(Object obj) {
-            if (! obj.getClass().equals(this.getClass())) return false;
-            return Objects.deepEquals(objs, ((FComposition)obj).objs);
         }
     }
 
@@ -321,7 +386,7 @@ public class K {
     public static class Fscan extends Adverb {
         public Fscan(KBase o) {
             super(108, o);
-            this.o = o;
+            this.obj = o;
         }
 
         @Override
@@ -352,6 +417,12 @@ public class K {
         }
 
         @Override
+        protected void serialiseData(OutputStream o) throws IOException {
+            write(o, (byte) 0);
+            new KCharacterVector(body).serialise(o);
+        }
+
+        @Override
         public int hashCode() {
             return body.hashCode();
         }
@@ -363,77 +434,65 @@ public class K {
         }
     }
 
-    public abstract static class Primitive extends KIntBase {
+    public abstract static class Primitive extends KByteBase {
         public String getDataType() {
             return "Primitive";
         }
 
         private String s = " ";
 
-        public Primitive(int type, String[] ops, int i) {
-            super(type, i);
-            if (i >= 0 && i < ops.length)
-                s = ops[i];
+        public Primitive(int type, String[] ops, int value) {
+            super(type, (byte) value);
+            if (value >= 0 && value < ops.length)
+                s = ops[value];
         }
 
         public String getPrimitive() {
             return s;
         }
+
+        @Override
+        public StringBuilder format(StringBuilder builder, KFormatContext context) {
+            builder = super.format(builder, context);
+            if (value != -1) builder.append(getPrimitive());
+            return builder;
+        }
+
     }
 
-    public static class Projection extends KBase {
+    public static class Projection extends KArrayBase {
         public String getDataType() {
             return "Projection";
         }
 
-        private final K.KList objs;
-
-        public Projection(K.KList objs) {
-            super(104);
-            this.objs = objs;
+        public Projection(KBase... array) {
+            super(104, array);
         }
 
         @Override
         public StringBuilder format(StringBuilder builder, KFormatContext context) {
             builder = super.format(builder, context);
-            if (objs.getLength() == 0) return builder; // not sure if such is possible
-            objs.at(0).format(builder, context);
+            if (array.length == 0) return builder; // not sure if such is possible
+            array[0].format(builder, context);
             builder.append("[");
-            for (int i = 1; i < objs.getLength(); i++) {
+            for (int i = 1; i < array.length; i++) {
                 if (i > 1) builder.append(";");
-                objs.at(i).format(builder, context);
+                array[i].format(builder, context);
             }
             builder.append("]");
             return builder;
         }
-
-        @Override
-        public int hashCode() {
-            return objs.hashCode();
-        }
-
-        @Override
-        public boolean equals(Object obj) {
-            if (! obj.getClass().equals(this.getClass())) return false;
-            return objs.equals(((Projection)obj).objs);
-        }
     }
 
-    public static class TernaryOperator extends KIntBase {
+    public static class TernaryOperator extends Primitive {
+        private final static String[] ops = {"'", "/", "\\"};
+
         public String getDataType() {
             return "Ternary Operator";
         }
 
-        private char charVal = ' ';
-
         public TernaryOperator(int i) {
-            super(103, i);
-            if (i>=0 && i<=2) charVal = "'/\\".charAt(i);
-        }
-
-        @Override
-        public StringBuilder format(StringBuilder builder, KFormatContext context) {
-            return super.format(builder, context).append(charVal);
+            super(103, ops, i);
         }
     }
 
@@ -444,11 +503,8 @@ public class K {
             super(101, ops, i);
         }
 
-        @Override
-        public StringBuilder format(StringBuilder builder, KFormatContext context) {
-            builder = super.format(builder, context);
-            if (toInt() != -1) builder.append(getPrimitive());
-            return builder;
+        public boolean isIdentity() {
+            return value == 0;
         }
     }
 
@@ -480,6 +536,11 @@ public class K {
         }
 
         @Override
+        protected void serialiseData(OutputStream o) throws IOException {
+            write(o,(byte) (b ? 1:0));
+        }
+
+        @Override
         public int hashCode() {
             return Boolean.hashCode(b);
         }
@@ -491,39 +552,21 @@ public class K {
         }
     }
 
-    public static class KByte extends KBase implements ToDouble {
+    public static class KByte extends KByteBase{
         public String getDataType() {
             return "Byte";
         }
 
-        public byte b;
-
-        public double toDouble() {
-            return b;
-        }
-
         public KByte(byte b) {
-            super(-4);
-            this.b = b;
+            super(-4, b);
         }
 
         @Override
         public StringBuilder format(StringBuilder builder, KFormatContext context) {
             return super.format(builder, context)
                         .append("0x")
-                        .append(Integer.toHexString((b >> 4) & 0xf))
-                        .append(Integer.toHexString(b & 0xf));
-        }
-
-        @Override
-        public int hashCode() {
-            return Byte.hashCode(b);
-        }
-
-        @Override
-        public boolean equals(Object obj) {
-            if (! (obj instanceof KByte)) return false;
-            return b == ((KByte)obj).b;
+                        .append(Integer.toHexString((value >> 4) & 0xf))
+                        .append(Integer.toHexString(value & 0xf));
         }
 
     }
@@ -557,6 +600,11 @@ public class K {
             else builder.append(context.getNumberFormat().format(s));
             if (context.showType()) builder.append("h");
             return builder;
+        }
+
+        @Override
+        protected void serialiseData(OutputStream o) throws IOException {
+            write(o, s);
         }
 
         @Override
@@ -615,8 +663,10 @@ public class K {
             return builder.append(s);
         }
 
-        public void serialise(OutputStream o) throws IOException {
+        @Override
+        public void serialiseData(OutputStream o) throws IOException {
             o.write(s.getBytes(Config.getInstance().getEncoding()));
+            write(o, (byte) 0);
         }
 
         @Override
@@ -649,11 +699,6 @@ public class K {
             else builder.append(context.getNumberFormat().format(value));
             return builder;
         }
-
-        public void serialise(OutputStream o) throws IOException {
-            serialiseType(o);
-            write(o, value);
-        }
     }
 
     public static class KCharacter extends KBase {
@@ -680,8 +725,8 @@ public class K {
             return builder;
         }
 
-        public void serialise(OutputStream o) throws IOException {
-            serialiseType(o);
+        @Override
+        public void serialiseData(OutputStream o) throws IOException {
             write(o, (byte) c);
         }
 
@@ -728,8 +773,8 @@ public class K {
             return builder;
         }
 
-        public void serialise(OutputStream o) throws IOException {
-            serialiseType(o);
+        @Override
+        public void serialiseData(OutputStream o) throws IOException {
             int i = Float.floatToIntBits(f);
             write(o, i);
         }
@@ -766,8 +811,8 @@ public class K {
             return builder;
         }
 
-        public void serialise(OutputStream o) throws IOException {
-            serialiseType(o);
+        @Override
+        public void serialiseData(OutputStream o) throws IOException {
             long j = Double.doubleToLongBits(value);
             write(o, j);
         }
@@ -818,6 +863,13 @@ public class K {
         @Override
         public StringBuilder format(StringBuilder builder, KFormatContext context) {
             return super.format(builder, context).append(uuid);
+        }
+
+        @Override
+        protected void serialiseData(OutputStream o) throws IOException {
+            write(o, uuid.getMostSignificantBits());
+            write(o, uuid.getLeastSignificantBits());
+
         }
 
         @Override
@@ -933,6 +985,7 @@ public class K {
             y = Y;
         }
 
+        //@TODO: change to somethign like setSortAttr
         public void setAttr(byte attr) {
             this.attr = attr;
         }
@@ -952,6 +1005,13 @@ public class K {
             builder.append("!");
             y.format(builder, context);
             return builder;
+        }
+
+        @Override
+        public void serialise(OutputStream o) throws IOException {
+            write(o, (byte) (attr == 1 ? 127 : 99));
+            x.serialise(o);
+            y.serialise(o);
         }
 
         @Override
@@ -997,6 +1057,12 @@ public class K {
             builder.append("!");
             y.format(builder, context);
             return builder;
+        }
+
+        @Override
+        protected void serialiseData(OutputStream o) throws IOException {
+            write(o, (byte)0);
+            new Dict(x,y).serialise(o);
         }
 
         @Override
@@ -1153,15 +1219,14 @@ public class K {
     public static abstract class KBaseVector<E extends KBase> extends KBase {
         protected Object array;
         private int length;
-        private byte attr;
+        private byte attr = 0;
         private final String typeName;
         private final String typeChar;
 
-
-        protected KBaseVector(Class klass, int length, int type, String typeName, String typeChar) {
+        protected KBaseVector(Object array, int type, String typeName, String typeChar) {
             super(type);
-            array = Array.newInstance(klass, length);
-            this.length = length;
+            this.array = array;
+            this.length = Array.getLength(array);
             this.typeName = typeName;
             this.typeChar = typeChar;
         }
@@ -1186,16 +1251,12 @@ public class K {
             return length;
         }
 
-        public Object getArray() {
-            return array;
-        }
-
         public int[] gradeUp() {
-            return Sorter.gradeUp(getArray(), getLength());
+            return Sorter.gradeUp(array, getLength());
         }
 
         public int[] gradeDown() {
-            return Sorter.gradeDown(getArray(), getLength());
+            return Sorter.gradeDown(array, getLength());
         }
 
         private final static String[] sAttr = new String[]{"", "`s#", "`u#", "`p#", "`g#"};
@@ -1223,13 +1284,22 @@ public class K {
         }
 
         @Override
+        public void serialiseData(OutputStream o) throws IOException {
+            write(o, attr);
+            write(o, length);
+            for (int index=0; index<length; index++) {
+                at(index).serialiseData(o);
+            }
+        }
+
+        @Override
         public int hashCode() {
             return length*getType();
         }
 
         @Override
         public boolean equals(Object obj) {
-            if (! obj.getClass().equals(this.getClass())) return false;
+            if (!super.equals(obj)) return false;
             KBaseVector<? extends KBase> vector = (KBaseVector<? extends KBase>)obj;
             return Objects.deepEquals(array, vector.array) && attr == vector.attr;
         }
@@ -1240,8 +1310,8 @@ public class K {
             return "Short Vector";
         }
 
-        public KShortVector(int length) {
-            super(short.class, length, 5, "short", "h");
+        public KShortVector(short... array) {
+            super(array, 5, "short", "h");
         }
 
         public KShort at(int i) {
@@ -1254,8 +1324,8 @@ public class K {
             return "Int Vector";
         }
 
-        public KIntVector(int length) {
-            super(int.class, length, 6, "int", "i");
+        public KIntVector(int... array) {
+            super(array, 6, "int", "i");
         }
 
         public KInteger at(int i) {
@@ -1268,8 +1338,8 @@ public class K {
             return "List";
         }
 
-        public KList(int length) {
-            super(KBase.class, length, 0, "", "");
+        public KList(KBase... array) {
+            super(array, 0, "", "");
         }
 
         public KBase at(int i) {
@@ -1287,6 +1357,16 @@ public class K {
             if (getLength() != 1) builder.append(")");
             return builder;
         }
+
+        @Override
+        public void serialiseData(OutputStream o) throws IOException {
+            int length = getLength();
+            write(o, (byte) 0);
+            write(o, length);
+            for (int index=0; index<length; index++) {
+                at(index).serialise(o);
+            }
+        }
     }
 
     public static class KDoubleVector extends KBaseVector<KDouble> {
@@ -1294,8 +1374,8 @@ public class K {
             return "Double Vector";
         }
 
-        public KDoubleVector(int length) {
-            super(double.class, length, 9, "float", "f");
+        public KDoubleVector(double... array) {
+            super(array, 9, "float", "f");
         }
 
         public KDouble at(int i) {
@@ -1308,8 +1388,8 @@ public class K {
             return "Float Vector";
         }
 
-        public KFloatVector(int length) {
-            super(float.class, length, 8, "real", "e");
+        public KFloatVector(float... array) {
+            super(array, 8, "real", "e");
         }
 
         public KFloat at(int i) {
@@ -1323,8 +1403,8 @@ public class K {
             return "Long Vector";
         }
 
-        public KLongVector(int length) {
-            super(long.class, length, 7, "long", "");
+        public KLongVector(long... array) {
+            super(array, 7, "long", "");
         }
 
         public KLong at(int i) {
@@ -1337,8 +1417,8 @@ public class K {
             return "Month Vector";
         }
 
-        public KMonthVector(int length) {
-            super(int.class, length, 13, "month", "m");
+        public KMonthVector(int... array) {
+            super(array, 13, "month", "m");
         }
 
         public Month at(int i) {
@@ -1351,8 +1431,8 @@ public class K {
             return "Date Vector";
         }
 
-        public KDateVector(int length) {
-            super(int.class, length, 14, "date", "");
+        public KDateVector(int... array) {
+            super(array, 14, "date", "");
         }
 
         public KDate at(int i) {
@@ -1365,8 +1445,8 @@ public class K {
             return "Guid Vector";
         }
 
-        public KGuidVector(int length) {
-            super(UUID.class, length, 2, "guid", "");
+        public KGuidVector(UUID... array) {
+            super(array, 2, "guid", "");
         }
 
         public KGuid at(int i) {
@@ -1379,8 +1459,8 @@ public class K {
             return "Minute Vector";
         }
 
-        public KMinuteVector(int length) {
-            super(int.class, length, 17, "minute", "");
+        public KMinuteVector(int... array) {
+            super(array, 17, "minute", "");
         }
 
         public Minute at(int i) {
@@ -1393,8 +1473,8 @@ public class K {
             return "Datetime Vector";
         }
 
-        public KDatetimeVector(int length) {
-            super(double.class, length, 15, "datetime", "z");
+        public KDatetimeVector(double... array) {
+            super(array, 15, "datetime", "z");
         }
 
         public KDatetime at(int i) {
@@ -1407,8 +1487,8 @@ public class K {
             return "Timestamp Vector";
         }
 
-        public KTimestampVector(int length) {
-            super(long.class, length, 12, "timestamp", "");
+        public KTimestampVector(long... array) {
+            super(array, 12, "timestamp", "");
         }
 
         public KTimestamp at(int i) {
@@ -1421,8 +1501,8 @@ public class K {
             return "Timespan Vector";
         }
 
-        public KTimespanVector(int length) {
-            super(long.class, length, 16, "timespan", "");
+        public KTimespanVector(long... array) {
+            super(array, 16, "timespan", "");
         }
 
         public KTimespan at(int i) {
@@ -1435,20 +1515,12 @@ public class K {
             return "Second Vector";
         }
 
-        public KSecondVector(int length) {
-            super(int.class, length, 18, "second", "");
+        public KSecondVector(int... array) {
+            super(array, 18, "second", "");
         }
 
         public Second at(int i) {
             return new Second(Array.getInt(array, i));
-        }
-
-        public void serialise(OutputStream o) throws IOException {
-            serialiseType(o);
-            write(o, (byte) 0);
-            write(o, getLength());
-            for (int i = 0; i < getLength(); i++)
-                write(o, Array.getInt(array, i));
         }
     }
 
@@ -1457,20 +1529,12 @@ public class K {
             return "Time Vector";
         }
 
-        public KTimeVector(int length) {
-            super(int.class, length, 19, "time", "");
+        public KTimeVector(int... array) {
+            super(array, 19, "time", "");
         }
 
         public KTime at(int i) {
             return new KTime(Array.getInt(array, i));
-        }
-
-        public void serialise(OutputStream o) throws IOException {
-            serialiseType(o);
-            write(o, (byte) 0);
-            write(o, getLength());
-            for (int i = 0; i < getLength(); i++)
-                write(o, Array.getInt(array, i));
         }
     }
 
@@ -1479,20 +1543,12 @@ public class K {
             return "Boolean Vector";
         }
 
-        public KBooleanVector(int length) {
-            super(boolean.class, length, 1, "boolean", "b");
+        public KBooleanVector(boolean... array) {
+            super(array, 1, "boolean", "b");
         }
 
         public KBoolean at(int i) {
             return new KBoolean(Array.getBoolean(array, i));
-        }
-
-        public void serialise(OutputStream o) throws IOException {
-            serialiseType(o);
-            write(o, (byte) 0);
-            write(o, getLength());
-            for (int i = 0; i < getLength(); i++)
-                write(o, (byte) (Array.getBoolean(array, i) ? 1 : 0));
         }
 
         @Override
@@ -1513,20 +1569,12 @@ public class K {
             return "Byte Vector";
         }
 
-        public KByteVector(int length) {
-            super(byte.class, length, 4, "byte", "x");
+        public KByteVector(byte... array) {
+            super(array, 4, "byte", "x");
         }
 
         public KByte at(int i) {
             return new KByte(Array.getByte(array, i));
-        }
-
-        public void serialise(OutputStream o) throws IOException {
-            serialiseType(o);
-            write(o, (byte) 0);
-            write(o, getLength());
-            for (int i = 0; i < getLength(); i++)
-                write(o, Array.getByte(array, i));
         }
 
         @Override
@@ -1550,8 +1598,8 @@ public class K {
             return "Symbol Vector";
         }
 
-        public KSymbolVector(int length) {
-            super(String.class, length, 11, "symbol", "s");
+        public KSymbolVector(String... array) {
+            super(array, 11, "symbol", "s");
         }
 
         public KSymbol at(int i) {
@@ -1575,13 +1623,8 @@ public class K {
             return "Character Vector";
         }
 
-        public KCharacterVector(char[] ca) {
-            super(char.class, ca.length, 10, "char", "c");
-            System.arraycopy(ca, 0, array, 0, ca.length);
-        }
-
-        public KCharacterVector(String s) {
-            this(s.toCharArray());
+        public KCharacterVector(String value) {
+            super(value.toCharArray(), 10, "char", "c");
         }
 
         public KCharacter at(int i) {
@@ -1590,14 +1633,6 @@ public class K {
 
         public String getString() {
             return new String((char[]) array);
-        }
-
-        public void serialise(OutputStream o) throws IOException {
-            serialiseType(o);
-            byte[] b = getString().getBytes(Config.getInstance().getEncoding());
-            write(o, (byte) 0);
-            write(o, b.length);
-            o.write(b);
         }
 
         @Override
