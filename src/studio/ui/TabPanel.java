@@ -11,8 +11,7 @@ import javax.swing.border.EtchedBorder;
 import java.awt.*;
 
 public class TabPanel extends JPanel {
-    private final StudioPanel panel;
-    private JComponent component = null;
+    private StudioPanel panel;
 
     private JToolBar toolbar = null;
     private JToggleButton tglBtnComma;
@@ -30,11 +29,19 @@ public class TabPanel extends JPanel {
         initComponents();
     }
 
+    public void setPanel(StudioPanel panel) {
+        this.panel = panel;
+        if (grid != null) {
+            grid.setPanel(panel);
+        }
+    }
+
     public ResultType getType() {
         return type;
     }
 
     private void initComponents() {
+        JComponent component;
         if (result != null) {
             KTableModel model = KTableModel.getModel(result);
             if (model != null) {

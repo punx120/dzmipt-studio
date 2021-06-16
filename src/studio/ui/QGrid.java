@@ -14,7 +14,7 @@ import java.awt.event.MouseEvent;
 
 //@TODO: Should it be really a JPanel? It looks it should be just a JTabel. And anyway any additional components could be added to TabPanel
 public class QGrid extends JPanel {
-    private final StudioPanel panel;
+    private StudioPanel panel;
     private final TableModel model;
     private final JTable table;
     private CellRenderer cellRenderer;
@@ -198,6 +198,10 @@ public class QGrid extends JPanel {
 
             }
         });
+    }
+
+    public void setPanel(StudioPanel panel) {
+        this.panel = panel;
     }
 
     private JPopupMenu getPopupMenu(Point point) {

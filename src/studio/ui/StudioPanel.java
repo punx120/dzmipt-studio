@@ -38,6 +38,7 @@ import studio.kdb.*;
 import studio.ui.action.QPadImport;
 import studio.ui.action.QueryResult;
 import studio.ui.action.WorkspaceSaver;
+import studio.ui.dndtabbedpane.DragEvent;
 import studio.ui.dndtabbedpane.DraggableTabbedPane;
 import studio.utils.BrowserLaunch;
 import studio.utils.HistoricalList;
@@ -89,7 +90,7 @@ public class StudioPanel extends JPanel implements Observer,WindowListener {
     private DraggableTabbedPane tabbedEditors;
     private EditorTab editor;
     private JSplitPane splitpane;
-    private JTabbedPane tabbedPane;
+    private DraggableTabbedPane tabbedPane;
     private ServerList serverList;
     private UserAction arrangeAllAction;
     private UserAction closeFileAction;
@@ -894,7 +895,7 @@ public class StudioPanel extends JPanel implements Observer,WindowListener {
         refreshAction = UserAction.create(I18n.getString("Refresh"), Util.REFRESH_ICON, "Refresh the result set",
                 KeyEvent.VK_R, KeyStroke.getKeyStroke(KeyEvent.VK_Y, menuShortcutKeyMask | InputEvent.SHIFT_MASK), e -> refreshQuery());
 
-        toggleCommaFormatAction = UserAction.create("Toggle Comma Format", Util.COMMA_ICON, "Add/remove thousands separator in selected result",
+        toggleCommaFormatAction = UserAction.create("Toggle Comma Format", Util. COMMA_ICON, "Add/remove thousands separator in selected result",
                 KeyEvent.VK_F, KeyStroke.getKeyStroke(KeyEvent.VK_J, menuShortcutKeyMask),
                 e -> {
                     TabPanel tab = (TabPanel) tabbedPane.getSelectedComponent();
@@ -1565,6 +1566,12 @@ public class StudioPanel extends JPanel implements Observer,WindowListener {
         refreshActionState();
     }
 
+    private void resultTabDragged(DragEvent event) {
+        DraggableTabbedPane targetPane = event.getTargetPane();
+        StudioPanel targetPanel = (StudioPanel) targetPane.getClientProperty(StudioPanel.class);
+        ((TabPanel)targetPane.getComponentAt(event.getTargetIndex())).setPanel(targetPanel);
+    }
+
     public StudioPanel() {
         editor = new EditorTab(this);
         registerForMacOSXEvents();
@@ -1592,7 +1599,7 @@ public class StudioPanel extends JPanel implements Observer,WindowListener {
                 refreshEditor();
             }
         });
-        tabbedEditors.addDragListener(success -> closeIfEmpty() );
+        tabbedEditors.addDragCompleteListener(success -> closeIfEmpty() );
         splitpane.setTopComponent(tabbedEditors);
         splitpane.setDividerLocation(0.5);
 
@@ -1607,6 +1614,8 @@ public class StudioPanel extends JPanel implements Observer,WindowListener {
             return true;
         });
         tabbedPane.addChangeListener(e->refreshActionState());
+        tabbedPane.putClientProperty(StudioPanel.class, this);
+        tabbedPane.addDragListener( evt -> resultTabDragged(evt));
 
         splitpane.setBottomComponent(tabbedPane);
         splitpane.setOneTouchExpandable(true);

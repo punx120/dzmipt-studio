@@ -27,6 +27,14 @@ public class DraggableTabbedPane extends JTabbedPane {
         this.dragID = dragID;
     }
 
+    public void addDragCompleteListener(DragCompleteListener listener) {
+        listenerList.add(DragCompleteListener.class, listener);
+    }
+
+    public void removeDragCompleteListener(DragCompleteListener listener) {
+        listenerList.remove(DragCompleteListener.class, listener);
+    }
+
     public void addDragListener(DragListener listener) {
         listenerList.add(DragListener.class, listener);
     }
@@ -36,9 +44,16 @@ public class DraggableTabbedPane extends JTabbedPane {
     }
 
     protected void fireDragComplete(boolean success) {
+        DragCompleteListener[] listeners = listenerList.getListeners(DragCompleteListener.class);
+        for (DragCompleteListener listener: listeners) {
+            listener.dragComplete(success);
+        }
+    }
+
+    protected void fireDraggedEvent(DragEvent event) {
         DragListener[] listeners = listenerList.getListeners(DragListener.class);
         for (DragListener listener: listeners) {
-            listener.dragComplete(success);
+            listener.dragged(event);
         }
     }
 
@@ -56,6 +71,7 @@ public class DraggableTabbedPane extends JTabbedPane {
         target.insertTab(title, icon, component, tip, targetIndex);
         if (updateSelection) target.setSelectedIndex(targetIndex);
 
+        fireDraggedEvent(new DragEvent(sourceIndex, target, targetIndex));
         return true;
     }
 

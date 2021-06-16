@@ -125,26 +125,30 @@ class DropTargetHandler implements DropTargetListener {
 
     @Override
     public void drop(DropTargetDropEvent dtde) {
-        int index = checkHighlight(dtde.getTransferable(), dtde.getLocation());
-        pane.setTargetRect(null);
+        try {
+            int index = checkHighlight(dtde.getTransferable(), dtde.getLocation());
+            pane.setTargetRect(null);
 
-        if (index == -1) return;
+            if (index == -1) return;
 
-        TabbedPaneTransferable data = getTransferable(dtde.getTransferable());
-        if (data == null) return;
+            TabbedPaneTransferable data = getTransferable(dtde.getTransferable());
+            if (data == null) return;
 
-        DraggableTabbedPane source = data.getPane();
-        int srcIndex = data.getIndex();
-        if (! before) index++;
-        if (pane == source && index>srcIndex) index--;
+            DraggableTabbedPane source = data.getPane();
+            int srcIndex = data.getIndex();
+            if (!before) index++;
+            if (pane == source && index > srcIndex) index--;
 
-        boolean success = source.dragTab(srcIndex, pane, index);
-        if (success) {
-            dtde.acceptDrop(DnDConstants.ACTION_COPY_OR_MOVE);
-        } else {
-            dtde.rejectDrop();
+            boolean success = source.dragTab(srcIndex, pane, index);
+            if (success) {
+                dtde.acceptDrop(DnDConstants.ACTION_COPY_OR_MOVE);
+            } else {
+                dtde.rejectDrop();
+            }
+            dtde.dropComplete(success);
+        } catch (RuntimeException e) {
+            log.error("Unexpected exception", e);
         }
-        dtde.dropComplete(success);
     }
 
 }
