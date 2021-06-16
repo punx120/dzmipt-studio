@@ -58,6 +58,8 @@ public class Util {
     public final static ImageIcon COMMA_ICON = getImage("/comma.png");
     public final static ImageIcon COMMA_CROSSED_ICON = getImage("/comma_crossed.png");
 
+    public final static ImageIcon UPLOAD_ICON = getImage("/upload.png");
+
     public static boolean MAC_OS_X = (System.getProperty("os.name").toLowerCase().startsWith("mac os x"));
 
     public static ImageIcon getImage(String strFilename) {

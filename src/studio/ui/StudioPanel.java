@@ -183,16 +183,6 @@ public class StudioPanel extends JPanel implements Observer,WindowListener {
         editServerAction.setEnabled(server != null);
         removeServerAction.setEnabled(server != null);
 
-        TabPanel tab = (TabPanel) tabbedPane.getSelectedComponent();
-        if (tab == null) {
-            setActionsEnabled(false, exportAction, chartAction, openInExcel, refreshAction);
-        } else {
-            exportAction.setEnabled(tab.isTable());
-            chartAction.setEnabled(tab.getType() == TabPanel.ResultType.TABLE);
-            openInExcel.setEnabled(tab.isTable());
-            refreshAction.setEnabled(true);
-        }
-
         UndoManager um = editor.getUndoManager();
         undoAction.setEnabled(um.canUndo());
         redoAction.setEnabled(um.canRedo());
@@ -202,6 +192,17 @@ public class StudioPanel extends JPanel implements Observer,WindowListener {
         executeAction.setEnabled(!queryRunning);
         executeCurrentLineAction.setEnabled(!queryRunning);
         refreshAction.setEnabled(lastQuery != null && !queryRunning);
+
+        TabPanel tab = (TabPanel) tabbedPane.getSelectedComponent();
+        if (tab == null) {
+            setActionsEnabled(false, exportAction, chartAction, openInExcel, refreshAction);
+        } else {
+            exportAction.setEnabled(tab.isTable());
+            chartAction.setEnabled(tab.getType() == TabPanel.ResultType.TABLE);
+            openInExcel.setEnabled(tab.isTable());
+            refreshAction.setEnabled(true);
+            tab.refreshActionState(queryRunning);
+        }
     }
 
     private String chooseFilename() {
@@ -1762,7 +1763,6 @@ public class StudioPanel extends JPanel implements Observer,WindowListener {
 
         executeK4Query(text);
         lastQuery = text;
-        refreshActionState();
     }
 
     public JFrame getFrame() {
@@ -1844,9 +1844,16 @@ public class StudioPanel extends JPanel implements Observer,WindowListener {
         return tab.getTable();
     }
 
-    public void executeK4Query(final String text) {
+    private void executeK4Query(String text) {
         editor.getTextArea().setCursor(waitCursor);
         editor.getQueryExecutor().execute(text);
+        refreshActionState();
+    }
+
+    void executeK4Query(K.KBase query) {
+        editor.getTextArea().setCursor(waitCursor);
+        editor.getQueryExecutor().execute(query);
+        refreshActionState();
     }
 
     private EditorTab getEditor(int index) {

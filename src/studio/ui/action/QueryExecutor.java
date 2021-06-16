@@ -31,6 +31,11 @@ public class QueryExecutor implements ProgressCallback {
         this.editor = editor;
     }
 
+    public void execute(K.KBase query) {
+        worker = new Worker(queryIndex.getAndIncrement(), editor.getServer(), query);
+        worker.execute();
+    }
+
     public void execute(String query) {
         worker = new Worker(queryIndex.getAndIncrement(), editor.getServer(), query);
         worker.execute();
@@ -94,14 +99,23 @@ public class QueryExecutor implements ProgressCallback {
     private class Worker extends SwingWorker<QueryResult, Integer> {
 
         private volatile Server server;
-        private volatile String query;
+        private volatile K.KBase query;
+        private volatile String queryText;
         private volatile kx.c c = null;
         private final int queryIndex;
 
-        public Worker (int queryIndex, Server server, String query) {
+        public Worker(int queryIndex, Server server, K.KBase query) {
             this.queryIndex = queryIndex;
             this.server = server;
             this.query = query;
+            this.queryText = "<upload to server>";
+        }
+
+        public Worker(int queryIndex, Server server, String query) {
+            this.queryIndex = queryIndex;
+            this.server = server;
+            this.query = new K.KCharacterVector(query);
+            this.queryText = query;
         }
 
         void closeConnection() {
@@ -112,12 +126,12 @@ public class QueryExecutor implements ProgressCallback {
 
         @Override
         protected QueryResult doInBackground() {
-            QueryResult result = new QueryResult(server, query);
-            queryLog.info("#{}: query {}({})\n{}",queryIndex, server.getFullName(), server.getConnectionString(false), query);
+            QueryResult result = new QueryResult(server, queryText);
+            queryLog.info("#{}: query {}({})\n{}",queryIndex, server.getFullName(), server.getConnectionString(false), queryText);
             long startTime = System.currentTimeMillis();
             try {
                 c = ConnectionPool.getInstance().leaseConnection(server);
-                K.KBase response = c.k(new K.KCharacterVector(query), QueryExecutor.this);
+                K.KBase response = c.k(query, QueryExecutor.this);
                 result.setResult(response);
             } catch (Throwable e) {
                 if (! (e instanceof kx.c.K4Exception)) {
@@ -149,7 +163,7 @@ public class QueryExecutor implements ProgressCallback {
                 pm.close();
             }
             try {
-                QueryResult result = isCancelled() ? new QueryResult(server, query) : get();
+                QueryResult result = isCancelled() ? new QueryResult(server, queryText) : get();
                 StudioPanel.queryExecutionComplete(editor, result);
             } catch (Exception e) {
                 log.error("Ops... It wasn't expected", e);

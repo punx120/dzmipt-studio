@@ -1,4 +1,5 @@
-* Drag and Drop editor and result tabs
+* Upload result to a server
+* Drag and Drop for editor and result tabs
 
 `dz1.9` 2021.04.28
 -----

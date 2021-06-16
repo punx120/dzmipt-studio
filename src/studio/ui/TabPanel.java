@@ -15,6 +15,7 @@ public class TabPanel extends JPanel {
 
     private JToolBar toolbar = null;
     private JToggleButton tglBtnComma;
+    private JButton uploadBtn;
     private QueryResult queryResult;
     private K.KBase result;
     private JEditorPane textArea = null;
@@ -38,6 +39,16 @@ public class TabPanel extends JPanel {
 
     public ResultType getType() {
         return type;
+    }
+
+    public void refreshActionState(boolean queryRunning) {
+        uploadBtn.setEnabled(result!= null && !queryRunning);
+    }
+
+    private void upload() {
+        String varName = JOptionPane.showInputDialog(panel, "Enter variable name", "Upload to Server", JOptionPane.QUESTION_MESSAGE);
+        if (varName == null) return;
+        panel.executeK4Query(new K.KList(new K.Function("{x set y}"), new K.KSymbol(varName), result));
     }
 
     private void initComponents() {
@@ -68,9 +79,18 @@ public class TabPanel extends JPanel {
             tglBtnComma.addActionListener(e -> {
                 updateFormatting();
             });
+
+            uploadBtn = new JButton(Util.UPLOAD_ICON);
+            uploadBtn.setToolTipText("Upload to server");
+            uploadBtn.setBorder(BorderFactory.createEtchedBorder(EtchedBorder.LOWERED));
+            uploadBtn.setFocusable(false);
+            uploadBtn.addActionListener(e -> upload());
+
             toolbar = new JToolBar();
             toolbar.setFloatable(false);
             toolbar.add(tglBtnComma);
+            toolbar.add(Box.createRigidArea(new Dimension(16,16)));
+            toolbar.add(uploadBtn);
             updateFormatting();
         } else {
             textArea = new JTextPane();
