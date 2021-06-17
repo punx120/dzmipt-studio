@@ -1,5 +1,10 @@
 package studio.kdb;
 
+import org.apache.logging.log4j.LogManager;
+import org.apache.logging.log4j.Logger;
+import studio.ui.StudioPanel;
+
+import java.io.IOException;
 import java.util.ArrayList;
 import java.util.List;
 import java.util.Properties;
@@ -19,6 +24,8 @@ public class Workspace {
     private final static String SERVER_AUTH = "serverAuth";
     private final static String CONTENT = "content";
     private final static String MODIFIED = "modified";
+
+    private final static Logger log = LogManager.getLogger();
 
     public int getSelectedWindow() {
         return selectedWindow;
@@ -186,6 +193,15 @@ public class Workspace {
             serverAuth = p.getProperty(prefix + SERVER_AUTH);
             content = p.getProperty(prefix + CONTENT);
             modified = Boolean.parseBoolean(p.getProperty(prefix + MODIFIED, "false"));
+
+            if (filename != null && !modified) {
+                try {
+                    content = StudioPanel.getContents(filename);
+                } catch(IOException e) {
+                    log.error("Can't load file " + filename + " from disk", e);
+                    modified = true;
+                }
+            }
         }
     }
 }
