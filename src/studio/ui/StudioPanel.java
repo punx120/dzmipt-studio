@@ -1900,7 +1900,7 @@ public class StudioPanel extends JPanel implements Observer,WindowListener {
         for (StudioPanel panel : allPanels) {
             Workspace.Window window = workspace.addWindow(panel.getFrame() == activeWindow);
 
-            int count = panel.tabbedEditors.getComponentCount();
+            int count = panel.tabbedEditors.getTabCount();
             for (int index = 0; index < count; index++) {
                 EditorTab editor = panel.getEditor(index);
                 Server server = editor.getServer();
