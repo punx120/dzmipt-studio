@@ -15,7 +15,7 @@ public class TabPanel extends JPanel {
 
     private JToolBar toolbar = null;
     private JToggleButton tglBtnComma;
-    private JButton uploadBtn;
+    private JButton uploadBtn = null;
     private QueryResult queryResult;
     private K.KBase result;
     private JEditorPane textArea = null;
@@ -42,7 +42,9 @@ public class TabPanel extends JPanel {
     }
 
     public void refreshActionState(boolean queryRunning) {
-        uploadBtn.setEnabled(result!= null && !queryRunning);
+        if (uploadBtn != null) {
+            uploadBtn.setEnabled(result != null && !queryRunning);
+        }
     }
 
     private void upload() {
