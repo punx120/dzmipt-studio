@@ -508,15 +508,14 @@ public class StudioPanel extends JPanel implements Observer,WindowListener {
     }
 
     public void newFile() {
-        if (!saveIfModified())
-            return;
+        if (!checkAndSaveTab(editor)) return;
+
         editor.setFilename(null);
         initTextArea("");
     }
 
     public void openFile() {
-        if (!saveIfModified())
-            return;
+        if (!checkAndSaveTab(editor))return;
 
         String filename = chooseFilename();
 
@@ -525,39 +524,9 @@ public class StudioPanel extends JPanel implements Observer,WindowListener {
             addToMruFiles(filename);
         }
     }
-    // returns true to continue
-    public boolean saveIfModified() {
-        String filename = editor.getFilename();
-        if (editor.isModified()) {
-            int choice = JOptionPane.showOptionDialog(frame,
-                    "Changes not saved.\nSave now?",
-                    "Save changes?",
-                    JOptionPane.YES_NO_CANCEL_OPTION,
-                    JOptionPane.QUESTION_MESSAGE,
-                    Util.QUESTION_ICON,
-                    null, // use standard button titles
-                    null);      // no default selection
-
-            if (choice == JOptionPane.YES_OPTION) {
-                try {
-                    if (saveFile(filename,false))
-                        // was cancelled so return
-                        return false;
-                }
-                catch (Exception e) {
-                    return false;
-                }
-                return true;
-            }
-            else if ((choice == JOptionPane.CANCEL_OPTION) || (choice == JOptionPane.CLOSED_OPTION))
-                return false;
-        }
-        return true;
-    }
 
     public void loadMRUFile(String filename) {
-        if (!saveIfModified())
-            return;
+        if (!checkAndSaveTab(editor)) return;
 
         if (!loadFile(filename)) return;
         addToMruFiles(filename);
@@ -630,7 +599,7 @@ public class StudioPanel extends JPanel implements Observer,WindowListener {
         }
     }
 
-    public boolean saveAsFile() {
+    private boolean saveAsFile() {
         JFileChooser chooser = new JFileChooser();
         chooser.setDialogType(JFileChooser.SAVE_DIALOG);
         chooser.setDialogTitle("Save script as");
@@ -659,60 +628,60 @@ public class StudioPanel extends JPanel implements Observer,WindowListener {
             File file = new File(filename);
             File dir = new File(file.getPath());
             chooser.setCurrentDirectory(dir);
+            chooser.setSelectedFile(file);
         }
 
-//        chooser.setMultiSelectionEnabled(true);
         int option = chooser.showSaveDialog(this);
+        if (option != JFileChooser.APPROVE_OPTION) return false;
+        File sf = chooser.getSelectedFile();
+        filename = sf.getAbsolutePath();
 
-        if (option == JFileChooser.APPROVE_OPTION) {
-            File sf = chooser.getSelectedFile();
-            File f = chooser.getCurrentDirectory();
-            String dir = f.getAbsolutePath();
-
-            try {
-                filename = dir + "/" + sf.getName();
-                sf = new File(filename);
-
-                if (sf.exists()) {
-                    int choice = JOptionPane.showOptionDialog(frame,
-                            filename + " already exists.\nOverwrite?",
-                            "Overwrite?",
-                            JOptionPane.YES_NO_CANCEL_OPTION,
-                            JOptionPane.QUESTION_MESSAGE,
-                            Util.QUESTION_ICON,
-                            null, // use standard button titles
-                            null);      // no default selection
-
-                    if (choice != JOptionPane.YES_OPTION)
-                        return false;
-                }
-
-                return saveFile(filename,true);
-            }
-            catch (Exception e) {
+        if (chooser.getFileFilter() == ff) {
+            if (! sf.getName().endsWith(".q")) {
+                filename = filename + ".q";
             }
         }
-        return false;
+
+        if (new File(filename).exists()) {
+            int choice = JOptionPane.showOptionDialog(frame,
+                    filename + " already exists.\nOverwrite?",
+                    "Overwrite?",
+                    JOptionPane.YES_NO_CANCEL_OPTION,
+                    JOptionPane.QUESTION_MESSAGE,
+                    Util.QUESTION_ICON,
+                    null, // use standard button titles
+                    null);      // no default selection
+
+            if (choice != JOptionPane.YES_OPTION)
+                return false;
+        }
+
+        editor.setFilename(filename);
+        return saveFile(editor);
+    }
+
+    private void saveCurrentFile() {
+        if (editor.getFilename() == null) {
+            saveAsFile();
+        } else {
+            saveFile(editor);
+        }
     }
 
     // returns true if saved, false if error or cancelled
-    public boolean saveFile(String filename,boolean force) {
-        if (filename == null)
-            return saveAsFile();
+    private boolean saveFile(EditorTab editor) {
+        String filename = editor.getFilename();
+        if (filename == null) return false;
 
         try {
-            if (!force)
-                if (null == editor.getFilename())
-                    return saveAsFile();
-
             editor.getTextArea().write(new BufferedWriter(new OutputStreamWriter(new FileOutputStream(filename), "UTF-8")));
-            editor.setFilename(filename);
             rebuildAll();
             editor.setModified(false);
             addToMruFiles(filename);
             return true;
         }
-        catch (Exception e) {
+        catch (IOException e) {
+            log.error("Error during saving file " + filename, e);
         }
 
         return false;
@@ -861,7 +830,7 @@ public class StudioPanel extends JPanel implements Observer,WindowListener {
 
         saveFileAction = UserAction.create(I18n.getString("Save"), Util.DISKS_ICON, "Save the script",
                 KeyEvent.VK_S, KeyStroke.getKeyStroke(KeyEvent.VK_S, menuShortcutKeyMask),
-                e -> saveFile(editor.getFilename(), false));
+                e -> saveCurrentFile());
 
         saveAsFileAction = UserAction.create(I18n.getString("SaveAs"), Util.SAVE_AS_ICON, "Save script as",
                 KeyEvent.VK_A, null, e -> saveAsFile());
@@ -1029,27 +998,18 @@ public class StudioPanel extends JPanel implements Observer,WindowListener {
     }
 
     private boolean checkAndSaveTab(EditorTab editor) {
-        if (editor.isModified()) {
-            int choice = JOptionPane.showOptionDialog(editor.getTextArea(),
-                    editor.getTitle() + " is changed. Save changes?","Save changes?",
-                    JOptionPane.YES_NO_CANCEL_OPTION, JOptionPane.QUESTION_MESSAGE, Util.QUESTION_ICON,
-                    null, // use standard button titles
-                    null);      // no default selection
+        if (! editor.isModified()) return true;
 
-            if (choice == JOptionPane.YES_OPTION)
-                try {
-                    if (!saveFile(editor.getFilename(),false))
-                        // was cancelled so return
-                        return false;
-                }
-                catch (Exception e) {
-
-                    return false;
-                }
-            else if ((choice == JOptionPane.CANCEL_OPTION) || (choice == JOptionPane.CLOSED_OPTION))
-                return false;
+        int choice = JOptionPane.showOptionDialog(editor.getTextArea(),
+                editor.getTitle() + " is changed. Save changes?","Save changes?",
+                JOptionPane.YES_NO_CANCEL_OPTION, JOptionPane.QUESTION_MESSAGE, Util.QUESTION_ICON,
+                null, // use standard button titles
+                null);      // no default selection
+        if (choice == JOptionPane.YES_OPTION) {
+            return saveFile(editor);
         }
-        return true;
+
+        return false;
     }
 
     private void closeFrame() {
