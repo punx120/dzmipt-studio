@@ -234,4 +234,16 @@ public class ConfigTest {
         assertEquals(port, newConfig.getPortColWords());
         assertEquals(100, newConfig.getTableMaxConnectionPopup());
     }
+
+    @Test
+    public void testAutoSaveFlags() throws IOException {
+        assertFalse(config.isAutoSave());
+        assertTrue(config.isSaveOnExit());
+
+        config.setAutoSave(true);
+        config.setSaveOnExit(false);
+        Config newConfig = copyConfig(config, p -> {});
+        assertTrue(newConfig.isAutoSave());
+        assertFalse(newConfig.isSaveOnExit());
+    }
 }

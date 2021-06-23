@@ -433,6 +433,24 @@ public class Config {
         save();
     }
 
+    public boolean isAutoSave() {
+        return Boolean.parseBoolean(p.getProperty("isAutoSave","false"));
+    }
+
+    public void setAutoSave(boolean value) {
+        p.setProperty("isAutoSave", "" + value);
+        save();
+    }
+
+    public boolean isSaveOnExit() {
+        return Boolean.parseBoolean(p.getProperty("isSaveOnExit","true"));
+    }
+
+    public void setSaveOnExit(boolean value) {
+        p.setProperty("isSaveOnExit", "" + value);
+        save();
+    }
+
     public boolean isShowServerComboBox() {
         return Boolean.parseBoolean(p.getProperty("showServerComboBox","true"));
     }

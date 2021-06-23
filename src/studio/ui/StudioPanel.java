@@ -959,6 +959,8 @@ public class StudioPanel extends JPanel implements Observer,WindowListener {
         Config.getInstance().setMaxCharsInResult(dialog.getMaxCharsInResult());
         Config.getInstance().setMaxCharsInTableCell(dialog.getMaxCharsInTableCell());
         Config.getInstance().setExecAllOption(dialog.getExecAllOption());
+        Config.getInstance().setSaveOnExit(dialog.isSaveOnExit());
+        Config.getInstance().setAutoSave(dialog.isAutoSave());
 
         String lfClass = dialog.getLookAndFeelClassName();
         if (!lfClass.equals(UIManager.getLookAndFeel().getClass().getName())) {
@@ -984,23 +986,25 @@ public class StudioPanel extends JPanel implements Observer,WindowListener {
     public boolean quit() {
         WorkspaceSaver.setEnabled(false);
         try {
-            for (StudioPanel panel : allPanels.toArray(new StudioPanel[0])) {
-                panel.getFrame().toFront();
-                JTabbedPane tabbedEditors = panel.tabbedEditors;
-                int selectedTab = tabbedEditors.getSelectedIndex();
-                try {
-                    int count = tabbedEditors.getTabCount();
-                    for (int index = 0; index < count; index++) {
-                        EditorTab editor = panel.getEditor(index);
-                        if (editor.isModified()) {
-                            tabbedEditors.setSelectedIndex(index);
-                            if (!checkAndSaveTab(editor)) {
-                                return false;
+            if (Config.getInstance().isSaveOnExit()) {
+                for (StudioPanel panel : allPanels.toArray(new StudioPanel[0])) {
+                    panel.getFrame().toFront();
+                    JTabbedPane tabbedEditors = panel.tabbedEditors;
+                    int selectedTab = tabbedEditors.getSelectedIndex();
+                    try {
+                        int count = tabbedEditors.getTabCount();
+                        for (int index = 0; index < count; index++) {
+                            EditorTab editor = panel.getEditor(index);
+                            if (editor.isModified()) {
+                                tabbedEditors.setSelectedIndex(index);
+                                if (!checkAndSaveTab(editor)) {
+                                    return false;
+                                }
                             }
                         }
+                    } finally {
+                        tabbedEditors.setSelectedIndex(selectedTab);
                     }
-                } finally {
-                    tabbedEditors.setSelectedIndex(selectedTab);
                 }
             }
         } finally {

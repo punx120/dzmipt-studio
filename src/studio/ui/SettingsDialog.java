@@ -17,6 +17,8 @@ public class SettingsDialog extends EscapeDialog {
     private JTextField txtUser;
     private JPasswordField txtPassword;
     private JCheckBox chBoxShowServerCombo;
+    private JCheckBox chBoxAutoSave;
+    private JCheckBox chBoxSaveOnExit;
     private JComboBox<CustomiszedLookAndFeelInfo> comboBoxLookAndFeel;
     private JFormattedTextField txtTabsCount;
     private JFormattedTextField txtMaxCharsInResult;
@@ -68,12 +70,19 @@ public class SettingsDialog extends EscapeDialog {
         return (Config.ExecAllOption) comboBoxExecAll.getSelectedItem();
     }
 
+    public boolean isAutoSave() {
+        return chBoxAutoSave.isSelected();
+    }
+
+    public boolean isSaveOnExit() {
+        return chBoxSaveOnExit.isSelected();
+    }
+
     private void refreshCredentials() {
         Credentials credentials = Config.getInstance().getDefaultCredentials(getDefaultAuthenticationMechanism());
 
         txtUser.setText(credentials.getUsername());
         txtPassword.setText(credentials.getPassword());
-        chBoxShowServerCombo.setSelected(Config.getInstance().isShowServerComboBox());
     }
 
     @Override
@@ -90,6 +99,7 @@ public class SettingsDialog extends EscapeDialog {
         comboBoxAuthMechanism = new JComboBox(AuthenticationManager.getInstance().getAuthenticationMechanisms());
         comboBoxAuthMechanism.getModel().setSelectedItem(Config.getInstance().getDefaultAuthMechanism());
         comboBoxAuthMechanism.addItemListener(e -> refreshCredentials());
+        refreshCredentials();
 
         JLabel lblLookAndFeel = new JLabel("Look and Feel:");
 
@@ -107,6 +117,7 @@ public class SettingsDialog extends EscapeDialog {
         txtTabsCount = new JFormattedTextField(formatter);
         txtTabsCount.setValue(Config.getInstance().getResultTabsCount());
         chBoxShowServerCombo = new JCheckBox("Show server drop down list in the toolbar");
+        chBoxShowServerCombo.setSelected(Config.getInstance().isShowServerComboBox());
         JLabel lblMaxCharsInResult = new JLabel("Max chars in result");
         txtMaxCharsInResult = new JFormattedTextField(formatter);
         txtMaxCharsInResult.setValue(Config.getInstance().getMaxCharsInResult());
@@ -116,6 +127,10 @@ public class SettingsDialog extends EscapeDialog {
         JLabel lblExecAll = new JLabel ("Execute the script when nothing is selected");
         comboBoxExecAll = new JComboBox<>(Config.ExecAllOption.values());
         comboBoxExecAll.setSelectedItem(Config.getInstance().getExecAllOption());
+        chBoxAutoSave = new JCheckBox("Auto save files");
+        chBoxAutoSave.setSelected(Config.getInstance().isAutoSave());
+        chBoxSaveOnExit = new JCheckBox("Ask save file on exit");
+        chBoxSaveOnExit.setSelected(Config.getInstance().isSaveOnExit());
         JLabel lblAuthMechanism = new JLabel("Authentication:");
         JLabel lblUser = new JLabel("  User:");
         JLabel lblPassword = new JLabel("  Password:");
@@ -124,14 +139,13 @@ public class SettingsDialog extends EscapeDialog {
         Component glue1 = Box.createGlue();
         Component glue2 = Box.createGlue();
         Component glue3 = Box.createGlue();
+        Component glue4 = Box.createGlue();
 
         btnOk = new JButton("OK");
         btnCancel = new JButton("Cancel");
 
         btnOk.addActionListener(e->accept());
         btnCancel.addActionListener(e->cancel());
-
-        refreshCredentials();
 
         GroupLayout layout = new GroupLayout(root);
         root.setLayout(layout);
@@ -162,6 +176,11 @@ public class SettingsDialog extends EscapeDialog {
                                         .addComponent(lblExecAll)
                                         .addComponent(comboBoxExecAll)
                                         .addComponent(glue3)
+                        ).addGroup(
+                            layout.createSequentialGroup()
+                                        .addComponent(chBoxAutoSave)
+                                        .addComponent(chBoxSaveOnExit)
+                                        .addComponent(glue4)
                         ).addGroup(
                             layout.createSequentialGroup()
                                         .addComponent(lblAuthMechanism)
@@ -203,6 +222,11 @@ public class SettingsDialog extends EscapeDialog {
                                 .addComponent(lblExecAll)
                                 .addComponent(comboBoxExecAll)
                                 .addComponent(glue3)
+                    ).addGroup(
+                        layout.createParallelGroup(GroupLayout.Alignment.BASELINE)
+                                .addComponent(chBoxAutoSave)
+                                .addComponent(chBoxSaveOnExit)
+                                .addComponent(glue4)
                     ).addGroup(
                         layout.createParallelGroup(GroupLayout.Alignment.BASELINE)
                                 .addComponent(lblAuthMechanism)
