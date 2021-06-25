@@ -82,6 +82,8 @@ public class StudioPanel extends JPanel implements Observer,WindowListener {
         editorRedoAction = kit.getActionByName(BaseKit.redoAction);
     }
 
+    private static boolean loading = false;
+
     private JComboBox<String> comboServer;
     private JTextField txtServer;
     private String exportFilename;
@@ -144,6 +146,8 @@ public class StudioPanel extends JPanel implements Observer,WindowListener {
     private final static int MAX_SERVERS_TO_CLONE = 20;
 
     public void refreshTitle() {
+        if (loading) return;
+
         if (editor.getTitle() == null) return;
         Server server = editor.getServer();
         String frameTitle = editor.getTitle() + (editor.isModified() ? " (not saved) " : "") + (server!=null?" @"+server.toString():"") +" Studio for kdb+ " + Lm.version;
@@ -721,11 +725,14 @@ public class StudioPanel extends JPanel implements Observer,WindowListener {
     private void setServer(Server server) {
         if (server == null) return;
         editor.setServer(server);
-        Config.getInstance().addServerToHistory(server);
-        serverHistory.add(server);
 
-        refreshTitle();
-        rebuildAll();
+        if (!loading) {
+            Config.getInstance().addServerToHistory(server);
+            serverHistory.add(server);
+
+            refreshTitle();
+            rebuildAll();
+        }
     }
 
     private void initActions() {
@@ -1050,6 +1057,8 @@ public class StudioPanel extends JPanel implements Observer,WindowListener {
     }
 
     private void rebuildMenuBar() {
+        if (loading) return;
+
         JMenuBar menubar = createMenuBar();
         frame.setJMenuBar(menubar);
         menubar.validate();
@@ -1361,6 +1370,8 @@ public class StudioPanel extends JPanel implements Observer,WindowListener {
     }
 
     private void rebuildToolbar() {
+        if (loading) return;
+
         if (toolbar != null) {
             toolbar.removeAll();
             toolbarAddServerSelection();
@@ -1680,6 +1691,7 @@ public class StudioPanel extends JPanel implements Observer,WindowListener {
     }
 
     public static void loadWorkspace(Workspace workspace) {
+        loading = true;
         for (Workspace.Window window: workspace.getWindows()) {
             Workspace.Tab[] tabs = window.getTabs();
             if (tabs.length == 0) {
@@ -1701,6 +1713,12 @@ public class StudioPanel extends JPanel implements Observer,WindowListener {
         if (workspace.getSelectedWindow() != -1) {
             allPanels.get(workspace.getSelectedWindow()).frame.toFront();
         }
+
+        loading = false;
+        for (StudioPanel panel: allPanels) {
+            panel.refreshTitle();
+        }
+        rebuildAll();
     }
 
     public void refreshQuery() {
