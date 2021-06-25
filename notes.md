@@ -1,3 +1,5 @@
+* Settings: auto save modified files
+* Settings: exit without asking to save anything
 * Upload result to a server
 * Drag and Drop for editor and result tabs
 
