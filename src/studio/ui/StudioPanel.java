@@ -669,7 +669,7 @@ public class StudioPanel extends JPanel implements Observer,WindowListener {
     }
 
     // returns true if saved, false if error or cancelled
-    private boolean saveFile(EditorTab editor) {
+    private static boolean saveFile(EditorTab editor) {
         String filename = editor.getFilename();
         if (filename == null) return false;
 
@@ -677,7 +677,7 @@ public class StudioPanel extends JPanel implements Observer,WindowListener {
             editor.getTextArea().write(new BufferedWriter(new OutputStreamWriter(new FileOutputStream(filename), "UTF-8")));
             rebuildAll();
             editor.setModified(false);
-            addToMruFiles(filename);
+            editor.getPanel().addToMruFiles(filename);
             return true;
         }
         catch (IOException e) {
@@ -1870,6 +1870,10 @@ public class StudioPanel extends JPanel implements Observer,WindowListener {
                 Server server = editor.getServer();
                 String filename = editor.getFilename();
                 boolean modified = editor.isModified();
+                if (modified && Config.getInstance().isAutoSave()) {
+                    panel.saveFile(editor);
+                }
+
                 String content = editor.getTextArea().getText();
 
                 window.addTab(index == panel.tabbedEditors.getSelectedIndex())
