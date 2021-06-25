@@ -163,7 +163,13 @@ public class QueryExecutor implements ProgressCallback {
                 pm.close();
             }
             try {
-                QueryResult result = isCancelled() ? new QueryResult(server, queryText) : get();
+                QueryResult result;
+                if (isCancelled()) {
+                    result = new QueryResult(server, queryText);
+                    queryLog.info("#{}: Cancelled", queryIndex);
+                } else {
+                    result = get();
+                }
                 StudioPanel.queryExecutionComplete(editor, result);
             } catch (Exception e) {
                 log.error("Ops... It wasn't expected", e);

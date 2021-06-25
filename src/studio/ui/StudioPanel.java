@@ -1826,12 +1826,15 @@ public class StudioPanel extends JPanel implements Observer,WindowListener {
 
     // if the query is canceld execTime=-1, result and error are null's
     public static void queryExecutionComplete(EditorTab editor, QueryResult queryResult) {
-        long execTime = queryResult.getExecutionTime();
-        Throwable error = queryResult.getError();
         JEditorPane textArea = editor.getTextArea();
         textArea.setCursor(textCursor);
-        if (execTime >= 0) {
-            Utilities.setStatusText(textArea, "Last execution time:" + (execTime > 0 ? "" + execTime : "<1") + " mS");
+
+        Throwable error = queryResult.getError();
+        if (queryResult.isComplete()) {
+            long execTime = queryResult.getExecutionTime();
+            if (execTime >= 0) {
+                Utilities.setStatusText(textArea, "Last execution time:" + (execTime > 0 ? "" + execTime : "<1") + " mS");
+            }
         }
 
         StudioPanel panel = editor.getPanel();
@@ -1846,7 +1849,7 @@ public class StudioPanel extends JPanel implements Observer,WindowListener {
                     "Studio for kdb+",
                     JOptionPane.ERROR_MESSAGE,
                     Util.ERROR_ICON);
-        } else {
+        } else if (queryResult.isComplete()) {
             JTabbedPane tabbedPane = panel.tabbedPane;
             TabPanel tab = new TabPanel(panel, queryResult);
             if(tabbedPane.getTabCount()>= Config.getInstance().getResultTabsCount()) {

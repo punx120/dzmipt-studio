@@ -11,6 +11,7 @@ public class QueryResult {
     private K.KBase result = null;
     private Throwable error = null;
     private long executionTime = -1;
+    private boolean complete = false;
 
     public QueryResult(Server server, String query) {
         this.server = server;
@@ -19,14 +20,20 @@ public class QueryResult {
 
     public void setResult(K.KBase result) {
         this.result = result;
+        complete = true;
     }
 
     public void setError(Throwable error) {
         this.error = error;
+        complete = true;
     }
 
     public void setExecutionTime(long executionTime) {
         this.executionTime = executionTime;
+    }
+
+    public boolean isComplete() {
+        return complete;
     }
 
     public String getQuery() {
