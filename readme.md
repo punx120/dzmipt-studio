@@ -38,6 +38,7 @@ Studio for kdb+ uses the following open source projects:
 * [Kx Systems] - kdb+ driver c.java
 * [Log4j 2] - Apache logging
 * [Gradle] - Build tool
+* [Txtmark] - Java markdown processor - to convert notes.md to HTML during build
 
 Installation
 --------------
@@ -79,3 +80,4 @@ of a license from Icon Experience.
 [JFreeChart]:http://www.jfree.org/jfreechart/
 [Log4j 2]:https://logging.apache.org/log4j/2.x/index.html
 [Gradle]:https://gradle.org/
+[Txtmark]:https://github.com/rjeschke/txtmark
