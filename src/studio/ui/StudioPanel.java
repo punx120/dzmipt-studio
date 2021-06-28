@@ -605,7 +605,7 @@ public class StudioPanel extends JPanel implements Observer,WindowListener {
         }
     }
 
-    private boolean saveAsFile() {
+    private boolean saveAsFile(EditorTab editor) {
         JFileChooser chooser = new JFileChooser();
         chooser.setDialogType(JFileChooser.SAVE_DIALOG);
         chooser.setDialogTitle("Save script as");
@@ -652,7 +652,7 @@ public class StudioPanel extends JPanel implements Observer,WindowListener {
             int choice = JOptionPane.showOptionDialog(frame,
                     filename + " already exists.\nOverwrite?",
                     "Overwrite?",
-                    JOptionPane.YES_NO_CANCEL_OPTION,
+                    JOptionPane.YES_NO_OPTION,
                     JOptionPane.QUESTION_MESSAGE,
                     Util.QUESTION_ICON,
                     null, // use standard button titles
@@ -663,19 +663,19 @@ public class StudioPanel extends JPanel implements Observer,WindowListener {
         }
 
         editor.setFilename(filename);
-        return saveFile(editor);
+        return saveFileOnDisk(editor);
     }
 
-    private void saveCurrentFile() {
+    private boolean saveEditor(EditorTab editor) {
         if (editor.getFilename() == null) {
-            saveAsFile();
+            return saveAsFile(editor);
         } else {
-            saveFile(editor);
+            return saveFileOnDisk(editor);
         }
     }
 
     // returns true if saved, false if error or cancelled
-    private static boolean saveFile(EditorTab editor) {
+    private static boolean saveFileOnDisk(EditorTab editor) {
         String filename = editor.getFilename();
         if (filename == null) return false;
 
@@ -839,10 +839,10 @@ public class StudioPanel extends JPanel implements Observer,WindowListener {
 
         saveFileAction = UserAction.create(I18n.getString("Save"), Util.DISKS_ICON, "Save the script",
                 KeyEvent.VK_S, KeyStroke.getKeyStroke(KeyEvent.VK_S, menuShortcutKeyMask),
-                e -> saveCurrentFile());
+                e -> saveEditor(editor));
 
         saveAsFileAction = UserAction.create(I18n.getString("SaveAs"), Util.SAVE_AS_ICON, "Save script as",
-                KeyEvent.VK_A, null, e -> saveAsFile());
+                KeyEvent.VK_A, null, e -> saveAsFile(editor));
 
         exportAction = UserAction.create(I18n.getString("Export"), Util.EXPORT_ICON, "Export result set",
                 KeyEvent.VK_E, null, e -> export());
@@ -1014,8 +1014,11 @@ public class StudioPanel extends JPanel implements Observer,WindowListener {
                 JOptionPane.YES_NO_CANCEL_OPTION, JOptionPane.QUESTION_MESSAGE, Util.QUESTION_ICON,
                 null, // use standard button titles
                 null);      // no default selection
+
+        if (choice == JOptionPane.CANCEL_OPTION) return false;
+
         if (choice == JOptionPane.YES_OPTION) {
-            return saveFile(editor);
+            return saveEditor(editor);
         }
 
         return true;
@@ -1894,7 +1897,7 @@ public class StudioPanel extends JPanel implements Observer,WindowListener {
                 String filename = editor.getFilename();
                 boolean modified = editor.isModified();
                 if (modified && Config.getInstance().isAutoSave()) {
-                    panel.saveFile(editor);
+                    panel.saveFileOnDisk(editor);
                 }
 
                 String content = editor.getTextArea().getText();
