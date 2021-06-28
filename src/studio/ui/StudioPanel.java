@@ -520,15 +520,11 @@ public class StudioPanel extends JPanel implements Observer,WindowListener {
         initTextArea("");
     }
 
-    public void openFile() {
-        if (!checkAndSaveTab(editor))return;
-
+    private void openFile() {
         String filename = chooseFilename();
-
-        if (filename != null) {
-            if (! loadFile(filename)) return;
-            addToMruFiles(filename);
-        }
+        if (filename == null) return;
+        addToMruFiles(filename);
+        addTab(editor.getServer(), filename);
     }
 
     public void loadMRUFile(String filename) {

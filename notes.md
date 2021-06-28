@@ -1,3 +1,4 @@
+* Open - changed behaviour to open in a new tab
 * Settings: auto save modified files
 * Settings: exit without asking to save anything
 * Upload result to a server
