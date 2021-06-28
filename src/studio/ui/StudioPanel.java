@@ -1018,7 +1018,7 @@ public class StudioPanel extends JPanel implements Observer,WindowListener {
             return saveFile(editor);
         }
 
-        return false;
+        return true;
     }
 
     private void closeFrame() {
