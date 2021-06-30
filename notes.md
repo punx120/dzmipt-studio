@@ -1,3 +1,5 @@
+`dz1.10` 2021.06.30
+-----
 * Open - changed behaviour to open in a new tab
 * Settings: auto save modified files
 * Settings: exit without asking to save anything
