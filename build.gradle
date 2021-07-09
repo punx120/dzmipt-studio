@@ -103,6 +103,8 @@ javadoc {
     failOnError = false
 }
 
+javadoc.options.addStringOption('Xdoclint:none', '-quiet')
+
 task javadocJar(type: Jar) {
     classifier = 'javadoc'
     from javadoc
