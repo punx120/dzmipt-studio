@@ -1011,7 +1011,7 @@ public class StudioPanel extends JPanel implements Observer,WindowListener {
                 null, // use standard button titles
                 null);      // no default selection
 
-        if (choice == JOptionPane.CANCEL_OPTION) return false;
+        if (choice == JOptionPane.CANCEL_OPTION || choice == JOptionPane.CLOSED_OPTION) return false;
 
         if (choice == JOptionPane.YES_OPTION) {
             return saveEditor(editor);
