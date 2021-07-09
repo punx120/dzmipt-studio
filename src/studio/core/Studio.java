@@ -1,6 +1,7 @@
 package studio.core;
 
 import java.awt.*;
+import java.io.IOException;
 import java.io.PrintStream;
 import java.util.Arrays;
 import java.util.List;
@@ -78,6 +79,23 @@ public class Studio {
             new StudioPanel().addTab(getInitServer(), args[0]);
         } else {
             Workspace workspace = Config.getInstance().loadWorkspace();
+            // Reload files from disk if it was modified somewhere else
+            for (Workspace.Window window: workspace.getWindows()) {
+                for (Workspace.Tab tab: window.getTabs()) {
+                    if (tab.getFilename() != null && !tab.isModified()) {
+                        try {
+                            String content = StudioPanel.getContents(tab.getFilename());
+                            tab.addContent(content);
+                            tab.setModified(false);
+                        } catch(IOException e) {
+                            log.error("Can't load file " + tab.getFilename() + " from disk", e);
+                            tab.setModified(true);
+                        }
+                    }
+                }
+            }
+
+
             if (workspace.getWindows().length == 0) {
                 String[] mruFiles = Config.getInstance().getMRUFiles();
                 String filename = mruFiles.length == 0 ? null : mruFiles[0];

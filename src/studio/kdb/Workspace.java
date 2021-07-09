@@ -193,15 +193,6 @@ public class Workspace {
             serverAuth = p.getProperty(prefix + SERVER_AUTH);
             content = p.getProperty(prefix + CONTENT);
             modified = Boolean.parseBoolean(p.getProperty(prefix + MODIFIED, "false"));
-
-            if (filename != null && !modified) {
-                try {
-                    content = StudioPanel.getContents(filename);
-                } catch(IOException e) {
-                    log.error("Can't load file " + filename + " from disk", e);
-                    modified = true;
-                }
-            }
         }
     }
 }
