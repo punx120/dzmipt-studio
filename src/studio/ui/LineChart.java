@@ -94,52 +94,52 @@ public class LineChart {
 
                     try {
                         if (klass == K.KDateVector.class) {
-                            series = new TimeSeries(table.getColumnName(col), Day.class);
+                            series = new TimeSeries(table.getColumnName(col));
                             K.KDateVector dates = (K.KDateVector) table.getColumn(0);
 
                             for (int row = 0; row < dates.getLength(); row++) {
                                 K.KDate date = dates.at(row);
-                                Day day = new Day(date.toDate(), tz);
+                                Day day = new Day(date.toDate());
                                 addOrUpdate(table, series, row, col, day);
                             }
                         } else if (klass == K.KTimeVector.class) {
-                            series = new TimeSeries(table.getColumnName(col), Millisecond.class);
+                            series = new TimeSeries(table.getColumnName(col));
 
                             K.KTimeVector times = (K.KTimeVector) table.getColumn(0);
                             for (int row = 0; row < table.getRowCount(); row++) {
                                 K.KTime time = times.at(row);
-                                Millisecond ms = new Millisecond(time.toTime(), tz);
+                                Millisecond ms = new Millisecond(time.toTime());
                                 addOrUpdate(table, series, row, col, ms);
                             }
                         } else if (klass == K.KTimestampVector.class) {
-                            series = new TimeSeries(table.getColumnName(col), Millisecond.class);
+                            series = new TimeSeries(table.getColumnName(col));
                             K.KTimestampVector dates = (K.KTimestampVector) table.getColumn(0);
 
                             for (int row = 0; row < dates.getLength(); row++) {
                                 K.KTimestamp date = dates.at(row);
-                                Millisecond day = new Millisecond(new java.util.Date(date.toTimestamp().getTime()), tz);
+                                Millisecond day = new Millisecond(date.toTimestamp());
                                 addOrUpdate(table, series, row, col, day);
                             }
                         } else if (klass == K.KTimespanVector.class) {
-                            series = new TimeSeries(table.getColumnName(col), Millisecond.class);
+                            series = new TimeSeries(table.getColumnName(col));
 
                             K.KTimespanVector times = (K.KTimespanVector) table.getColumn(0);
                             for (int row = 0; row < table.getRowCount(); row++) {
                                 K.KTimespan time = times.at(row);
-                                Millisecond ms = new Millisecond(time.toTime(), tz);
+                                Millisecond ms = new Millisecond(time.toTime());
                                 addOrUpdate(table, series, row, col, ms);
                             }
                         } else if (klass == K.KDatetimeVector.class) {
-                            series = new TimeSeries(table.getColumnName(col), Millisecond.class);
+                            series = new TimeSeries(table.getColumnName(col));
                             K.KDatetimeVector times = (K.KDatetimeVector) table.getColumn(0);
 
                             for (int row = 0; row < table.getRowCount(); row++) {
                                 K.KDatetime time = times.at(row);
-                                Millisecond ms = new Millisecond(time.toTimestamp(), tz);
+                                Millisecond ms = new Millisecond(time.toTimestamp());
                                 addOrUpdate(table, series, row, col, ms);
                             }
                         } else if (klass == K.KMonthVector.class) {
-                            series = new TimeSeries(table.getColumnName(col), Month.class);
+                            series = new TimeSeries(table.getColumnName(col));
                             K.KMonthVector times = (K.KMonthVector) table.getColumn(0);
                             for (int row = 0; row < table.getRowCount(); row++) {
                                 K.Month time = times.at(row);
@@ -150,7 +150,7 @@ public class LineChart {
                                 addOrUpdate(table, series, row, col, month);
                             }
                         } else if (klass == K.KSecondVector.class) {
-                            series = new TimeSeries(table.getColumnName(col), Second.class);
+                            series = new TimeSeries(table.getColumnName(col));
                             K.KSecondVector times = (K.KSecondVector) table.getColumn(0);
                             for (int row = 0; row < table.getRowCount(); row++) {
                                 K.Second time = times.at(row);
@@ -158,7 +158,7 @@ public class LineChart {
                                 addOrUpdate(table, series, row, col, second);
                             }
                         } else if (klass == K.KMinuteVector.class) {
-                            series = new TimeSeries(table.getColumnName(col), Minute.class);
+                            series = new TimeSeries(table.getColumnName(col));
                             K.KMinuteVector times = (K.KMinuteVector) table.getColumn(0);
                             for (int row = 0; row < table.getRowCount(); row++) {
                                 K.Minute time = times.at(row);

@@ -32,7 +32,7 @@ dependencies {
     compile group: 'org.apache.logging.log4j', name: 'log4j-core', version: '2.14.0'
     compile group: 'org.apache.logging.log4j', name: 'log4j-iostreams', version: '2.14.0'
     compile group: 'org.netbeans.api', name: 'org-openide-awt', version: 'RELEASE113'
-    compile group: 'org.jfree', name: 'jfreechart', version: '1.0.14'
+    compile group: 'org.jfree', name: 'jfreechart', version: '1.5.3'
     runtime files ('lib/images.jar')
 
     testImplementation 'org.junit.jupiter:junit-jupiter-api:5.3.1'
