@@ -64,7 +64,7 @@ public abstract class KTableModel extends AbstractTableModel {
     public Class getColumnClass(int col) {
         return getColumn(col).getClass();
     }
-
+    //@TODO: should return K.KBase
     public Object getValueAt(int row,int col) {
         row = (sortIndex == null) ? row : sortIndex[row];
         K.KBaseVector<? extends K.KBase> v = getColumn(col);
