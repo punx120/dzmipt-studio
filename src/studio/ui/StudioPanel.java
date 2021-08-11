@@ -38,6 +38,7 @@ import studio.kdb.*;
 import studio.ui.action.QPadImport;
 import studio.ui.action.QueryResult;
 import studio.ui.action.WorkspaceSaver;
+import studio.ui.chart.Chart;
 import studio.ui.dndtabbedpane.DragEvent;
 import studio.ui.dndtabbedpane.DraggableTabbedPane;
 import studio.utils.BrowserLaunch;
@@ -844,7 +845,7 @@ public class StudioPanel extends JPanel implements Observer,WindowListener {
                 KeyEvent.VK_E, null, e -> export());
 
         chartAction = UserAction.create(I18n.getString("Chart"), Util.CHART_ICON, "Chart current data set",
-                KeyEvent.VK_E, null, e -> new LineChart((KTableModel) getSelectedTable().getModel()));
+                KeyEvent.VK_E, null, e -> new Chart((KTableModel) getSelectedTable().getModel()));
 
         stopAction = UserAction.create(I18n.getString("Stop"), Util.STOP_ICON, "Stop the query",
                 KeyEvent.VK_S, null, e -> editor.getQueryExecutor().cancel());

@@ -1,3 +1,8 @@
+* Reworking charts:
+    * added shapes and bars
+    * legends with colors and char types for individual charts
+    * zoom with mouse wheel
+
 `dz1.10` 2021.06.30
 -----
 * Open - changed behaviour to open in a new tab
