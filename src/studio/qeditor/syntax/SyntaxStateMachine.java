@@ -1,6 +1,4 @@
-package studio.qeditor;
-
-import org.netbeans.editor.TokenID;
+package studio.qeditor.syntax;
 
 import java.util.*;
 
@@ -16,7 +14,7 @@ public class SyntaxStateMachine {
     public SyntaxStateMachine() {
     }
 
-    public void add(Enum fromState, String chars, Enum nextState, TokenID token, Action action) {
+    public void add(Enum fromState, String chars, Enum nextState, QToken token, Action action) {
         rules.add(new Rule(fromState, chars, nextState, token, action));
     }
 
@@ -75,9 +73,9 @@ public class SyntaxStateMachine {
 
     public static class Next {
         Enum nextState;
-        TokenID token;
+        QToken token;
         Action action;
-        Next(Enum nextState, TokenID token, Action action) {
+        Next(Enum nextState, QToken token, Action action) {
             this.nextState = nextState;
             this.token = token;
             this.action = action;
@@ -88,7 +86,7 @@ public class SyntaxStateMachine {
         Enum fromState;
         String chars;
         Next next;
-        Rule(Enum fromState, String chars, Enum nextState, TokenID token, Action action) {
+        Rule(Enum fromState, String chars, Enum nextState, QToken token, Action action) {
             this.fromState = fromState;
             this.chars = chars;
             this.next = new Next(nextState, token, action);

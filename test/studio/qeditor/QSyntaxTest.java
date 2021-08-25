@@ -1,14 +1,14 @@
 package studio.qeditor;
 
+import org.junit.jupiter.api.BeforeAll;
 import org.junit.jupiter.api.Test;
-import org.netbeans.editor.Syntax;
-import org.netbeans.editor.TokenID;
+import studio.qeditor.syntax.QSyntaxParser;
+import studio.qeditor.syntax.QToken;
 
 import java.io.BufferedReader;
 import java.io.IOException;
 import java.io.InputStream;
 import java.io.InputStreamReader;
-import java.util.ArrayList;
 import java.util.Arrays;
 import java.util.List;
 
@@ -16,15 +16,11 @@ import static org.junit.jupiter.api.Assertions.assertTrue;
 
 public class QSyntaxTest {
 
-    private static List<TokenID> tokens(String buffer) {
-        Syntax syntax = new QSyntax();
-        syntax.load(null, buffer.toCharArray(), 0, buffer.length(), true, buffer.length());
-        List<TokenID> result = new ArrayList<>();
-        for(;;) {
-            TokenID token = syntax.nextToken();
-            if (token == null) return result;
-            result.add(token);
-        }
+    private static QSyntaxParser parser;
+
+    @BeforeAll
+    private static void init() {
+        parser = new QSyntaxParser();
     }
 
     private String replaceAll(String src, String... pairs) {
@@ -47,8 +43,8 @@ public class QSyntaxTest {
     }
 
     private void assertSyntax(String text, String... expected) {
-        List<TokenID> actualTokens = tokens(decode(text));
-        String[] actual = actualTokens.stream().map(t -> t.getName()).toArray(String[]::new);
+        List<QToken> actualTokens = parser.parse(decode(text));
+        String[] actual = actualTokens.stream().map(t -> t.toString().toLowerCase()).toArray(String[]::new);
         assertTrue(Arrays.equals(actual, expected), String.format("Actual: %s; expected: %s; for text: %s", Arrays.toString(actual), Arrays.toString(expected), encode(text)));
     }
 

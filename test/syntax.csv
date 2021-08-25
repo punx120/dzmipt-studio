@@ -129,8 +129,8 @@
 
 0ng,keyword
 0Ng,keyword
-0nc,charvector
-0Nc,charvector
+0nc,char_vector
+0Nc,char_vector
 
 0:,operator
 1:,operator
@@ -175,19 +175,19 @@
 -0k,unknown
 -0:,unknown
 
-"dzmipt",charvector
-"",charvector
-"русский",charvector
-"abc"\,"xyz",charvector,operator,charvector
-"a\"b",charvector,charvector,charvector
-"a\\na",charvector,charvector
-"a\t",charvector,charvector,charvector
-"a\xa",charvector,unknown,charvector
-"a\xa",charvector,unknown,charvector
-"\120",charvector,charvector,charvector
-"\12,charvector,unknown
-"\99",charvector,unknown,charvector
-"\400",charvector,unknown,charvector
+"dzmipt",char_vector
+"",char_vector
+"русский",char_vector
+"abc"\,"xyz",char_vector,operator,char_vector
+"a\"b",char_vector,char_vector,char_vector
+"a\\na",char_vector,char_vector
+"a\t",char_vector,char_vector,char_vector
+"a\xa",char_vector,unknown,char_vector
+"a\xa",char_vector,unknown,char_vector
+"\120",char_vector,char_vector,char_vector
+"\12,char_vector,unknown
+"\99",char_vector,unknown,char_vector
+"\400",char_vector,unknown,char_vector
 
 `,symbol
 ``,symbol
@@ -221,14 +221,14 @@ f/,identifier,operator
 +/,operator,operator
 {x+y}/,bracket,identifier,operator,identifier,bracket,operator
 x\,\:y,identifier,operator,operator,operator,identifier
-0 /something,long,whitespace,eolComment
-/comment,eolComment
-/comment\n1,eolComment,long
-1.2f //sdf,float,whitespace,eolComment
- / \n 1,whitespace,eolComment,eolComment
- / \n 1\n\ ,whitespace,eolComment,eolComment,eolComment
- / \n 1\n\\ \n+,whitespace,eolComment,eolComment,eolComment,operator
- / \n 1\n\\ test\n+,whitespace,eolComment,eolComment,eolComment,eolComment
+0 /something,long,whitespace,eol_comment
+/comment,eol_comment
+/comment\n1,eol_comment,long
+1.2f //sdf,float,whitespace,eol_comment
+ / \n 1,whitespace,eol_comment,eol_comment
+ / \n 1\n\ ,whitespace,eol_comment,eol_comment,eol_comment
+ / \n 1\n\\ \n+,whitespace,eol_comment,eol_comment,eol_comment,operator
+ / \n 1\n\\ test\n+,whitespace,eol_comment,eol_comment,eol_comment,eol_comment
 \p,command
 \p 1234,command
 \ls -la,system
