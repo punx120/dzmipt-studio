@@ -132,6 +132,8 @@ public class StudioPanel extends JPanel implements Observer,WindowListener {
     private UserAction addServerAction;
     private UserAction removeServerAction;
     private UserAction toggleCommaFormatAction;
+    private UserAction nextEditorTab;
+    private UserAction prevEditorTab;
     private JFrame frame;
 
     private static JFileChooser fileChooser;
@@ -919,6 +921,19 @@ public class StudioPanel extends JPanel implements Observer,WindowListener {
 
         redoAction = UserAction.create(I18n.getString("Redo"), Util.REDO_ICON, "Redo the last change to the document",
                 KeyEvent.VK_R, KeyStroke.getKeyStroke(KeyEvent.VK_Y,menuShortcutKeyMask), editorRedoAction);
+
+        nextEditorTab = UserAction.create("Next tab", Util.BLANK_ICON,
+                "Select next editor tab", KeyEvent.VK_N,
+                    Util.MAC_OS_X ? KeyStroke.getKeyStroke(KeyEvent.VK_RIGHT, menuShortcutKeyMask | InputEvent.ALT_MASK ) :
+                                    KeyStroke.getKeyStroke(KeyEvent.VK_TAB, menuShortcutKeyMask),
+                e -> selectNextTab(true));
+
+        prevEditorTab = UserAction.create("Previous tab", Util.BLANK_ICON,
+                "Select previous editor tab", KeyEvent.VK_P,
+                Util.MAC_OS_X ? KeyStroke.getKeyStroke(KeyEvent.VK_LEFT, menuShortcutKeyMask | InputEvent.ALT_MASK ) :
+                        KeyStroke.getKeyStroke(KeyEvent.VK_TAB, menuShortcutKeyMask | InputEvent.SHIFT_MASK),
+                e -> selectNextTab(false));
+
     }
 
     public void settings() {
@@ -1205,6 +1220,8 @@ public class StudioPanel extends JPanel implements Observer,WindowListener {
         menu.add(new JMenuItem(minMaxDividerAction));
         menu.add(new JMenuItem(toggleDividerOrientationAction));
         menu.add(new JMenuItem(arrangeAllAction));
+        menu.add(new JMenuItem(nextEditorTab));
+        menu.add(new JMenuItem(prevEditorTab));
 
         if (allPanels.size() > 0) {
             menu.addSeparator();
@@ -1512,10 +1529,23 @@ public class StudioPanel extends JPanel implements Observer,WindowListener {
         splitpane.setDividerLocation(0.5);
     }
 
+    private void selectNextTab(boolean forward) {
+        int index = tabbedEditors.getSelectedIndex();
+        int count = tabbedEditors.getTabCount();
+        if (forward) {
+            index++;
+            if (index == count) index = 0;
+        } else {
+            index--;
+            if (index == -1) index = count-1;
+        }
+        tabbedEditors.setSelectedIndex(index);
+    }
+
     public EditorTab addTab(Server server, String filename) {
         editor = new EditorTab(this);
         JEditorPane textArea = editor.init();
-        overrideDefaultKeymap(textArea, toggleCommaFormatAction, newTabAction, closeTabAction);
+        overrideDefaultKeymap(textArea, toggleCommaFormatAction, newTabAction, closeTabAction, nextEditorTab, prevEditorTab);
         JComponent component = Utilities.getEditorUI(textArea).getExtComponent();
         component.putClientProperty(EditorTab.class, editor);
         tabbedEditors.add(component);

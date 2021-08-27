@@ -1,4 +1,5 @@
-* Reworking charts:
+* Added shortcut to select next and previous editor tab
+* Reworked charts:
     * added shapes and bars
     * legends with colors and char types for individual charts
     * zoom with mouse wheel
