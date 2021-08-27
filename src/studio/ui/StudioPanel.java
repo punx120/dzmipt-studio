@@ -173,6 +173,23 @@ public class StudioPanel extends JPanel implements Observer,WindowListener {
         }
     }
 
+    private void removeFocusChangeKeysForWindows(JComponent component) {
+        if (Util.MAC_OS_X) return;
+
+        KeyStroke ctrlTab = KeyStroke.getKeyStroke("ctrl TAB");
+        KeyStroke ctrlShiftTab = KeyStroke.getKeyStroke("ctrl shift TAB");
+
+        // Remove ctrl-tab from normal focus traversal
+        Set<AWTKeyStroke> forwardKeys = new HashSet<>(component.getFocusTraversalKeys(KeyboardFocusManager.FORWARD_TRAVERSAL_KEYS));
+        forwardKeys.remove(ctrlTab);
+        component.setFocusTraversalKeys(KeyboardFocusManager.FORWARD_TRAVERSAL_KEYS, forwardKeys);
+
+        // Remove ctrl-shift-tab from normal focus traversal
+        Set<AWTKeyStroke> backwardKeys = new HashSet<>(component.getFocusTraversalKeys(KeyboardFocusManager.BACKWARD_TRAVERSAL_KEYS));
+        backwardKeys.remove(ctrlShiftTab);
+        component.setFocusTraversalKeys(KeyboardFocusManager.BACKWARD_TRAVERSAL_KEYS, backwardKeys);
+    }
+
     private void setActionsEnabled(boolean value, Action... actions) {
         for (Action action: actions) {
             if (action != null) {
@@ -1545,6 +1562,8 @@ public class StudioPanel extends JPanel implements Observer,WindowListener {
     public EditorTab addTab(Server server, String filename) {
         editor = new EditorTab(this);
         JEditorPane textArea = editor.init();
+        removeFocusChangeKeysForWindows(textArea);
+
         overrideDefaultKeymap(textArea, toggleCommaFormatAction, newTabAction, closeTabAction, nextEditorTab, prevEditorTab);
         JComponent component = Utilities.getEditorUI(textArea).getExtComponent();
         component.putClientProperty(EditorTab.class, editor);
@@ -1592,6 +1611,7 @@ public class StudioPanel extends JPanel implements Observer,WindowListener {
         allPanels.add(this);
 
         tabbedEditors = new DraggableTabbedPane("Editor");
+        removeFocusChangeKeysForWindows(tabbedEditors);
         ClosableTabbedPane.makeCloseable(tabbedEditors, index -> {
             tabbedEditors.setSelectedIndex(index);
             return closeTab();
