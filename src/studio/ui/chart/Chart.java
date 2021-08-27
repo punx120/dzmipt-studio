@@ -209,8 +209,12 @@ public class Chart {
             collection.setAutoWidth(true);
             XYSeries series = new XYSeries(table.getColumnName(col));
             for (int row = 0; row < table.getRowCount(); row++) {
-                double x = ((ToDouble) table.getValueAt(row, xIndex)).toDouble();
-                double y = ((ToDouble) table.getValueAt(row, col)).toDouble();
+                K.KBase xValue = (K.KBase)table.getValueAt(row, xIndex);
+                K.KBase yValue = (K.KBase)table.getValueAt(row, col);
+                if (xValue.isNull() || yValue.isNull()) continue;
+
+                double x = ((ToDouble)xValue).toDouble();
+                double y = ((ToDouble)yValue).toDouble();
                 series.add(x, y);
             }
             collection.addSeries(series);
@@ -258,7 +262,11 @@ public class Chart {
                 } else {
                     throw new IllegalStateException("Unexpected class: " + xValue.getClass());
                 }
-                series.addOrUpdate(period, ((ToDouble) table.getValueAt(row, col)).toDouble());
+
+                K.KBase value = (K.KBase) table.getValueAt(row, col);
+                if (value.isNull()) continue;
+
+                series.addOrUpdate(period, ((ToDouble)value).toDouble());
             }
             collection.addSeries(series);
 
