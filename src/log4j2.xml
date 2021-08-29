@@ -2,7 +2,7 @@
 <Configuration status="warn">
     <Properties>
         <!-- Reference to the folder with Config properties - see Config class  -->
-        <Property name="baseFolder">${sys:user.home}/.studioforkdb/log</Property>
+        <Property name="baseFolder">${sys:user.home}/.studioforkdb${sys:log4j.studio.envSuffix:-}/log</Property>
     </Properties>
 
     <Appenders>

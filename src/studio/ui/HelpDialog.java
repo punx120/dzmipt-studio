@@ -1,5 +1,6 @@
 package studio.ui;
 
+import studio.kdb.Config;
 import studio.kdb.Lm;
 import studio.utils.BrowserLaunch;
 
@@ -15,9 +16,12 @@ import java.util.TimeZone;
 public class HelpDialog extends JDialog {
     public HelpDialog(JFrame parent) {
         super(parent, "Studio for kdb+");
+        String env = Config.getEnvironment();
         final JEditorPane jep = new JEditorPane("text/html",
                 "<html><head><title>Studio for kdb+</title></head><body><h1>Studio for kdb+</h1>"
-                        + "<p>Version: " + Lm.version + " (" + Lm.date + ")"
+                        + "<p>"
+                        + (env == null ? "" : "Environment: " + env + "<br>")
+                        + "Version: " + Lm.version + " (" + Lm.date + ")"
                         + "<br>Build date: " + Lm.build
                         + "<br>JVM Version: " + System.getProperty("java.version")
                         + "</p><p>License: <a href=\"http://github.com/CharlesSkelton/studio/blob/master/license.md\">Apache 2</a>"

@@ -25,7 +25,15 @@ public class Studio {
 
     private static final Logger log = LogManager.getLogger();
 
-    private static void initStdLoggers() {
+    private static void initLogger() {
+        String env = System.getProperty("env");
+        if (env != null) {
+            log.info("Set environment to {}", env);
+            System.setProperty("log4j.studio.envSuffix", "/" + env);
+            ((org.apache.logging.log4j.core.LoggerContext) LogManager.getContext(false)).reconfigure();
+            Config.setEnvironment(env);
+        }
+
         PrintStream stdoutStream = IoBuilder.forLogger("stdout").setLevel(Level.INFO).buildPrintStream();
         PrintStream stderrStream = IoBuilder.forLogger("stderr").setLevel(Level.ERROR).buildPrintStream();
         System.setOut(stdoutStream);
@@ -33,7 +41,7 @@ public class Studio {
     }
 
     public static void main(final String[] args) {
-        initStdLoggers();
+        initLogger();
         TimeZone.setDefault(TimeZone.getTimeZone("GMT"));
 
         if(System.getProperty("os.name","").contains("OS X")){ 

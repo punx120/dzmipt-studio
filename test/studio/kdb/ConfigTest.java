@@ -23,7 +23,7 @@ public class ConfigTest {
     public void init() throws IOException {
         tmpFile = File.createTempFile("studioforkdb", ".tmp");
         tmpFile.deleteOnExit();
-        config = Config.getInstance(tmpFile.getPath());
+        config = Config.getByFilename(tmpFile.getPath());
         System.out.println("temp file " + tmpFile.getPath());
 
         server = new Server("testServer", "localhost",1111,
@@ -76,7 +76,7 @@ public class ConfigTest {
         assertEquals(value+1, config.getResultTabsCount());
         assertEquals(value, config1.getResultTabsCount());
 
-        assertEquals(value+1, Config.getInstance(tmpFile.getPath()).getResultTabsCount());
+        assertEquals(value+1, Config.getByFilename(tmpFile.getPath()).getResultTabsCount());
     }
 
     @Test
@@ -151,7 +151,7 @@ public class ConfigTest {
         p.store(out, null);
         out.close();
 
-        return Config.getInstance(newFile.getPath());
+        return Config.getByFilename(newFile.getPath());
     }
 
     @Test
