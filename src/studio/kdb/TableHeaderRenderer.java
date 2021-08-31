@@ -61,8 +61,7 @@ public class TableHeaderRenderer extends DefaultTableCellRenderer {
             if (icon != null)
                 setIcon(icon);
             else {
-                icon = new ScaledIcon(Util.SORT_ASC_ICON,targetHeight);
-                setIcon(new BlankIcon(icon));
+                setIcon(null);
             }
         }
 

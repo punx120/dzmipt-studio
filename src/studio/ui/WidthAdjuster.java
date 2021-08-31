@@ -92,7 +92,6 @@ public class WidthAdjuster extends MouseAdapter {
             maxWidth = Math.max(maxWidth,comp.getPreferredSize().width);
         }
 
-        maxWidth += 10; //and room to grow...
         tc.setPreferredWidth(maxWidth); //remembers the value
         tc.setWidth(maxWidth);          //forces layout, repaint
     }
