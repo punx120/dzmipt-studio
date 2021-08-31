@@ -12,17 +12,35 @@ public class ClosableTabbedPane {
 
     public static void makeCloseable(JTabbedPane tabbedPane, CloseTabAction closeTabAction) {
         tabbedPane.addMouseListener(new MouseAdapter() {
+            //We need to override both mouseReleased and mousePressed...
+            // Popup trigger is set in mousePressed on Mac and mouseReleased is for Windows
+            @Override
+            public void mouseReleased(MouseEvent e) {
+                int tabIndex = tabbedPane.indexAtLocation(e.getX(), e.getY());
+                if (tabIndex == -1) return;
+
+                if (checkPopup(tabIndex, e)) return;
+
+                if (SwingUtilities.isMiddleMouseButton(e)) {
+                    closeTabAction.close(tabIndex);
+                }
+            }
+
             @Override
             public void mousePressed(MouseEvent e) {
                 int tabIndex = tabbedPane.indexAtLocation(e.getX(), e.getY());
                 if (tabIndex == -1) return;
 
+                checkPopup(tabIndex, e);
+            }
+
+            private boolean checkPopup(int tabIndex, MouseEvent e) {
                 if (e.isPopupTrigger()) {
                     JPopupMenu popup = createTabbedPopupMenu(tabbedPane, closeTabAction, tabIndex);
                     popup.show(e.getComponent(), e.getX(), e.getY());
-                } else if (SwingUtilities.isMiddleMouseButton(e)) {
-                    closeTabAction.close(tabIndex);
+                    return true;
                 }
+                return false;
             }
         });
 
