@@ -4,9 +4,8 @@ import javax.swing.border.Border;
 import studio.ui.BlankIcon;
 import studio.ui.ScaledIcon;
 import studio.ui.Util;
-import java.awt.Component;
-import java.awt.Font;
-import java.awt.Insets;
+
+import java.awt.*;
 import javax.swing.*;
 import javax.swing.table.DefaultTableCellRenderer;
 
@@ -19,6 +18,8 @@ public class TableHeaderRenderer extends DefaultTableCellRenderer {
         final Border border = UIManager.getBorder("TableHeader.cellBorder");
         if (border != null) {
             setBorder(border);
+        } else {
+            setBorder(BorderFactory.createMatteBorder(0, 0, 2, 1, Color.BLACK));
         }
         setFont(UIManager.getFont("TableHeader.font"));
         setBackground(UIManager.getColor("TableHeader.background"));

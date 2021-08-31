@@ -107,7 +107,7 @@ public class QGrid extends JPanel {
         }
 
         table.setAutoResizeMode(JTable.AUTO_RESIZE_OFF);
-
+        table.setShowVerticalLines(true);
         table.getTableHeader().setReorderingAllowed(true);
         final JScrollPane scrollPane = new JScrollPane(table);
 

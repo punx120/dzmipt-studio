@@ -1,3 +1,4 @@
+* Output grid: add vertical lines and make header compact
 * Added shortcut to select next and previous editor tab
 * Reworked charts:
     * added shapes and bars
