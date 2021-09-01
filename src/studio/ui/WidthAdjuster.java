@@ -89,7 +89,7 @@ public class WidthAdjuster extends MouseAdapter {
             tcr = table.getCellRenderer(i,col);
             Object obj = table.getValueAt(i,col);
             comp = tcr.getTableCellRendererComponent(table,obj,false,false,i,col);
-            maxWidth = Math.max(maxWidth,comp.getPreferredSize().width);
+            maxWidth = Math.max(maxWidth, 2 + comp.getPreferredSize().width); // we need to add a gap for lines between cells
         }
 
         tc.setPreferredWidth(maxWidth); //remembers the value
