@@ -1,12 +1,12 @@
 package studio.kdb;
 
 import javax.swing.border.Border;
-import studio.ui.BlankIcon;
 import studio.ui.ScaledIcon;
 import studio.ui.Util;
 
 import java.awt.*;
 import javax.swing.*;
+
 import javax.swing.table.DefaultTableCellRenderer;
 
 public class TableHeaderRenderer extends DefaultTableCellRenderer {
@@ -15,12 +15,12 @@ public class TableHeaderRenderer extends DefaultTableCellRenderer {
         setHorizontalAlignment(SwingConstants.LEFT);
         setVerticalAlignment(SwingConstants.CENTER);
         setOpaque(true);
-        final Border border = UIManager.getBorder("TableHeader.cellBorder");
-        if (border != null) {
-            setBorder(border);
-        } else {
-            setBorder(BorderFactory.createMatteBorder(0, 0, 2, 1, Color.BLACK));
+        Border border = UIManager.getBorder("TableHeader.cellBorder");
+        if (border == null) {
+            border = BorderFactory.createMatteBorder(0, 0, 2, 1, Color.BLACK);
         }
+        setBorder(BorderFactory.createCompoundBorder(border, BorderFactory.createEmptyBorder(0,2,0,0)));
+
         setFont(UIManager.getFont("TableHeader.font"));
         setBackground(UIManager.getColor("TableHeader.background"));
         setForeground(UIManager.getColor("TableHeader.foreground"));
@@ -60,7 +60,7 @@ public class TableHeaderRenderer extends DefaultTableCellRenderer {
                     else
                         icon = new ScaledIcon(Util.SORT_ASC_ICON,targetHeight);
             if (icon != null)
-                setIcon(new BlankIcon(2,2));
+                setIcon(icon);
             else {
                 setIcon(null);
             }
