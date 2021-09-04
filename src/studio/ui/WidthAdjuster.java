@@ -7,9 +7,13 @@ import javax.swing.*;
 import javax.swing.table.*;
 
 public class WidthAdjuster extends MouseAdapter {
+
+    private int gap;
     public WidthAdjuster(JTable table) {
         this.table = table;
         table.getTableHeader().addMouseListener(this);
+        gap = SwingUtilities.computeStringWidth(table.getFontMetrics(UIManager.getFont("Table.font")), "x") / 2;
+
     }
 
     public void mousePressed(MouseEvent evt) {
@@ -74,9 +78,8 @@ public class WidthAdjuster extends MouseAdapter {
         if (tcr == null)
             tcr = table.getTableHeader().getDefaultRenderer();
 
-        int maxWidth = 0;
         Component comp = tcr.getTableCellRendererComponent(table,tc.getHeaderValue(),false,false,0,col);
-        maxWidth = comp.getPreferredSize().width;
+        int maxWidth = comp.getPreferredSize().width;
 
         int ub = table.getRowCount();
 
@@ -89,7 +92,7 @@ public class WidthAdjuster extends MouseAdapter {
             tcr = table.getCellRenderer(i,col);
             Object obj = table.getValueAt(i,col);
             comp = tcr.getTableCellRendererComponent(table,obj,false,false,i,col);
-            maxWidth = Math.max(maxWidth, 2 + comp.getPreferredSize().width); // we need to add a gap for lines between cells
+            maxWidth = Math.max(maxWidth, 2 + gap + comp.getPreferredSize().width); // we need to add a gap for lines between cells
         }
 
         tc.setPreferredWidth(maxWidth); //remembers the value
