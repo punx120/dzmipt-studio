@@ -1,8 +1,6 @@
 package studio.utils;
 
 import studio.core.Credentials;
-import studio.core.DefaultAuthenticationMechanism;
-import studio.kdb.Config;
 import studio.kdb.Server;
 import studio.kdb.ServerTreeNode;
 
@@ -10,6 +8,7 @@ import javax.swing.tree.TreeNode;
 import java.io.*;
 import java.nio.file.Files;
 import java.util.ArrayList;
+import java.util.Collections;
 import java.util.List;
 import java.util.stream.Stream;
 
@@ -33,39 +32,17 @@ public class QPadConverter {
 
     private static Server convertConnection(String conn, String defaultAuth,
                                             Credentials defaultCredentials) {
-        if (conn.startsWith(":")) conn = conn.substring(1);
-
-        String[] nodes = conn.split(":");
-        if (nodes.length<2) return null;
-
-        String host = nodes[0];
-        int port;
         try {
-            port = Integer.parseInt(nodes[1]);
-        } catch (NumberFormatException e) {
+            Server server = QConnection.getByConnection(conn, defaultAuth, defaultCredentials, Collections.emptyList());
+            String password = server.getPassword();
+            if (password.contains("?")) {
+                int index = password.indexOf('?');
+                server.setAuthenticationMechanism(password.substring(0, index));
+            }
+            return server;
+        } catch (IllegalArgumentException e) {
             return null;
         }
-        String user = nodes.length>2 ? nodes[2] : "";
-        String password = nodes.length>3 ? nodes[3] : "";
-        String auth = "";
-        if (password.contains("?")) {
-            int index = password.indexOf('?');
-            auth = password.substring(0, index);
-        }
-
-        if (user.equals("") && password.equals("")) {
-            auth = defaultAuth;
-            user = defaultCredentials.getUsername();
-            password = defaultCredentials.getPassword();
-        } else {
-            if (auth.equals("")) {
-                auth = DefaultAuthenticationMechanism.NAME;
-            }
-        }
-
-
-
-        return new Server("", host, port, user, password, Config.getInstance().getDefaultBackgroundColor(), auth, false);
     }
 
     static Server convert(String line, ServerTreeNode root, String defaultAuth,

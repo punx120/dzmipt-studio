@@ -2,6 +2,7 @@ package studio.kdb;
 
 import org.junit.jupiter.api.BeforeEach;
 import org.junit.jupiter.api.Test;
+import studio.core.Credentials;
 import studio.core.DefaultAuthenticationMechanism;
 import studio.utils.TableConnExtractor;
 
@@ -282,5 +283,43 @@ public class ConfigTest {
         Config newConfig = copyConfig(config, p -> {});
         assertTrue(newConfig.isAutoSave());
         assertFalse(newConfig.isSaveOnExit());
+    }
+
+    @Test
+    public void testGetServerByConnectionString() {
+        config.setDefaultAuthMechanism("testAuth");
+        config.setDefaultCredentials("testAuth", new Credentials("testUser", "testPassword"));
+
+        Server server = config.getServerByConnectionString("host:123");
+        assertEquals("host", server.getHost());
+        assertEquals(123, server.getPort());
+        assertEquals("testAuth", server.getAuthenticationMechanism());
+        assertEquals("testUser", server.getUsername());
+        assertEquals("testPassword", server.getPassword());
+
+        server = config.getServerByConnectionString("host:123:uu:pp");
+        assertEquals(DefaultAuthenticationMechanism.NAME, server.getAuthenticationMechanism());
+        assertEquals("uu", server.getUsername());
+        assertEquals("pp", server.getPassword());
+
+        server = config.getServerByConnectionString("host:123:uu");
+        assertEquals(DefaultAuthenticationMechanism.NAME, server.getAuthenticationMechanism());
+        assertEquals("uu", server.getUsername());
+        assertEquals("", server.getPassword());
+
+        server = config.getServerByConnectionString("host:123:uu:");
+        assertEquals(DefaultAuthenticationMechanism.NAME, server.getAuthenticationMechanism());
+        assertEquals("uu", server.getUsername());
+        assertEquals("", server.getPassword());
+
+        server = config.getServerByConnectionString("host:123:uu:pp:pp1:");
+        assertEquals(DefaultAuthenticationMechanism.NAME, server.getAuthenticationMechanism());
+        assertEquals("uu", server.getUsername());
+        assertEquals("pp:pp1:", server.getPassword());
+
+        server = config.getServerByConnectionString("host:123:uu::pp:pp1:");
+        assertEquals(DefaultAuthenticationMechanism.NAME, server.getAuthenticationMechanism());
+        assertEquals("uu", server.getUsername());
+        assertEquals(":pp:pp1:", server.getPassword());
     }
 }
