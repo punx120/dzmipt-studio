@@ -33,19 +33,15 @@ public class WidthAdjuster extends MouseAdapter {
                 final int column = columnModel.getColumn(viewColumn).getModelIndex();
 
                 KTableModel ktm = (KTableModel) table.getModel();
-                //         if(Sorter.isSortable(ktm.getColumn(column)))
-                {
-                    if (ktm.isSortedAsc())
-                        ktm.desc(column);
-                    else if (ktm.isSortedDesc())
-                        ktm.removeSort();
-                    else
-                        ktm.asc(column);
+                if (ktm.isSortedAsc(column))
+                    ktm.desc(column);
+                else if (ktm.isSortedDesc(column))
+                    ktm.removeSort();
+                else
+                    ktm.asc(column);
 
-                    ktm.fireTableDataChanged();
-                    if (h != null)
-                        h.repaint();
-                }
+                ktm.fireTableDataChanged();
+                h.repaint();
             }
         }
     }

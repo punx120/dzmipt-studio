@@ -49,10 +49,10 @@ public class TableHeaderRenderer extends DefaultTableCellRenderer {
         if (table.getModel() instanceof KTableModel) {
             column = table.convertColumnIndexToModel(column);
             KTableModel ktm = (KTableModel) table.getModel();
-            if (ktm.isSortedAsc() && column == ktm.getSortByColumn()) {
+            if (ktm.isSortedAsc(column)) {
                 asc = true;
                 desc = false;
-            } else if (ktm.isSortedDesc() && column == ktm.getSortByColumn()) {
+            } else if (ktm.isSortedDesc(column)) {
                 asc = false;
                 desc = true;
             } else {

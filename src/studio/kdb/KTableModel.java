@@ -47,12 +47,12 @@ public abstract class KTableModel extends AbstractTableModel {
         return sortedByColumn;
     }
 
-    public boolean isSortedAsc() {
-        return sorted == 1;
+    public boolean isSortedAsc(int column) {
+        return sorted == 1 && sortedByColumn == column;
     }
 
-    public boolean isSortedDesc() {
-        return sorted == -1;
+    public boolean isSortedDesc(int column) {
+        return sorted == -1 && sortedByColumn == column;
     }
 
     public void removeSort() {
