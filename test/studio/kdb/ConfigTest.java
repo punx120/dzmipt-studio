@@ -140,18 +140,21 @@ public class ConfigTest {
         assertEquals(server1, config.getServerHistory().get(2));
     }
 
+    private Config getConfig(Properties properties) throws IOException {
+        File newFile = File.createTempFile("studioforkdb", ".tmp");
+        newFile.deleteOnExit();
+        OutputStream out = new FileOutputStream(newFile);
+        properties.store(out, null);
+        out.close();
+
+        return Config.getByFilename(newFile.getPath());
+    } 
+    
     private Config copyConfig(Config config, Consumer<Properties> propsModification) throws IOException {
         Properties p = new Properties();
         p.load(new FileInputStream(config.getFilename()));
         propsModification.accept(p);
-
-        File newFile = File.createTempFile("studioforkdb", ".tmp");
-        newFile.deleteOnExit();
-        OutputStream out = new FileOutputStream(newFile);
-        p.store(out, null);
-        out.close();
-
-        return Config.getByFilename(newFile.getPath());
+        return getConfig(p);
     }
 
     @Test
@@ -171,6 +174,40 @@ public class ConfigTest {
         assertEquals(server, newConfig.getServerHistory().get(0));
     }
 
+    @Test
+    public void upgradeFromOldConfig() throws IOException {
+        Properties p = new Properties();
+        p.setProperty("Servers", "server1");
+        p.setProperty("server.server1.host", "host.com");
+        p.setProperty("server.server1.port", "2000");
+        p.setProperty("server.server1.user", "user");
+        p.setProperty("server.server1.password", "password");
+        p.setProperty("server.server1.backgroundColor", "001122");
+        p.setProperty("server.server1.authenticationMechanism", DefaultAuthenticationMechanism.NAME);
+
+        Config config = getConfig(p);
+        assertEquals(1, config.getServers().length);
+
+        //duplicate server
+        p.setProperty("Servers", "server1,server1");
+        config = getConfig(p);
+        assertEquals(1, config.getServers().length);
+
+        //undefined servers should be filled with defaults
+        p.setProperty("Servers", "server2,server1");
+        config = getConfig(p);
+        assertEquals(2, config.getServers().length);
+
+        //errors should not fail the whole process
+        p.setProperty("server.server1.port", "not a number");
+        p.setProperty("server.server1.backgroundColor", "very strange");
+        p.setProperty("server.server1.authenticationMechanism", "unknown auth");
+        config = getConfig(p);
+        assertEquals(1, config.getServers().length);
+        assertEquals("server2", config.getServers()[0].getFullName());
+
+    }
+    
     @Test
     public void addServersTest() {
         Server server1 = new Server(server);

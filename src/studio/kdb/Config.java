@@ -298,15 +298,28 @@ public class Config {
             for (String name : names) {
                 name = name.trim();
                 if (name.equals("")) continue;
-                Server server = initServerFromKey(name);
-                server.setName(name);
-                list.add(server);
+                try {
+                    Server server = initServerFromKey(name);
+                    server.setName(name);
+                    list.add(server);
+                } catch (IllegalArgumentException e) {
+                    log.warn("Error during parsing server " + name, e);
+                }
             }
             p.remove("Servers");
             p.entrySet().removeIf(e -> e.getKey().toString().startsWith("server."));
             p.setProperty("version", VERSION12);
             initServers();
-            addServers(false, list.toArray(new Server[0]));
+            String[] results = addServers(true, list.toArray(new Server[0]));
+            boolean error = false;
+            for(String result: results) {
+                if (result == null) continue;
+                if (!error) {
+                    error = true;
+                    log.warn("Found errors during conversion");
+                }
+                log.warn(result);
+            }
             log.info("Done");
         } catch (IllegalArgumentException e) {
             log.error("Ups... Can't convert", e);
