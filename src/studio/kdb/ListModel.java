@@ -4,6 +4,7 @@ public class ListModel extends KTableModel {
     private final K.KBaseVector<? extends K.KBase> list;
 
     public ListModel(K.KBaseVector<? extends K.KBase> list) {
+        super(list.count());
         this.list = list;
     }
     @Override

@@ -8,9 +8,15 @@ import javax.swing.table.*;
 
 public class WidthAdjuster extends MouseAdapter {
 
+    private JTable table;
+    private TableRowHeader tableRowHeader;
     private int gap;
-    public WidthAdjuster(JTable table) {
+
+    private static final int EPSILON = 5;   //boundary sensitivity
+
+    public WidthAdjuster(JTable table, TableRowHeader tableRowHeader) {
         this.table = table;
+        this.tableRowHeader = tableRowHeader;
         table.getTableHeader().addMouseListener(this);
         gap = SwingUtilities.computeStringWidth(table.getFontMetrics(UIManager.getFont("Table.font")), "x") / 2;
 
@@ -42,6 +48,7 @@ public class WidthAdjuster extends MouseAdapter {
 
                 ktm.fireTableDataChanged();
                 h.repaint();
+                tableRowHeader.repaint();
             }
         }
     }
@@ -94,6 +101,4 @@ public class WidthAdjuster extends MouseAdapter {
         tc.setPreferredWidth(maxWidth); //remembers the value
         tc.setWidth(maxWidth);          //forces layout, repaint
     }
-    private JTable table;
-    private static final int EPSILON = 5;   //boundary sensitivity
 }

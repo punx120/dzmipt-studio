@@ -5,6 +5,7 @@ public class FlipTableModel extends KTableModel {
     private final K.Flip flip;
 
     public FlipTableModel(K.Flip obj) {
+        super(obj.count());
         flip = obj;
     }
 

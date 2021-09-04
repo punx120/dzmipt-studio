@@ -9,6 +9,7 @@ public class DictTableModel extends KTableModel {
     private final int valueCount;
 
     public DictTableModel(K.Dict obj) {
+        super(obj.count());
         this.dict = obj;
         keyFlip = dict.x instanceof K.Flip;
         valueFlip = dict.y instanceof K.Flip;

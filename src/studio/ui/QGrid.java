@@ -111,25 +111,23 @@ public class QGrid extends JPanel {
         table.getTableHeader().setReorderingAllowed(true);
         final JScrollPane scrollPane = new JScrollPane(table);
 
-        if (table.getRowCount() > 0) {
-            TableRowHeader trh = new TableRowHeader(table);
-            scrollPane.setRowHeaderView(trh);
+        TableRowHeader trh = new TableRowHeader(table);
+        scrollPane.setRowHeaderView(trh);
 
-            scrollPane.getRowHeader().addChangeListener(new ChangeListener() {
-                public void stateChanged(ChangeEvent ev) {
-                    Point header_pt = ((JViewport) ev.getSource()).getViewPosition();
-                    Point main_pt = main.getViewPosition();
-                    if (header_pt.y != main_pt.y) {
-                        main_pt.y = header_pt.y;
-                        main.setViewPosition(main_pt);
-                    }
+        scrollPane.getRowHeader().addChangeListener(new ChangeListener() {
+            public void stateChanged(ChangeEvent ev) {
+                Point header_pt = ((JViewport) ev.getSource()).getViewPosition();
+                Point main_pt = main.getViewPosition();
+                if (header_pt.y != main_pt.y) {
+                    main_pt.y = header_pt.y;
+                    main.setViewPosition(main_pt);
                 }
+            }
 
-                final JViewport main = scrollPane.getViewport();
-            });
+            final JViewport main = scrollPane.getViewport();
+        });
 
-        }
-        WidthAdjuster wa = new WidthAdjuster(table);
+        WidthAdjuster wa = new WidthAdjuster(table, trh);
         wa.resizeAllColumns();
 
         scrollPane.setWheelScrollingEnabled(true);

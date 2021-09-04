@@ -103,7 +103,8 @@ public class TableRowHeader extends JList {
         }
 
         public Object getElementAt(int index) {
-            return String.valueOf(index);
+            int value = ((KTableModel)table.getModel()).getIndex()[index];
+            return String.valueOf(value);
         }
     }
 
