@@ -1,7 +1,6 @@
 package studio.kdb;
 
 import javax.swing.border.Border;
-import studio.ui.ScaledIcon;
 import studio.ui.Util;
 
 import java.awt.*;
@@ -10,6 +9,11 @@ import javax.swing.*;
 import javax.swing.table.DefaultTableCellRenderer;
 
 public class TableHeaderRenderer extends DefaultTableCellRenderer {
+
+    private static Icon ASC_ICON = Util.ASC_ICON;
+    private static Icon DESC_ICON = Util.DESC_ICON;
+
+
     public TableHeaderRenderer() {
         super();
         setHorizontalAlignment(SwingConstants.LEFT);
@@ -19,7 +23,7 @@ public class TableHeaderRenderer extends DefaultTableCellRenderer {
         if (border == null) {
             border = BorderFactory.createMatteBorder(0, 0, 2, 1, Color.BLACK);
         }
-        setBorder(BorderFactory.createCompoundBorder(border, BorderFactory.createEmptyBorder(0,2,0,0)));
+        setBorder(BorderFactory.createCompoundBorder(border, BorderFactory.createEmptyBorder(5,2,1,0)));
 
         setFont(UIManager.getFont("TableHeader.font"));
         setBackground(UIManager.getColor("TableHeader.background"));
@@ -31,6 +35,9 @@ public class TableHeaderRenderer extends DefaultTableCellRenderer {
         invalidate();
     }
 
+    private boolean asc = false;
+    private boolean desc = false;
+
     public Component getTableCellRendererComponent(JTable table,
                                                    Object value,
                                                    boolean isSelected,
@@ -41,28 +48,16 @@ public class TableHeaderRenderer extends DefaultTableCellRenderer {
 
         if (table.getModel() instanceof KTableModel) {
             column = table.convertColumnIndexToModel(column);
-            Icon icon = null;
-
-            Insets insets = getInsets();
-            int targetHeight = getFontMetrics(getFont()).getHeight() - insets.bottom - insets.top;
             KTableModel ktm = (KTableModel) table.getModel();
-            if (ktm.isSortedDesc()) {
-                if (column == ktm.getSortByColumn())
-                    if (ktm.getColumnClass(column) == K.KSymbolVector.class)
-                        icon = new ScaledIcon(Util.SORT_AZ_ASC_ICON,targetHeight);
-                    else
-                        icon = new ScaledIcon(Util.SORT_DESC_ICON,targetHeight);
-            }
-            else if (ktm.isSortedAsc())
-                if (column == ktm.getSortByColumn())
-                    if (ktm.getColumnClass(column) == K.KSymbolVector.class)
-                        icon = new ScaledIcon(Util.SORT_AZ_DESC_ICON,targetHeight);
-                    else
-                        icon = new ScaledIcon(Util.SORT_ASC_ICON,targetHeight);
-            if (icon != null)
-                setIcon(icon);
-            else {
-                setIcon(null);
+            if (ktm.isSortedAsc() && column == ktm.getSortByColumn()) {
+                asc = true;
+                desc = false;
+            } else if (ktm.isSortedDesc() && column == ktm.getSortByColumn()) {
+                asc = false;
+                desc = true;
+            } else {
+                asc = false;
+                desc = false;
             }
         }
 
@@ -73,5 +68,17 @@ public class TableHeaderRenderer extends DefaultTableCellRenderer {
         setText(text);
 
         return this;
+    }
+
+    @Override
+    public void paint(Graphics g) {
+        if (asc || desc) {
+            Dimension size = getSize();
+            int x = (size.width - ASC_ICON.getIconWidth()) / 2;
+            Icon icon = asc ? ASC_ICON : DESC_ICON;
+            icon.paintIcon(this, g, x, 2);
+        }
+        super.paint(g);
+
     }
 }

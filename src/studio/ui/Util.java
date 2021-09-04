@@ -60,6 +60,9 @@ public class Util {
 
     public final static ImageIcon UPLOAD_ICON = getImage("/upload.png");
 
+    public final static ImageIcon ASC_ICON = getImage("/asc.png");
+    public final static ImageIcon DESC_ICON = getImage("/desc.png");
+
     public static boolean MAC_OS_X = (System.getProperty("os.name").toLowerCase().startsWith("mac os x"));
 
     public static ImageIcon getImage(String strFilename) {
