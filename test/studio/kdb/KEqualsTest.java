@@ -12,6 +12,7 @@ public class KEqualsTest {
 
     private void testEquals(K.KBase k0, K.KBase k1, String message) {
         assertTrue(k0.equals(k1), message);
+        assertEquals(0, k0.compareTo(k1));
         assertEquals(k0.hashCode(), k1.hashCode(), message);
     }
 

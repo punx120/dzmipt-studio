@@ -47,7 +47,7 @@ public class K {
         return formatter.format(x);
     }
 
-    public abstract static class KBase {
+    public abstract static class KBase implements Comparable<KBase> {
         public abstract String getDataType();
 
         private final int type;
@@ -94,6 +94,11 @@ public class K {
         public boolean equals(Object obj) {
             return obj.getClass().equals(this.getClass());
         }
+
+        @Override
+        public int compareTo(KBase o) {
+            return toString(KFormatContext.NO_TYPE).compareTo(o.toString(KFormatContext.NO_TYPE));
+        }
     }
 
     private abstract static class KByteBase extends KBase implements ToDouble {
@@ -123,6 +128,18 @@ public class K {
             return value == ((KByteBase)obj).value;
         }
 
+        @Override
+        public String getDataType() {
+            return null;
+        }
+
+        @Override
+        public int compareTo(KBase o) {
+            if (o instanceof KByteBase)  {
+                return Byte.compare(value, ((KByteBase)o).value);
+            }
+            return super.compareTo(o);
+        }
     }
 
     private abstract static class KIntBase extends KBase implements ToDouble {
@@ -159,6 +176,14 @@ public class K {
             if (!super.equals(obj)) return false;
             return value == ((KIntBase)obj).value;
         }
+
+        @Override
+        public int compareTo(KBase o) {
+            if (o instanceof KIntBase) {
+                return Integer.compare(value, ((KIntBase)o).value);
+            }
+            return super.compareTo(o);
+        }
     }
 
     private abstract static class KLongBase extends KBase implements ToDouble {
@@ -193,6 +218,14 @@ public class K {
             if (! obj.getClass().equals(this.getClass())) return false;
             return value == ((KLongBase)obj).value;
         }
+
+        @Override
+        public int compareTo(KBase o) {
+            if (o instanceof KLongBase) {
+                return Long.compare(value, ((KLongBase)o).value);
+            }
+            return super.compareTo(o);
+        }
     }
 
     private abstract static class KDoubleBase extends KBase implements ToDouble {
@@ -226,6 +259,14 @@ public class K {
         public boolean equals(Object obj) {
             if (!super.equals(obj)) return false;
             return Double.doubleToLongBits(value) == Double.doubleToLongBits(((KDoubleBase)obj).value);
+        }
+
+        @Override
+        public int compareTo(KBase o) {
+            if (o instanceof KDoubleBase) {
+                return Double.compare(value, ((KDoubleBase)o).value);
+            }
+            return super.compareTo(o);
         }
     }
 
@@ -550,6 +591,14 @@ public class K {
             if (! (obj instanceof KBoolean)) return false;
             return b == ((KBoolean)obj).b;
         }
+
+        @Override
+        public int compareTo(KBase o) {
+            if (o instanceof KBoolean) {
+                return Boolean.compare(b, ((KBoolean)o).b);
+            }
+            return super.compareTo(o);
+        }
     }
 
     public static class KByte extends KByteBase{
@@ -616,6 +665,14 @@ public class K {
         public boolean equals(Object obj) {
             if (! (obj instanceof KShort)) return false;
             return s == ((KShort)obj).s;
+        }
+
+        @Override
+        public int compareTo(KBase o) {
+            if (o instanceof KShort) {
+                return Short.compare(s, ((KShort)o).s);
+            }
+            return super.compareTo(o);
         }
     }
 
@@ -788,6 +845,14 @@ public class K {
         public boolean equals(Object obj) {
             if (! (obj instanceof KFloat)) return false;
             return Float.floatToIntBits(f) == Float.floatToIntBits(((KFloat)obj).f);
+        }
+
+        @Override
+        public int compareTo(KBase o) {
+            if (o instanceof KFloat) {
+                return Float.compare(f, ((KFloat)o).f);
+            }
+            return super.compareTo(o);
         }
     }
 
@@ -1251,12 +1316,8 @@ public class K {
             return length;
         }
 
-        public int[] gradeUp() {
-            return Sorter.gradeUp(array, getLength());
-        }
-
-        public int[] gradeDown() {
-            return Sorter.gradeDown(array, getLength());
+        public Object getArray() {
+            return array;
         }
 
         private final static String[] sAttr = new String[]{"", "`s#", "`u#", "`p#", "`g#"};

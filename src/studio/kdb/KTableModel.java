@@ -44,14 +44,14 @@ public abstract class KTableModel extends AbstractTableModel {
 
     public void asc(int col) {
         K.KBaseVector<? extends K.KBase>  v = getColumn(col);
-        index = v.gradeUp();
+        index = Sorter.sort(v, index);
         sorted = 1;
         sortedByColumn = col;
     }
 
     public void desc(int col) {
         K.KBaseVector<? extends K.KBase> v = getColumn(col);
-        index = v.gradeDown();
+        index = Sorter.reverse(v, index);
         sorted = -1;
         sortedByColumn = col;
     }
