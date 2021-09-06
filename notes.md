@@ -1,4 +1,7 @@
-* Output grid: add vertical lines and make header compact
+* Output grid:
+    * add vertical lines and make header compact
+    * trying to keep old order during sorting
+    * sorting row header as well
 * Added shortcut to select next and previous editor tab
 * Reworked charts:
     * added shapes and bars

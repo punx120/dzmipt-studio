@@ -1,7 +1,8 @@
 package studio.kdb;
 
 import javax.swing.border.Border;
-import studio.ui.Util;
+
+import studio.ui.SorterDrawer;
 
 import java.awt.*;
 import javax.swing.*;
@@ -9,10 +10,6 @@ import javax.swing.*;
 import javax.swing.table.DefaultTableCellRenderer;
 
 public class TableHeaderRenderer extends DefaultTableCellRenderer {
-
-    private static Icon ASC_ICON = Util.ASC_ICON;
-    private static Icon DESC_ICON = Util.DESC_ICON;
-
 
     public TableHeaderRenderer() {
         super();
@@ -23,6 +20,7 @@ public class TableHeaderRenderer extends DefaultTableCellRenderer {
         if (border == null) {
             border = BorderFactory.createMatteBorder(0, 0, 2, 1, Color.BLACK);
         }
+        // add gap for sorter icon
         setBorder(BorderFactory.createCompoundBorder(border, BorderFactory.createEmptyBorder(5,2,1,0)));
 
         setFont(UIManager.getFont("TableHeader.font"));
@@ -72,13 +70,7 @@ public class TableHeaderRenderer extends DefaultTableCellRenderer {
 
     @Override
     public void paint(Graphics g) {
-        if (asc || desc) {
-            Dimension size = getSize();
-            int x = (size.width - ASC_ICON.getIconWidth()) / 2;
-            Icon icon = asc ? ASC_ICON : DESC_ICON;
-            icon.paintIcon(this, g, x, 2);
-        }
+        SorterDrawer.paint(asc, desc, this, g);
         super.paint(g);
-
     }
 }

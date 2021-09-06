@@ -83,7 +83,7 @@ public class QGrid extends JPanel {
         table.repaint();
     }
 
-    public QGrid(StudioPanel panel, TableModel model) {
+    public QGrid(StudioPanel panel, KTableModel model) {
         this.panel = panel;
         this.model = model;
         table = new MYJTable(model);
@@ -127,17 +127,18 @@ public class QGrid extends JPanel {
             final JViewport main = scrollPane.getViewport();
         });
 
-        WidthAdjuster wa = new WidthAdjuster(table, trh);
+        WidthAdjuster wa = new WidthAdjuster(table, scrollPane);
         wa.resizeAllColumns();
 
         scrollPane.setWheelScrollingEnabled(true);
         scrollPane.getViewport().setBackground(UIManager.getColor("Table.background"));
-        JLabel rowCountLabel = new JLabel("");
-        rowCountLabel.setHorizontalAlignment(SwingConstants.RIGHT);
-        rowCountLabel.setVerticalAlignment(SwingConstants.CENTER);
-        rowCountLabel.setOpaque(true);
+
+        JLabel rowCountLabel = new IndexHeader(model, scrollPane);
+        rowCountLabel.setHorizontalAlignment(SwingConstants.CENTER);
+        rowCountLabel.setVerticalAlignment(SwingConstants.BOTTOM);
+        rowCountLabel.setOpaque(false);
         rowCountLabel.setBorder(UIManager.getBorder("TableHeader.cellBorder"));
-        rowCountLabel.setFont(UIManager.getFont("Table.font"));
+        rowCountLabel.setFont(UIManager.getFont("TableHeader.font"));
         rowCountLabel.setBackground(UIManager.getColor("TableHeader.background"));
         rowCountLabel.setForeground(UIManager.getColor("TableHeader.foreground"));
         scrollPane.setCorner(JScrollPane.UPPER_LEFT_CORNER, rowCountLabel);

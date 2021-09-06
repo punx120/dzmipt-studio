@@ -9,14 +9,14 @@ import javax.swing.table.*;
 public class WidthAdjuster extends MouseAdapter {
 
     private JTable table;
-    private TableRowHeader tableRowHeader;
+    private JScrollPane scrollPane;
     private int gap;
 
     private static final int EPSILON = 5;   //boundary sensitivity
 
-    public WidthAdjuster(JTable table, TableRowHeader tableRowHeader) {
+    public WidthAdjuster(JTable table, JScrollPane scrollPane) {
         this.table = table;
-        this.tableRowHeader = tableRowHeader;
+        this.scrollPane = scrollPane;
         table.getTableHeader().addMouseListener(this);
         gap = SwingUtilities.computeStringWidth(table.getFontMetrics(UIManager.getFont("Table.font")), "x") / 2;
 
@@ -39,16 +39,9 @@ public class WidthAdjuster extends MouseAdapter {
                 final int column = columnModel.getColumn(viewColumn).getModelIndex();
 
                 KTableModel ktm = (KTableModel) table.getModel();
-                if (ktm.isSortedAsc(column))
-                    ktm.desc(column);
-                else if (ktm.isSortedDesc(column))
-                    ktm.removeSort();
-                else
-                    ktm.asc(column);
+                ktm.sort(column);
 
-                ktm.fireTableDataChanged();
-                h.repaint();
-                tableRowHeader.repaint();
+                scrollPane.repaint();
             }
         }
     }

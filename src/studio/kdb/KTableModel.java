@@ -24,54 +24,55 @@ public abstract class KTableModel extends AbstractTableModel {
     }
 
     protected int[] index;
-    protected int sorted = 0;
-    protected int sortedByColumn = -1;
+    protected boolean ascSorted;
+    protected int sortedByColumn;
 
     protected KTableModel(int rowCount) {
         index = new int[rowCount];
+        ascSorted = true;
         initIndex();
     }
 
     private void initIndex() {
-        for (int i = 0; i< this.index.length; i++) {
-            index[i] = i;
+        int k = ascSorted ? 1 : -1;
+        int b = ascSorted ? 0 : index.length - 1;
+        for (int i = 0; i< index.length; i++) {
+            index[i] = b + k*i;
         }
+        sortedByColumn = -1;
     }
 
     public int[] getIndex() {
         return index;
     }
 
-    public void asc(int col) {
-        K.KBaseVector<? extends K.KBase>  v = getColumn(col);
-        index = Sorter.sort(v, index);
-        sorted = 1;
+    public void sort(int col) {
+        if (sortedByColumn == col) {
+            ascSorted = ! ascSorted;
+        } else {
+            ascSorted = true;
+        }
+        if (col == -1) {
+            initIndex();
+        } else {
+            K.KBaseVector<? extends K.KBase> array = getColumn(col);
+            if (sortedByColumn == col) {
+                index = Sorter.reverse(array, index);
+            } else {
+                index = Sorter.sort(array, index);
+            }
+        }
         sortedByColumn = col;
-    }
 
-    public void desc(int col) {
-        K.KBaseVector<? extends K.KBase> v = getColumn(col);
-        index = Sorter.reverse(v, index);
-        sorted = -1;
-        sortedByColumn = col;
-    }
-
-    public int getSortByColumn() {
-        return sortedByColumn;
+        fireTableDataChanged();
     }
 
     public boolean isSortedAsc(int column) {
-        return sorted == 1 && sortedByColumn == column;
+        return ascSorted && sortedByColumn == column;
     }
 
     public boolean isSortedDesc(int column) {
-        return sorted == -1 && sortedByColumn == column;
-    }
-
-    public void removeSort() {
-        initIndex();
-        sorted = 0;
-        sortedByColumn = -1;
+        return !ascSorted && sortedByColumn == column;
     }
 
     public Class getColumnClass(int col) {
