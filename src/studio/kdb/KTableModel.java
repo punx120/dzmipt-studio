@@ -48,7 +48,12 @@ public abstract class KTableModel extends AbstractTableModel {
 
     public void sort(int col) {
         if (sortedByColumn == col) {
-            ascSorted = ! ascSorted;
+            if (ascSorted) {
+                ascSorted = false;
+            } else {
+                ascSorted = true;
+                col = -1;
+            }
         } else {
             ascSorted = true;
         }
