@@ -1,5 +1,7 @@
 package studio.ui;
 
+import org.apache.logging.log4j.LogManager;
+import org.apache.logging.log4j.Logger;
 import org.netbeans.editor.BaseDocument;
 import org.netbeans.editor.Utilities;
 import studio.kdb.Server;
@@ -25,6 +27,8 @@ public class EditorTab {
 
     private StudioPanel panel;
     private JEditorPane textArea;
+
+    private static final Logger log = LogManager.getLogger();
 
     public EditorTab(StudioPanel panel) {
         this.panel = panel;
@@ -118,7 +122,15 @@ public class EditorTab {
 
     public void setServer(Server server) {
         textArea.getDocument().putProperty(SERVER,server);
-        Utilities.getEditorUI(textArea).getComponent().setBackground(server.getBackgroundColor());
+        org.netbeans.editor.EditorUI editorUI = Utilities.getEditorUI(textArea);
+        if (editorUI == null) {
+            log.info("Ups... That wasn't expected. Please send this to an author");
+            log.info("textArray.class: " + textArea.getClass());
+            log.info("textArray.getUI class: " + textArea.getUI().getClass());
+            log.info("textArray text: " + textArea.getText().substring(0, Math.max(30, textArea.getText().length())));
+            throw new IllegalStateException("Can't set server to editor");
+        }
+        editorUI.getComponent().setBackground(server.getBackgroundColor());
     }
 
     public QueryExecutor getQueryExecutor() {
