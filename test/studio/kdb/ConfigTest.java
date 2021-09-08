@@ -275,14 +275,14 @@ public class ConfigTest {
 
     @Test
     public void testAutoSaveFlags() throws IOException {
-        assertFalse(config.isAutoSave());
-        assertTrue(config.isSaveOnExit());
+        assertFalse(config.getBoolean(Config.AUTO_SAVE));
+        assertTrue(config.getBoolean(Config.SAVE_ON_EXIT));
 
-        config.setAutoSave(true);
-        config.setSaveOnExit(false);
+        config.setBoolean(Config.AUTO_SAVE, true);
+        config.setBoolean(Config.SAVE_ON_EXIT, false);
         Config newConfig = copyConfig(config, p -> {});
-        assertTrue(newConfig.isAutoSave());
-        assertFalse(newConfig.isSaveOnExit());
+        assertTrue(newConfig.getBoolean(Config.AUTO_SAVE));
+        assertFalse(newConfig.getBoolean(Config.SAVE_ON_EXIT));
     }
 
     @Test

@@ -128,9 +128,9 @@ public class SettingsDialog extends EscapeDialog {
         comboBoxExecAll = new JComboBox<>(Config.ExecAllOption.values());
         comboBoxExecAll.setSelectedItem(Config.getInstance().getExecAllOption());
         chBoxAutoSave = new JCheckBox("Auto save files");
-        chBoxAutoSave.setSelected(Config.getInstance().isAutoSave());
+        chBoxAutoSave.setSelected(Config.getInstance().getBoolean(Config.AUTO_SAVE));
         chBoxSaveOnExit = new JCheckBox("Ask save file on exit");
-        chBoxSaveOnExit.setSelected(Config.getInstance().isSaveOnExit());
+        chBoxSaveOnExit.setSelected(Config.getInstance().getBoolean(Config.SAVE_ON_EXIT));
         JLabel lblAuthMechanism = new JLabel("Authentication:");
         JLabel lblUser = new JLabel("  User:");
         JLabel lblPassword = new JLabel("  Password:");

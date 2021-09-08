@@ -967,8 +967,8 @@ public class StudioPanel extends JPanel implements Observer,WindowListener {
         Config.getInstance().setMaxCharsInResult(dialog.getMaxCharsInResult());
         Config.getInstance().setMaxCharsInTableCell(dialog.getMaxCharsInTableCell());
         Config.getInstance().setExecAllOption(dialog.getExecAllOption());
-        Config.getInstance().setSaveOnExit(dialog.isSaveOnExit());
-        Config.getInstance().setAutoSave(dialog.isAutoSave());
+        Config.getInstance().setBoolean(Config.SAVE_ON_EXIT, dialog.isSaveOnExit());
+        Config.getInstance().setBoolean(Config.AUTO_SAVE, dialog.isAutoSave());
 
         String lfClass = dialog.getLookAndFeelClassName();
         if (!lfClass.equals(UIManager.getLookAndFeel().getClass().getName())) {
@@ -994,7 +994,7 @@ public class StudioPanel extends JPanel implements Observer,WindowListener {
     public boolean quit() {
         WorkspaceSaver.setEnabled(false);
         try {
-            if (Config.getInstance().isSaveOnExit()) {
+            if (Config.getInstance().getBoolean(Config.SAVE_ON_EXIT)) {
                 for (StudioPanel panel : allPanels.toArray(new StudioPanel[0])) {
                     panel.getFrame().toFront();
                     JTabbedPane tabbedEditors = panel.tabbedEditors;
@@ -1944,7 +1944,7 @@ public class StudioPanel extends JPanel implements Observer,WindowListener {
                 Server server = editor.getServer();
                 String filename = editor.getFilename();
                 boolean modified = editor.isModified();
-                if (modified && Config.getInstance().isAutoSave()) {
+                if (modified && Config.getInstance().getBoolean(Config.AUTO_SAVE)) {
                     panel.saveFileOnDisk(editor);
                 }
 

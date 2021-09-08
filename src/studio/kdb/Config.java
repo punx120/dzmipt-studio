@@ -23,8 +23,16 @@ import java.util.stream.Collectors;
 import java.util.stream.Stream;
 
 public class Config {
-
     private static final Logger log = LogManager.getLogger();
+
+    private enum ConfigType { STRING, INT, DOUBLE, BOOLEAN, FONT}
+
+    private static final Map<String,? super Object> defaultValues = new HashMap();
+    private static final Map<String, ConfigType> configTypes = new HashMap();
+
+    //@TODO migrate all other keys under such approach
+    public static final String AUTO_SAVE = configDefault("isAutoSave", false);
+    public static final String SAVE_ON_EXIT = configDefault("isSaveOnExit", true);
 
     // The folder is also referenced in lon4j2.xml config
     private static final String PATH = System.getProperties().getProperty("user.home") + "/.studioforkdb";
@@ -55,7 +63,7 @@ public class Config {
 
     private final static Map<String, Config> instances = new ConcurrentHashMap<>();
 
-    public enum ExecAllOption {Execute, Ask, Ignore};
+    public enum ExecAllOption {Execute, Ask, Ignore}
 
     private Config(String env, String filename, Properties properties) {
         this.env = env;
@@ -462,24 +470,6 @@ public class Config {
         save();
     }
 
-    public boolean isAutoSave() {
-        return Boolean.parseBoolean(p.getProperty("isAutoSave","false"));
-    }
-
-    public void setAutoSave(boolean value) {
-        p.setProperty("isAutoSave", "" + value);
-        save();
-    }
-
-    public boolean isSaveOnExit() {
-        return Boolean.parseBoolean(p.getProperty("isSaveOnExit","true"));
-    }
-
-    public void setSaveOnExit(boolean value) {
-        p.setProperty("isSaveOnExit", "" + value);
-        save();
-    }
-
     public boolean isShowServerComboBox() {
         return Boolean.parseBoolean(p.getProperty("showServerComboBox","true"));
     }
@@ -774,6 +764,40 @@ public class Config {
             initServers();
             throw e;
         }
+    }
+
+    private Object checkAndGetDefaultValue(String key, ConfigType passed) {
+        ConfigType type = configTypes.get(key);
+        if (type == null) {
+            throw new IllegalStateException("Ups... Wrong access to config " + key + ". The key wasn't defined");
+        }
+        if (type != passed) {
+            throw new IllegalStateException("Ups... Wrong access to config " + key + ". Expected type: " + type + "; passed: " + passed);
+        }
+        return defaultValues.get(key);
+    }
+
+    private static String configDefault(String key, boolean value) {
+        defaultValues.put(key, value);
+        configTypes.put(key, ConfigType.BOOLEAN);
+        return key;
+    }
+
+    private boolean get(String key, boolean defaultValue) {
+        String value = p.getProperty(key);
+        if (value == null) return defaultValue;
+
+        return Boolean.parseBoolean(value);
+    }
+
+    public boolean getBoolean(String key) {
+        return get(key, (Boolean) checkAndGetDefaultValue(key, ConfigType.BOOLEAN));
+    }
+
+    public void setBoolean(String key, boolean value) {
+        checkAndGetDefaultValue(key, ConfigType.BOOLEAN);
+        p.setProperty(key, "" + value);
+        save();
     }
 
 }
