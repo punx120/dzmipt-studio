@@ -106,6 +106,12 @@ public class Chart {
             if (rangeKClass.contains(clazz)) yIndex.add(index);
         }
 
+        if (xIndex.size() == 0 || yIndex.size() ==0) {
+            log.info("Nothing to chart. Number of columns for x axes is {}. Number of columns for y axes is {}", xIndex.size(), yIndex.size());
+            JOptionPane.showMessageDialog(null, "It turns out that nothing is found to chart.", "Nothing to chart", JOptionPane.WARNING_MESSAGE);
+            return;
+        }
+
         contentPane = new JPanel(new BorderLayout());
         pnlConfig = new ChartConfigPanel(this, names, xIndex, yIndex);
         contentPane.add(pnlConfig, BorderLayout.EAST);
