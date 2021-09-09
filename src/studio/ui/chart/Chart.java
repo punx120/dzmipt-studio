@@ -15,6 +15,7 @@ import org.jfree.chart.renderer.AbstractRenderer;
 import org.jfree.chart.renderer.xy.*;
 import org.jfree.data.time.*;
 import org.jfree.data.xy.*;
+import studio.kdb.Config;
 import studio.kdb.K;
 import studio.kdb.KTableModel;
 import studio.kdb.ToDouble;
@@ -22,14 +23,21 @@ import studio.ui.Util;
 
 import javax.swing.*;
 import java.awt.*;
+import java.awt.event.ComponentEvent;
+import java.awt.event.ComponentListener;
 import java.util.ArrayList;
 import java.util.HashSet;
 import java.util.List;
 
 
-public class Chart {
+public class Chart implements ComponentListener {
 
     private static final Logger log = LogManager.getLogger();
+    private static final Config config = Config.getInstance();
+
+    private static final int CONFIG_UPDATE_DELAY = 1000;
+
+    private Timer configUpdateTimer;
 
     private KTableModel table;
     private ChartPanel chartPanel = null;
@@ -118,15 +126,51 @@ public class Chart {
 
         createPlot();
 
+        configUpdateTimer = new Timer(CONFIG_UPDATE_DELAY, e -> saveFrameBounds());
+
         frame = new JFrame("Studio for kdb+ [chart]");
         frame.setContentPane(contentPane);
         frame.setDefaultCloseOperation(JFrame.DISPOSE_ON_CLOSE);
         frame.setIconImage(Util.CHART_BIG_ICON.getImage());
 
-        frame.pack();
+        frame.setBounds(config.getBounds(Config.CHART_BOUNDS));
+        frame.addComponentListener(this);
         frame.setVisible(true);
         frame.requestFocus();
         frame.toFront();
+    }
+
+    private void saveFrameBounds() {
+        SwingUtilities.invokeLater( () -> {
+            configUpdateTimer.stop();
+            if (frame == null) return;
+
+            config.setBounds(Config.CHART_BOUNDS, frame.getBounds());
+        });
+    }
+
+    private void updateFrameBounds() {
+        configUpdateTimer.restart();
+    }
+
+    @Override
+    public void componentResized(ComponentEvent e) {
+        updateFrameBounds();
+    }
+
+    @Override
+    public void componentMoved(ComponentEvent e) {
+        updateFrameBounds();
+    }
+
+    @Override
+    public void componentShown(ComponentEvent e) {
+        updateFrameBounds();
+    }
+
+    @Override
+    public void componentHidden(ComponentEvent e) {
+        updateFrameBounds();
     }
 
     void createPlot() {
