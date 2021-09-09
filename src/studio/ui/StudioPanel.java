@@ -1313,18 +1313,17 @@ public class StudioPanel extends JPanel implements Observer,WindowListener {
     private void showServerList(boolean selectHistory) {
         if (serverList == null) {
 
-            Point location = frame.getLocation();
-            GraphicsDevice devices[] = GraphicsEnvironment.getLocalGraphicsEnvironment().getScreenDevices();
-            Rectangle screenBounds = Stream.of(devices)
-                    .map(d -> d.getDefaultConfiguration().getBounds())
-                    .filter(b -> b.contains(location))
-                    .findFirst().orElse(null);
-
+            // It could be a situation that monitors are changed, changed resolution, etc.
+            // If the window couldn't fit to current monitors, we will default position
+            boolean fitToScreen = false;
             Rectangle bounds = Config.getInstance().getServerListBounds();
-            bounds.translate(frame.getX(), frame.getY());
+            GraphicsDevice devices[] = GraphicsEnvironment.getLocalGraphicsEnvironment().getScreenDevices();
+            for (GraphicsDevice device: devices) {
+                fitToScreen |= device.getDefaultConfiguration().getBounds().contains(bounds);
+            }
 
             serverList = new ServerList(frame);
-            if (screenBounds != null && screenBounds.contains(bounds)) {
+            if (fitToScreen) {
                 serverList.setBounds(bounds);
             } else {
                 serverList.align();
@@ -1336,7 +1335,6 @@ public class StudioPanel extends JPanel implements Observer,WindowListener {
         serverList.setVisible(true);
 
         Rectangle bounds = serverList.getBounds();
-        bounds.translate( -frame.getX(), -frame.getY());
         Config.getInstance().setServerListBounds(bounds);
 
         Server selectedServer = serverList.getSelectedServer();
