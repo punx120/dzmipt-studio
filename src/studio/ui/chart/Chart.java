@@ -137,7 +137,7 @@ public class Chart {
 
         JFreeChart chart = createChart();
         if (chart != null) {
-            chartPanel = new ChartPanel(createChart());
+            chartPanel = new ChartPanel(chart);
             chartPanel.setPreferredSize(new java.awt.Dimension(500, 270));
             chartPanel.setMouseWheelEnabled(true);
             chartPanel.setMouseZoomable(true, true);
