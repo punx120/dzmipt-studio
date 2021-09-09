@@ -1312,22 +1312,7 @@ public class StudioPanel extends JPanel implements Observer,WindowListener {
 
     private void showServerList(boolean selectHistory) {
         if (serverList == null) {
-
-            // It could be a situation that monitors are changed, changed resolution, etc.
-            // If the window couldn't fit to current monitors, we will default position
-            boolean fitToScreen = false;
-            Rectangle bounds = Config.getInstance().getBounds(Config.SERVER_LIST_BOUNDS);
-            GraphicsDevice devices[] = GraphicsEnvironment.getLocalGraphicsEnvironment().getScreenDevices();
-            for (GraphicsDevice device: devices) {
-                fitToScreen |= device.getDefaultConfiguration().getBounds().contains(bounds);
-            }
-
             serverList = new ServerList(frame);
-            if (fitToScreen) {
-                serverList.setBounds(bounds);
-            } else {
-                serverList.align();
-            }
         }
         serverList.updateServerTree(Config.getInstance().getServerTree(), editor.getServer());
         serverList.updateServerHistory(serverHistory);

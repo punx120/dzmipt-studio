@@ -34,6 +34,7 @@ public class Config {
     public static final String AUTO_SAVE = configDefault("isAutoSave", ConfigType.BOOLEAN, false);
     public static final String SAVE_ON_EXIT = configDefault("isSaveOnExit", ConfigType.BOOLEAN, true);
     public static final String SERVER_LIST_BOUNDS = configDefault("serverList", ConfigType.BOUNDS, new Dimension(ServerList.DEFAULT_WIDTH, ServerList.DEFAULT_HEIGHT));
+    public static final String CHART_BOUNDS = configDefault("chartBounds", ConfigType.BOUNDS, 0.5);
 
     // The folder is also referenced in lon4j2.xml config
     private static final String PATH = System.getProperties().getProperty("user.home") + "/.studioforkdb";
@@ -769,7 +770,7 @@ public class Config {
         save();
     }
 
-    private Rectangle getBounds(String key, Dimension defaultSize) {
+    private Rectangle getBounds(String key, Object defaultBoundOrScale) {
         try {
             String strX = p.getProperty(key + ".x");
             String strY = p.getProperty(key + ".y");
@@ -777,9 +778,18 @@ public class Config {
             String strHeight = p.getProperty(key + ".height");
 
             if (strX != null && strY != null && strWidth != null && strHeight != null) {
-                return new Rectangle(Integer.parseInt(strX), Integer.parseInt(strY),
+                Rectangle bounds = new Rectangle(Integer.parseInt(strX), Integer.parseInt(strY),
                         Integer.parseInt(strWidth), Integer.parseInt(strHeight));
+                boolean fitToScreen = false;
+                GraphicsDevice[] devices = GraphicsEnvironment.getLocalGraphicsEnvironment().getScreenDevices();
+                for (GraphicsDevice device : devices) {
+                    fitToScreen |= device.getDefaultConfiguration().getBounds().contains(bounds);
+                }
+                if (fitToScreen) return bounds;
+
+                log.info("Bounds of {} doesn't fit to any of current monitors - falling back to a default value", key);
             }
+
         } catch (NumberFormatException e) {
             log.error("Failed to parse bounds from config key " + key, e);
         }
@@ -790,8 +800,23 @@ public class Config {
         int width = displayMode.getWidth();
         int height = displayMode.getHeight();
 
-        int w = Math.min(width / 2, defaultSize.width);
-        int h = Math.min(height / 2, defaultSize.height);
+        int w,h;
+
+        if (defaultBoundOrScale instanceof Dimension) {
+            Dimension defaultSize = (Dimension)defaultBoundOrScale;
+            w = Math.min(width / 2, defaultSize.width);
+            h = Math.min(height / 2, defaultSize.height);
+        } else {
+            double scale = 0.5;
+            if (defaultBoundOrScale instanceof Double) {
+                scale = (Double) defaultBoundOrScale;
+            } else {
+                log.error("Internal error. Wrong default value passed to getBounds - key = {}; value = {}", key, defaultBoundOrScale);
+            }
+            w = (int) (width * scale);
+            h = (int) (height * scale);
+        }
+
         int x = (width - w) / 2;
         int y = (height - h) / 2;
         return new Rectangle(x,y,w,h);
@@ -799,7 +824,7 @@ public class Config {
     }
 
     public Rectangle getBounds(String key) {
-        return getBounds(key, (Dimension) checkAndGetDefaultValue(key, ConfigType.BOUNDS));
+        return getBounds(key, checkAndGetDefaultValue(key, ConfigType.BOUNDS));
     }
 
     public void setBounds(String key, Rectangle bound) {
