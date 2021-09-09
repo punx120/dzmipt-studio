@@ -25,14 +25,15 @@ import java.util.stream.Stream;
 public class Config {
     private static final Logger log = LogManager.getLogger();
 
-    private enum ConfigType { STRING, INT, DOUBLE, BOOLEAN, FONT}
+    private enum ConfigType { STRING, INT, DOUBLE, BOOLEAN, FONT, BOUNDS}
 
     private static final Map<String,? super Object> defaultValues = new HashMap();
     private static final Map<String, ConfigType> configTypes = new HashMap();
 
     //@TODO migrate all other keys under such approach
-    public static final String AUTO_SAVE = configDefault("isAutoSave", false);
-    public static final String SAVE_ON_EXIT = configDefault("isSaveOnExit", true);
+    public static final String AUTO_SAVE = configDefault("isAutoSave", ConfigType.BOOLEAN, false);
+    public static final String SAVE_ON_EXIT = configDefault("isSaveOnExit", ConfigType.BOOLEAN, true);
+    public static final String SERVER_LIST_BOUNDS = configDefault("serverList", ConfigType.BOUNDS, new Dimension(ServerList.DEFAULT_WIDTH, ServerList.DEFAULT_HEIGHT));
 
     // The folder is also referenced in lon4j2.xml config
     private static final String PATH = System.getProperties().getProperty("user.home") + "/.studioforkdb";
@@ -506,38 +507,6 @@ public class Config {
         save();
     }
 
-    public void setServerListBounds(Rectangle rectangle) {
-        p.setProperty("serverList.x", "" + (int)rectangle.getX());
-        p.setProperty("serverList.y", "" + (int)rectangle.getY());
-        p.setProperty("serverList.width", "" + (int)rectangle.getWidth());
-        p.setProperty("serverList.height", "" + (int)rectangle.getHeight());
-        save();
-    }
-
-    public Rectangle getServerListBounds() {
-        String strX = p.getProperty("serverList.x");
-        String strY = p.getProperty("serverList.y");
-        String strWidth = p.getProperty("serverList.width");
-        String strHeight = p.getProperty("serverList.height");
-
-        if (strX != null && strY != null && strWidth != null && strHeight != null) {
-            return new Rectangle(Integer.parseInt(strX), Integer.parseInt(strY),
-                                Integer.parseInt(strWidth), Integer.parseInt(strHeight));
-        }
-
-        DisplayMode displayMode = GraphicsEnvironment.getLocalGraphicsEnvironment()
-                                            .getDefaultScreenDevice().getDisplayMode();
-
-        int width = displayMode.getWidth();
-        int height = displayMode.getHeight();
-
-        int w = Math.min(width / 2, ServerList.DEFAULT_WIDTH);
-        int h = Math.min(height / 2, ServerList.DEFAULT_HEIGHT);
-        int x = (width - w) / 2;
-        int y = (height - h) / 2;
-        return new Rectangle(x,y,w,h);
-    }
-
     public Collection<String> getServerNames() {
         return Collections.unmodifiableCollection(serverNames);
     }
@@ -777,9 +746,9 @@ public class Config {
         return defaultValues.get(key);
     }
 
-    private static String configDefault(String key, boolean value) {
+    private static String configDefault(String key, ConfigType type, Object value) {
         defaultValues.put(key, value);
-        configTypes.put(key, ConfigType.BOOLEAN);
+        configTypes.put(key, type);
         return key;
     }
 
@@ -797,6 +766,47 @@ public class Config {
     public void setBoolean(String key, boolean value) {
         checkAndGetDefaultValue(key, ConfigType.BOOLEAN);
         p.setProperty(key, "" + value);
+        save();
+    }
+
+    private Rectangle getBounds(String key, Dimension defaultSize) {
+        try {
+            String strX = p.getProperty(key + ".x");
+            String strY = p.getProperty(key + ".y");
+            String strWidth = p.getProperty(key + ".width");
+            String strHeight = p.getProperty(key + ".height");
+
+            if (strX != null && strY != null && strWidth != null && strHeight != null) {
+                return new Rectangle(Integer.parseInt(strX), Integer.parseInt(strY),
+                        Integer.parseInt(strWidth), Integer.parseInt(strHeight));
+            }
+        } catch (NumberFormatException e) {
+            log.error("Failed to parse bounds from config key " + key, e);
+        }
+
+        DisplayMode displayMode = GraphicsEnvironment.getLocalGraphicsEnvironment()
+                .getDefaultScreenDevice().getDisplayMode();
+
+        int width = displayMode.getWidth();
+        int height = displayMode.getHeight();
+
+        int w = Math.min(width / 2, defaultSize.width);
+        int h = Math.min(height / 2, defaultSize.height);
+        int x = (width - w) / 2;
+        int y = (height - h) / 2;
+        return new Rectangle(x,y,w,h);
+
+    }
+
+    public Rectangle getBounds(String key) {
+        return getBounds(key, (Dimension) checkAndGetDefaultValue(key, ConfigType.BOUNDS));
+    }
+
+    public void setBounds(String key, Rectangle bound) {
+        p.setProperty(key + ".x", "" + bound.x);
+        p.setProperty(key + ".y", "" + bound.y);
+        p.setProperty(key + ".width", "" + bound.width);
+        p.setProperty(key + ".height", "" + bound.height);
         save();
     }
 

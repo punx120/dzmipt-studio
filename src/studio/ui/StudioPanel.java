@@ -1316,7 +1316,7 @@ public class StudioPanel extends JPanel implements Observer,WindowListener {
             // It could be a situation that monitors are changed, changed resolution, etc.
             // If the window couldn't fit to current monitors, we will default position
             boolean fitToScreen = false;
-            Rectangle bounds = Config.getInstance().getServerListBounds();
+            Rectangle bounds = Config.getInstance().getBounds(Config.SERVER_LIST_BOUNDS);
             GraphicsDevice devices[] = GraphicsEnvironment.getLocalGraphicsEnvironment().getScreenDevices();
             for (GraphicsDevice device: devices) {
                 fitToScreen |= device.getDefaultConfiguration().getBounds().contains(bounds);
@@ -1335,7 +1335,7 @@ public class StudioPanel extends JPanel implements Observer,WindowListener {
         serverList.setVisible(true);
 
         Rectangle bounds = serverList.getBounds();
-        Config.getInstance().setServerListBounds(bounds);
+        Config.getInstance().setBounds(Config.SERVER_LIST_BOUNDS, bounds);
 
         Server selectedServer = serverList.getSelectedServer();
         if (selectedServer == null || selectedServer.equals(editor.getServer())) return;
