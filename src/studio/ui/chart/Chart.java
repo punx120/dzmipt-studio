@@ -13,6 +13,7 @@ import org.jfree.chart.plot.DefaultDrawingSupplier;
 import org.jfree.chart.plot.XYPlot;
 import org.jfree.chart.renderer.AbstractRenderer;
 import org.jfree.chart.renderer.xy.*;
+import org.jfree.chart.title.TextTitle;
 import org.jfree.data.time.*;
 import org.jfree.data.xy.*;
 import studio.kdb.Config;
@@ -128,7 +129,8 @@ public class Chart implements ComponentListener {
 
         configUpdateTimer = new Timer(CONFIG_UPDATE_DELAY, e -> saveFrameBounds());
 
-        frame = new JFrame("Studio for kdb+ [chart]");
+        frame = new JFrame();
+        updateTitle(null);
         frame.setContentPane(contentPane);
         frame.setDefaultCloseOperation(JFrame.DISPOSE_ON_CLOSE);
         frame.setIconImage(Util.CHART_BIG_ICON.getImage());
@@ -138,6 +140,23 @@ public class Chart implements ComponentListener {
         frame.setVisible(true);
         frame.requestFocus();
         frame.toFront();
+    }
+
+    private void updateTitle(JFreeChart chart) {
+        String title = "Studio for kdb+ [chart]";
+        if (chart != null) {
+            TextTitle chartTitle = chart.getTitle();
+            if (chartTitle != null && chartTitle.isVisible()) {
+                String text = chartTitle.getText();
+                if (text != null && ! text.trim().equals("")) {
+                    title = text.trim();
+                }
+            }
+        }
+
+        if (! title.equals(frame.getTitle())) {
+            frame.setTitle(title);
+        }
     }
 
     private void saveFrameBounds() {
@@ -181,6 +200,7 @@ public class Chart implements ComponentListener {
 
         JFreeChart chart = createChart();
         if (chart != null) {
+            chart.addChangeListener(e -> updateTitle(chart) );
             chartPanel = new ChartPanel(chart);
             chartPanel.setPreferredSize(new java.awt.Dimension(500, 270));
             chartPanel.setMouseWheelEnabled(true);
