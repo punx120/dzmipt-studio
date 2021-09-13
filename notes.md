@@ -4,9 +4,10 @@
     * sorting row header as well
 * Added shortcut to select next and previous editor tab
 * Reworked charts:
-    * added shapes and bars
+    * added shapes, strokes and bars
     * legends with colors and char types for individual charts
     * zoom with mouse wheel
+    * chart frame title is derived from chart title
 
 `dz1.10` 2021.06.30
 -----

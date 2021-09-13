@@ -69,34 +69,9 @@ public class Chart implements ComponentListener {
         domainKClass.add(K.KTimeVector.class);
     }
 
-    private static Paint[] colors = DefaultDrawingSupplier.DEFAULT_PAINT_SEQUENCE;
-    private static Shape[] shapes = DefaultDrawingSupplier.DEFAULT_SHAPE_SEQUENCE;
-
     private static StandardChartTheme currentTheme = new StandardChartTheme("JFree");
     static {
         currentTheme.setXYBarPainter(new StandardXYBarPainter());
-    }
-
-    public Paint[] getColors(int count) {
-        Paint[] aColors = new Paint[count];
-        for (int i=0,index=0; i<count; i++) {
-            aColors[i] = colors[index++];
-            if (index == colors.length) index = 0;
-        }
-        return aColors;
-    }
-
-    public Shape[] getShapes(int count) {
-        Shape[] aShapes = new Shape[count];
-        for (int i=0,index=0; i<count; i++) {
-            aShapes[i] = shapes[index++];
-            if (index == shapes.length) index = 0;
-        }
-        return aShapes;
-    }
-
-    public Shape[] getAllShapes() {
-        return shapes;
     }
 
     public Chart(KTableModel table) {
@@ -253,8 +228,10 @@ public class Chart implements ComponentListener {
             renderer.setDefaultToolTipGenerator(toolTipGenerator);
             renderer.setSeriesPaint(0, pnlConfig.getColor(index));
             renderer.setSeriesShape(0, pnlConfig.getShape(index));
+            renderer.setSeriesStroke(0, pnlConfig.getStroke(index));
             ((AbstractRenderer)renderer).setAutoPopulateSeriesPaint(false);
             ((AbstractRenderer)renderer).setAutoPopulateSeriesShape(false);
+            ((AbstractRenderer)renderer).setAutoPopulateSeriesStroke(false);
 
             plot.setRenderer(datasetIndex, renderer);
             plot.setDataset(datasetIndex, dataset);

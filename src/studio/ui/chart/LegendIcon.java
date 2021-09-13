@@ -11,7 +11,6 @@ public class LegendIcon implements Icon {
 
     private final static int WIDTH = 30;
     private final static int HEIGHT = 20;
-    private final static Stroke LINE_STROKE = new BasicStroke(1.5f);
     private final static Stroke SHAPE_OUTLINE_STROKE = new BasicStroke(0.3f);
     private final static AffineTransform SHAPE_TRANSFORM;
     private final static Shape LINE;
@@ -40,12 +39,17 @@ public class LegendIcon implements Icon {
 
     private Paint color;
     private Shape shape;
+    private BasicStroke stroke;
     private ChartType chartType;
 
-    public LegendIcon(Paint color, Shape shape) {
+    public LegendIcon(Paint color, Shape shape, BasicStroke stroke) {
         this.color = color;
         this.shape = shape;
-        this.chartType = ChartType.LINE_SHAPE;
+        this.stroke = stroke;
+
+        chartType = shape == null ?
+                        (stroke == null ? ChartType.BAR : ChartType.LINE) :
+                        (stroke == null ? ChartType.SHAPE : ChartType.LINE_SHAPE);
     }
 
     public void setChartType(ChartType chartType) {
@@ -72,9 +76,18 @@ public class LegendIcon implements Icon {
         this.shape = shape;
     }
 
+    public BasicStroke getStroke() {
+        return stroke;
+    }
+
+    public void setStroke(BasicStroke stroke) {
+        this.stroke = stroke;
+    }
+
     @Override
     public void paintIcon(Component c, Graphics g, int x, int y) {
         Graphics2D g2 = (Graphics2D) g;
+        g2.translate(x, y);
         g2.setRenderingHint(RenderingHints.KEY_ANTIALIASING, RenderingHints.VALUE_ANTIALIAS_ON);
         Paint paint = g2.getPaint();
         g2.setPaint(color);
@@ -85,7 +98,7 @@ public class LegendIcon implements Icon {
             }
         } else {
             if (chartType.hasLine()) {
-                g2.setStroke(LINE_STROKE);
+                g2.setStroke(stroke);
                 g2.draw(LINE);
             }
 
@@ -102,6 +115,7 @@ public class LegendIcon implements Icon {
             }
         }
         g2.setPaint(paint);
+        g2.translate(-x, -y);
     }
 
     @Override

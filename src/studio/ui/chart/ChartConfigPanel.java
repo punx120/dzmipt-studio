@@ -1,5 +1,7 @@
 package studio.ui.chart;
 
+import org.jfree.chart.plot.DefaultDrawingSupplier;
+
 import javax.swing.*;
 import javax.swing.border.Border;
 import javax.swing.border.EtchedBorder;
@@ -27,6 +29,53 @@ public class ChartConfigPanel extends Box implements ActionListener {
     private final static Border EMPTY_BORDER = BorderFactory.createEmptyBorder(2,0,2,0);
     private final static Border SELECTED_BORDER = BorderFactory.createEtchedBorder(EtchedBorder.LOWERED);
 
+    private static Paint[] colors = DefaultDrawingSupplier.DEFAULT_PAINT_SEQUENCE;
+    private static Shape[] shapes = DefaultDrawingSupplier.DEFAULT_SHAPE_SEQUENCE;
+    private static BasicStroke[] strokes = new BasicStroke[] {
+            new BasicStroke(1f),
+            new BasicStroke(1f,BasicStroke.CAP_BUTT,
+                    BasicStroke.JOIN_BEVEL,1f,new float[] {10,10},0f
+            ),
+            new BasicStroke(1f,BasicStroke.CAP_BUTT,
+                    BasicStroke.JOIN_BEVEL,1f,new float[] {10,5},0f
+            ),
+            new BasicStroke(1f,BasicStroke.CAP_BUTT,
+                    BasicStroke.JOIN_BEVEL,1f,new float[] {5,5},0f
+            ),
+            new BasicStroke(1f,BasicStroke.CAP_BUTT,
+                    BasicStroke.JOIN_BEVEL,1f,new float[] {1.5f,3},0f
+            ),
+            new BasicStroke(1f,BasicStroke.CAP_BUTT,
+                    BasicStroke.JOIN_BEVEL,1f,new float[] {10,3,3,3},0f
+            ),
+    };
+
+    private static class StrokeWidth {
+        String title;
+        float width;
+        StrokeWidth(String title, float width) {
+            this.title = title;
+            this.width = width;
+        }
+    }
+
+    private static StrokeWidth[] strokeWidths = new StrokeWidth[] {
+            new StrokeWidth("x 1", 1),
+            new StrokeWidth("x 1.5", 1.5f),
+            new StrokeWidth("x 2", 2),
+            new StrokeWidth("x 3", 3),
+    };
+
+
+    //@TODO: May be it is better to have a cache of all possible strokes to avoid unneseccary garbage ?
+    private static BasicStroke strokeWithWidth(BasicStroke stroke, float width) {
+        if (stroke.getLineWidth() == width) return stroke;
+
+        return new BasicStroke(width, stroke.getEndCap(), stroke.getLineJoin(),
+                stroke.getMiterLimit(), stroke.getDashArray(), stroke.getDashPhase());
+    }
+
+    private static BasicStroke defaultStroke = strokeWithWidth(strokes[0], 2f);
 
     public ChartConfigPanel(Chart chart, List<String> names, List<Integer> xIndex, List<Integer> yIndex) {
         super(BoxLayout.Y_AXIS);
@@ -35,8 +84,6 @@ public class ChartConfigPanel extends Box implements ActionListener {
         this.xIndex = xIndex;
         this.yIndex = yIndex;
         int count = yIndex.size();
-        Paint[] colors = chart.getColors(count);
-        Shape[] shapes = chart.getShapes(count);
         setBorder(BorderFactory.createEmptyBorder(5,5,5,5));
 
         Box boxStyle = Box.createHorizontalBox();
@@ -87,7 +134,7 @@ public class ChartConfigPanel extends Box implements ActionListener {
             chkY[i] = new JCheckBox(names.get(yIndex.get(i)), true);
             chkY[i].addActionListener(this);
 
-            icons[i] = new LegendIcon(colors[i], shapes[i]);
+            icons[i] = new LegendIcon(colors[i % colors.length],shapes[i % shapes.length], defaultStroke);
             icons[i].setChartType(chartType);
             iconPanels[i] = new JLabel(icons[i]);
             iconPanels[i].setBorder(EMPTY_BORDER);
@@ -95,7 +142,9 @@ public class ChartConfigPanel extends Box implements ActionListener {
             iconPanels[i].addMouseListener(new MouseAdapter() {
                 @Override
                 public void mousePressed(MouseEvent e) {
-                    legendPressed(theIndex, e);
+                    if (chkY[theIndex].isEnabled()) {
+                        legendPressed(theIndex, e);
+                    }
                 }
 
                 @Override
@@ -136,7 +185,7 @@ public class ChartConfigPanel extends Box implements ActionListener {
 
         colorChooser = new JColorChooser();
 
-        colorChoosePreviewIcon = new LegendIcon(null, null);
+        colorChoosePreviewIcon = new LegendIcon(null, null, null);
         colorChooser.getSelectionModel().addChangeListener(e-> colorChoosePreviewIcon.setColor(colorChooser.getColor()));
 
         colorChooser.setPreviewPanel(new JLabel(colorChoosePreviewIcon, SwingConstants.CENTER));
@@ -156,6 +205,10 @@ public class ChartConfigPanel extends Box implements ActionListener {
 
     public Shape getShape(int index) {
         return icons[index].getShape();
+    }
+
+    public Stroke getStroke(int index) {
+        return icons[index].getStroke();
     }
 
     public ChartType getChartType(int index) {
@@ -189,8 +242,8 @@ public class ChartConfigPanel extends Box implements ActionListener {
 
     private void charTypeSelected(ActionEvent e) {
         ChartType chartType = (ChartType) comboCharType.getSelectedItem();
-        for (int i=0; i<icons.length; i++) {
-            icons[i].setChartType(chartType);
+        for (LegendIcon icon: icons) {
+            icon.setChartType(chartType);
         }
         actionPerformed(e);
     }
@@ -198,6 +251,7 @@ public class ChartConfigPanel extends Box implements ActionListener {
     private void legendPressed(int index, MouseEvent e) {
         Paint theColor = icons[index].getColor();
         Shape theShape = icons[index].getShape();
+        BasicStroke theStroke = icons[index].getStroke();
         ChartType theChartType = icons[index].getChartType();
 
         JPopupMenu popup = new JPopupMenu();
@@ -208,12 +262,10 @@ public class ChartConfigPanel extends Box implements ActionListener {
 
         JMenu subMenu = new JMenu("Change type");
         for (ChartType chartType : ChartType.values()) {
-            if (theChartType == chartType) continue;
-
-            LegendIcon icon = new LegendIcon(theColor, theShape);
+            LegendIcon icon = new LegendIcon(theColor, theShape, theStroke);
             icon.setChartType(chartType);
 
-            JMenuItem item = new JMenuItem(chartType.toString(), icon);
+            JCheckBoxMenuItem item = new JCheckBoxMenuItem(chartType.toString(), icon, theChartType == chartType);
             item.addActionListener(actionEvent -> changeChartType(index, chartType, actionEvent));
             subMenu.add(item);
         }
@@ -221,13 +273,11 @@ public class ChartConfigPanel extends Box implements ActionListener {
 
         if (icons[index].getChartType().hasShape()) {
             subMenu = new JMenu("Change shape");
-            for (Shape shape: chart.getAllShapes()) {
-                if (theShape == shape) continue;
-
-                LegendIcon icon = new LegendIcon(theColor, shape);
+            for (Shape shape: shapes) {
+                LegendIcon icon = new LegendIcon(theColor, shape, theStroke);
                 icon.setChartType(theChartType);
 
-                JMenuItem item = new JMenuItem(icon);
+                JCheckBoxMenuItem item = new JCheckBoxMenuItem("", icon, theShape == shape);
                 item.addActionListener(actionEvent -> changeShape(index, shape, actionEvent));
                 subMenu.add(item);
             }
@@ -235,6 +285,33 @@ public class ChartConfigPanel extends Box implements ActionListener {
 
             menu = new JMenuItem("Set this shape to all");
             menu.addActionListener(actionEvent -> setShapeToAll(index, actionEvent));
+            popup.add(menu);
+        }
+
+        if (icons[index].getChartType().hasLine()) {
+            float theWidth = theStroke.getLineWidth();
+            subMenu = new JMenu("Change stroke");
+            for (BasicStroke stroke: strokes) {
+                BasicStroke aStroke = strokeWithWidth(stroke, theWidth);
+                LegendIcon icon = new LegendIcon(theColor, null, aStroke);
+                JCheckBoxMenuItem item = new JCheckBoxMenuItem("", icon, theStroke.equals(strokeWithWidth(stroke, theWidth)));
+                item.addActionListener(actionEvent -> changeStroke(index, aStroke, actionEvent));
+                subMenu.add(item);
+            }
+            subMenu.addSeparator();
+
+            for (StrokeWidth strokeWidth: strokeWidths) {
+                boolean selected = theWidth == strokeWidth.width;
+                LegendIcon icon = new LegendIcon(theColor, null, strokeWithWidth(theStroke, strokeWidth.width));
+
+                JCheckBoxMenuItem item = new JCheckBoxMenuItem(strokeWidth.title, icon, selected);
+                item.addActionListener(actionEvent -> changeStrokeWidth(index, strokeWidth.width, actionEvent));
+                subMenu.add(item);
+            }
+            popup.add(subMenu);
+
+            menu = new JMenuItem("Set this stroke to all");
+            menu.addActionListener(actionEvent -> setStrokeToAll(index, actionEvent));
             popup.add(menu);
         }
 
@@ -250,6 +327,7 @@ public class ChartConfigPanel extends Box implements ActionListener {
         colorChooser.setColor(color);
         colorChoosePreviewIcon.setColor(color);
         colorChoosePreviewIcon.setShape(icons[index].getShape());
+        colorChoosePreviewIcon.setStroke(icons[index].getStroke());
         colorChoosePreviewIcon.setChartType(icons[index].getChartType());
         JDialog dialog = JColorChooser.createDialog(pnlLagend, "Choose color", true, colorChooser, actionEvent -> changeColor(index, actionEvent), null);
         dialog.setVisible(true);
@@ -274,6 +352,24 @@ public class ChartConfigPanel extends Box implements ActionListener {
         Shape shape = icons[index].getShape();
         for (LegendIcon icon: icons) {
             icon.setShape(shape);
+        }
+        actionPerformed(e);
+    }
+
+    private void changeStroke(int index, BasicStroke stroke, ActionEvent e) {
+        icons[index].setStroke(stroke);
+        actionPerformed(e);
+    }
+
+    private void changeStrokeWidth(int index, float width, ActionEvent e) {
+        icons[index].setStroke(strokeWithWidth(icons[index].getStroke(), width));
+        actionPerformed(e);
+    }
+
+    private void setStrokeToAll(int index, ActionEvent e) {
+        BasicStroke stroke = icons[index].getStroke();
+        for (LegendIcon icon: icons) {
+            icon.setStroke(stroke);
         }
         actionPerformed(e);
     }
