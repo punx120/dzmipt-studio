@@ -3,7 +3,14 @@
 *.iws
 .idea/
 out/
+
 .gradle/
 gradle/
 gradlew*
 build/
+
+/bin
+.vscode
+.classpath
+.project
+.settings
