@@ -5,7 +5,7 @@ apply plugin: 'idea'
 apply plugin: 'java'
 apply plugin: 'application'
 
-apply plugin: 'maven'
+apply plugin: 'maven-publish'
 apply plugin: 'signing'
 
 group = "com.github.dzmipt"
@@ -28,12 +28,12 @@ configurations {
 dependencies {
     txtmark group: 'com.github.rjeschke', name: 'txtmark', version: '0.13'
 
-    compile group: 'org.apache.logging.log4j', name: 'log4j-api', version: '2.14.0'
-    compile group: 'org.apache.logging.log4j', name: 'log4j-core', version: '2.14.0'
-    compile group: 'org.apache.logging.log4j', name: 'log4j-iostreams', version: '2.14.0'
-    compile group: 'org.netbeans.api', name: 'org-openide-awt', version: 'RELEASE113'
-    compile group: 'org.jfree', name: 'jfreechart', version: '1.5.3'
-    runtime files ('lib/images.jar')
+    implementation group: 'org.apache.logging.log4j', name: 'log4j-api', version: '2.14.0'
+    implementation group: 'org.apache.logging.log4j', name: 'log4j-core', version: '2.14.0'
+    implementation group: 'org.apache.logging.log4j', name: 'log4j-iostreams', version: '2.14.0'
+    implementation group: 'org.netbeans.api', name: 'org-openide-awt', version: 'RELEASE113'
+    implementation group: 'org.jfree', name: 'jfreechart', version: '1.5.3'
+    runtimeOnly files ('lib/images.jar')
 
     testImplementation 'org.junit.jupiter:junit-jupiter-api:5.3.1'
     testImplementation 'org.junit.jupiter:junit-jupiter-params:5.3.1'
@@ -71,7 +71,7 @@ test {
 }
 
 application {
-    mainClassName = 'studio.core.Studio'
+    mainClass = 'studio.core.Studio'
 }
 
 def buildTime() {
@@ -86,7 +86,7 @@ task getBuildHash {
 }
 
 task convertNotes (type: JavaExec) {
-    main = 'com.github.rjeschke.txtmark.Run'
+    mainClass = 'com.github.rjeschke.txtmark.Run'
     classpath = configurations.txtmark
     args 'notes.md'
     standardOutput new FileOutputStream(new File(projectDir,"src/notes.html"))
@@ -96,6 +96,7 @@ processResources.dependsOn('getBuildHash', 'convertNotes')
 
 task sourcesJar(type: Jar) {
     classifier = 'sources'
+    duplicatesStrategy = 'warn'
     from sourceSets.main.allSource
 }
 
@@ -114,51 +115,73 @@ artifacts {
     archives javadocJar, sourcesJar
 }
 
-signing {
-    sign configurations.archives
-}
+def pubUsername = project.findProperty("ossrhUsername") ?: ""
+def pubPassword = project.findProperty("ossrhPassword") ?: ""
 
-uploadArchives {
-    repositories {
-        mavenDeployer {
-            beforeDeployment { MavenDeployment deployment -> signing.signPom(deployment) }
-
-            repository(url: "https://oss.sonatype.org/service/local/staging/deploy/maven2/") {
-                authentication(userName: ossrhUsername, password: ossrhPassword)
-            }
-
-            snapshotRepository(url: "https://oss.sonatype.org/content/repositories/snapshots/") {
-                authentication(userName: ossrhUsername, password: ossrhPassword)
-            }
-
-            pom.project {
-                name 'Studio for kdb+'
-                packaging 'jar'
+publishing {
+    publications {
+        mavenJava(MavenPublication) {
+            from components.java
+            pom {
+                name = 'Studio for kdb+'
+                packaging = 'jar'
                 // optionally artifactId can be defined here
-                description 'Studio for kdb+ is a rapid development environment for the ultra-fast database kdb+ from Kx Systems: http://www.kx.com.'
-                url 'https://github.com/dzmipt/kdbStudio'
+                description = 'Studio for kdb+ is a rapid development environment for the ultra-fast database kdb+ from Kx Systems: http://www.kx.com.'
+                url = 'https://github.com/dzmipt/kdbStudio'
 
                 scm {
-                    connection 'git@github.com:dzmipt/kdbStudio.git'
-                    developerConnection 'git@github.com:dzmipt/kdbStudio.git'
-                    url 'https://github.com/dzmipt/kdbStudio'
+                    connection = 'git@github.com:dzmipt/kdbStudio.git'
+                    developerConnection = 'git@github.com:dzmipt/kdbStudio.git'
+                    url = 'https://github.com/dzmipt/kdbStudio'
                 }
 
                 licenses {
                     license {
-                        name 'The Apache License, Version 2.0'
-                        url 'http://www.apache.org/licenses/LICENSE-2.0.txt'
+                        name = 'The Apache License, Version 2.0'
+                        url = 'http://www.apache.org/licenses/LICENSE-2.0.txt'
                     }
                 }
 
                 developers {
                     developer {
-                        id 'dzmipt'
-                        name 'Dmitry Zakharov'
-                        email 'dz.mipt@gmail.com'
+                        id = 'dzmipt'
+                        name = 'Dmitry Zakharov'
+                        email = 'dz.mipt@gmail.com'
                     }
                 }
             }
         }
     }
+    repositories {
+        maven {
+            url "https://oss.sonatype.org/service/local/staging/deploy/maven2/"
+            mavenContent {
+                releasesOnly()
+            }
+            credentials {
+                username pubUsername
+                password pubPassword
+            }
+            authentication {
+                basic(BasicAuthentication)
+            }
+        }
+        maven {
+            url "https://oss.sonatype.org/content/repositories/snapshots/"
+            mavenContent {
+                snapshotsOnly()
+            }
+            credentials {
+                username pubUsername
+                password pubPassword
+            }
+            authentication {
+                basic(BasicAuthentication)
+            }
+        }
+    }
+}
+
+signing {
+    sign publishing.publications.mavenJava
 }
