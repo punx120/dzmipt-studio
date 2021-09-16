@@ -71,7 +71,7 @@ test {
 }
 
 application {
-    mainClassName = 'studio.core.Studio'
+    mainClass = 'studio.core.Studio'
 }
 
 def buildTime() {
@@ -86,7 +86,7 @@ task getBuildHash {
 }
 
 task convertNotes (type: JavaExec) {
-    main = 'com.github.rjeschke.txtmark.Run'
+    mainClass = 'com.github.rjeschke.txtmark.Run'
     classpath = configurations.txtmark
     args 'notes.md'
     standardOutput new FileOutputStream(new File(projectDir,"src/notes.html"))
@@ -96,6 +96,7 @@ processResources.dependsOn('getBuildHash', 'convertNotes')
 
 task sourcesJar(type: Jar) {
     classifier = 'sources'
+    duplicatesStrategy = 'warn'
     from sourceSets.main.allSource
 }
 
@@ -113,6 +114,9 @@ task javadocJar(type: Jar) {
 artifacts {
     archives javadocJar, sourcesJar
 }
+
+def pubUsername = project.findProperty("ossrhUsername") ?: ""
+def pubPassword = project.findProperty("ossrhPassword") ?: ""
 
 publishing {
     publications {
@@ -154,11 +158,25 @@ publishing {
             mavenContent {
                 releasesOnly()
             }
+            credentials {
+                username pubUsername
+                password pubPassword
+            }
+            authentication {
+                basic(BasicAuthentication)
+            }
         }
         maven {
             url "https://oss.sonatype.org/content/repositories/snapshots/"
             mavenContent {
                 snapshotsOnly()
+            }
+            credentials {
+                username pubUsername
+                password pubPassword
+            }
+            authentication {
+                basic(BasicAuthentication)
             }
         }
     }
