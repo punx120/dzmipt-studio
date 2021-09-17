@@ -27,6 +27,6 @@ public class IndexHeader extends JLabel {
     @Override
     public void paint(Graphics g) {
         super.paint(g);
-        SorterDrawer.paint(tableModel.isSortedAsc(-1), tableModel.isSortedDesc(-1), this, g);
+        SorterDrawer.paint(tableModel.isSortedAsc(-1), tableModel.isSortedDesc(-1), this, 0, g);
     }
 }

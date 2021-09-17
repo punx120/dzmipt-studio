@@ -59,18 +59,16 @@ public class TableHeaderRenderer extends DefaultTableCellRenderer {
             }
         }
 
-        String text = " ";
-        if (value != null)
-            text = value.toString() + " ";
-
-        setText(text);
+        setText(value == null ? " " : value.toString());
 
         return this;
     }
 
     @Override
     public void paint(Graphics g) {
-        SorterDrawer.paint(asc, desc, this, g);
+        int width = SwingUtilities.computeStringWidth(getFontMetrics(getFont()), getText());
+        int availableWidth = Math.min(getInsets().left + width, getSize().width);
+        SorterDrawer.paint(asc, desc, this, availableWidth, g);
         super.paint(g);
     }
 }
