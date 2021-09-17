@@ -3,6 +3,7 @@ package studio.ui;
 import studio.kdb.*;
 import java.awt.*;
 import java.awt.event.*;
+import java.util.Arrays;
 import javax.swing.*;
 import javax.swing.table.*;
 
@@ -14,11 +15,15 @@ public class WidthAdjuster extends MouseAdapter {
     private int cellMaxWidth;
 
     private static final int EPSILON = 5;   //boundary sensitivity
+    private boolean[] limitWidthState;
 
     public WidthAdjuster(JTable table, JScrollPane scrollPane) {
         this.table = table;
         this.scrollPane = scrollPane;
         table.getTableHeader().addMouseListener(this);
+        int colCount = table.getColumnCount();
+        limitWidthState = new boolean[colCount];
+        Arrays.fill(limitWidthState, true);
         int charWidth = SwingUtilities.computeStringWidth(table.getFontMetrics(UIManager.getFont("Table.font")), "x");
         gap =  (int) Math.round(charWidth * Config.getInstance().getDouble(Config.CELL_RIGHT_PADDING));
         cellMaxWidth = charWidth * Config.getInstance().getInt(Config.CELL_MAX_WIDTH);
@@ -28,8 +33,12 @@ public class WidthAdjuster extends MouseAdapter {
         if (evt.getClickCount() > 1 && usingResizeCursor())
             if ((table.getSelectedRowCount() == table.getRowCount()) && (table.getSelectedColumnCount() == table.getColumnCount()))
                 resizeAllColumns(false);
-            else
-                resize(getLeftColumn(evt.getPoint()), false);
+            else {
+                int col = getLeftColumn(evt.getPoint());
+                if (col == -1) return;
+                limitWidthState[col] = ! limitWidthState[col];
+                resize(getLeftColumn(evt.getPoint()), limitWidthState[col]);
+            }
     }
 
     public void mouseClicked(final MouseEvent e) {
