@@ -7,6 +7,9 @@ import studio.kdb.Config;
 import javax.swing.*;
 import javax.swing.text.NumberFormatter;
 import java.awt.*;
+import java.math.RoundingMode;
+import java.text.DecimalFormat;
+import java.text.NumberFormat;
 import java.util.HashMap;
 import java.util.Map;
 
@@ -23,6 +26,8 @@ public class SettingsDialog extends EscapeDialog {
     private JFormattedTextField txtTabsCount;
     private JFormattedTextField txtMaxCharsInResult;
     private JFormattedTextField txtMaxCharsInTableCell;
+    private JFormattedTextField txtCellRightPadding;
+    private JFormattedTextField txtCellMaxWidth;
     private JComboBox<Config.ExecAllOption> comboBoxExecAll;
     private JButton btnOk;
     private JButton btnCancel;
@@ -64,6 +69,14 @@ public class SettingsDialog extends EscapeDialog {
 
     public int getMaxCharsInTableCell() {
         return (Integer) txtMaxCharsInTableCell.getValue();
+    }
+
+    public double getCellRightPadding() {
+        return (Double) txtCellRightPadding.getValue();
+    }
+
+    public int getCellMaxWidth() {
+        return (Integer) txtCellMaxWidth.getValue();
     }
 
     public Config.ExecAllOption getExecAllOption() {
@@ -112,7 +125,7 @@ public class SettingsDialog extends EscapeDialog {
         comboBoxLookAndFeel.setSelectedItem(lf);
         JLabel lblResultTabsCount = new JLabel("Result tabs count");
         NumberFormatter formatter = new NumberFormatter();
-        formatter.setMinimum(new Integer(1));
+        formatter.setMinimum(1);
         formatter.setAllowsInvalid(false);
         txtTabsCount = new JFormattedTextField(formatter);
         txtTabsCount.setValue(Config.getInstance().getResultTabsCount());
@@ -124,6 +137,25 @@ public class SettingsDialog extends EscapeDialog {
         JLabel lblMaxCharsInTableCell = new JLabel("Max chars in table cell");
         txtMaxCharsInTableCell = new JFormattedTextField(formatter);
         txtMaxCharsInTableCell.setValue(Config.getInstance().getMaxCharsInTableCell());
+
+        JLabel lblCellRightPadding = new JLabel("Right padding in table cell");
+
+        NumberFormat doubleFormat = DecimalFormat.getInstance();
+        doubleFormat.setMaximumFractionDigits(1);
+        doubleFormat.setRoundingMode(RoundingMode.HALF_UP);
+        NumberFormatter doubleFormatter = new NumberFormatter(doubleFormat);
+        doubleFormatter.setMinimum(0.0);
+        txtCellRightPadding = new JFormattedTextField(doubleFormatter);
+        txtCellRightPadding.setValue(Config.getInstance().getDouble(Config.CELL_RIGHT_PADDING));
+
+        JLabel lblCellMaxWidth = new JLabel("Max width of table columns");
+        NumberFormatter maxWidthFormatter = new NumberFormatter();
+        maxWidthFormatter.setMinimum(10);
+        maxWidthFormatter.setAllowsInvalid(false);
+        txtCellMaxWidth = new JFormattedTextField(maxWidthFormatter);
+        txtCellMaxWidth.setValue(Config.getInstance().getInt(Config.CELL_MAX_WIDTH));
+
+
         JLabel lblExecAll = new JLabel ("Execute the script when nothing is selected");
         comboBoxExecAll = new JComboBox<>(Config.ExecAllOption.values());
         comboBoxExecAll.setSelectedItem(Config.getInstance().getExecAllOption());
@@ -173,6 +205,12 @@ public class SettingsDialog extends EscapeDialog {
                                         .addComponent(txtMaxCharsInTableCell)
                         ).addGroup(
                             layout.createSequentialGroup()
+                                        .addComponent(lblCellRightPadding)
+                                        .addComponent(txtCellRightPadding)
+                                        .addComponent(lblCellMaxWidth)
+                                        .addComponent(txtCellMaxWidth)
+                        ).addGroup(
+                            layout.createSequentialGroup()
                                         .addComponent(lblExecAll)
                                         .addComponent(comboBoxExecAll)
                                         .addComponent(glue3)
@@ -217,6 +255,12 @@ public class SettingsDialog extends EscapeDialog {
                                 .addComponent(txtMaxCharsInResult)
                                 .addComponent(lblMaxCharsInTableCell)
                                 .addComponent(txtMaxCharsInTableCell)
+                    ).addGroup(
+                        layout.createParallelGroup(GroupLayout.Alignment.BASELINE)
+                                .addComponent(lblCellRightPadding)
+                                .addComponent(txtCellRightPadding)
+                                .addComponent(lblCellMaxWidth)
+                                .addComponent(txtCellMaxWidth)
                     ).addGroup(
                         layout.createParallelGroup(GroupLayout.Alignment.BASELINE)
                                 .addComponent(lblExecAll)

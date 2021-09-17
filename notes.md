@@ -1,5 +1,6 @@
 * Output grid:
     * add vertical lines and make header compact
+    * Settings: adding right padding and max width for columns
     * trying to keep old order during sorting
     * sorting row header as well
 * Added shortcut to select next and previous editor tab

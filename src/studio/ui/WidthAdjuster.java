@@ -11,6 +11,7 @@ public class WidthAdjuster extends MouseAdapter {
     private JTable table;
     private JScrollPane scrollPane;
     private int gap;
+    private int cellMaxWidth;
 
     private static final int EPSILON = 5;   //boundary sensitivity
 
@@ -18,16 +19,17 @@ public class WidthAdjuster extends MouseAdapter {
         this.table = table;
         this.scrollPane = scrollPane;
         table.getTableHeader().addMouseListener(this);
-        gap = SwingUtilities.computeStringWidth(table.getFontMetrics(UIManager.getFont("Table.font")), "x") / 2;
-
+        int charWidth = SwingUtilities.computeStringWidth(table.getFontMetrics(UIManager.getFont("Table.font")), "x");
+        gap =  (int) Math.round(charWidth * Config.getInstance().getDouble(Config.CELL_RIGHT_PADDING));
+        cellMaxWidth = charWidth * Config.getInstance().getInt(Config.CELL_MAX_WIDTH);
     }
 
     public void mousePressed(MouseEvent evt) {
         if (evt.getClickCount() > 1 && usingResizeCursor())
             if ((table.getSelectedRowCount() == table.getRowCount()) && (table.getSelectedColumnCount() == table.getColumnCount()))
-                resizeAllColumns();
+                resizeAllColumns(false);
             else
-                resize(getLeftColumn(evt.getPoint()));
+                resize(getLeftColumn(evt.getPoint()), false);
     }
 
     public void mouseClicked(final MouseEvent e) {
@@ -62,12 +64,12 @@ public class WidthAdjuster extends MouseAdapter {
         return getTableHeader().columnAtPoint(pt);
     }
 
-    public void resizeAllColumns() {
+    public void resizeAllColumns(boolean limitWidth) {
         for (int i = 0;i < table.getColumnCount();i++)
-            resize(i);
+            resize(i, limitWidth);
     }
 
-    private void resize(int col) {
+    private void resize(int col, boolean limitWidth) {
         TableColumnModel tcm = table.getColumnModel();
         TableColumn tc = tcm.getColumn(col);
         TableCellRenderer tcr = tc.getHeaderRenderer();
@@ -89,6 +91,9 @@ public class WidthAdjuster extends MouseAdapter {
             Object obj = table.getValueAt(i,col);
             comp = tcr.getTableCellRendererComponent(table,obj,false,false,i,col);
             maxWidth = Math.max(maxWidth, 2 + gap + comp.getPreferredSize().width); // we need to add a gap for lines between cells
+        }
+        if (limitWidth) {
+            maxWidth = Math.min(maxWidth, cellMaxWidth);
         }
 
         tc.setPreferredWidth(maxWidth); //remembers the value

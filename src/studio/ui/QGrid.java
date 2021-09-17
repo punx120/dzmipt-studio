@@ -128,7 +128,7 @@ public class QGrid extends JPanel {
         });
 
         WidthAdjuster wa = new WidthAdjuster(table, scrollPane);
-        wa.resizeAllColumns();
+        wa.resizeAllColumns(true);
 
         scrollPane.setWheelScrollingEnabled(true);
         scrollPane.getViewport().setBackground(UIManager.getColor("Table.background"));

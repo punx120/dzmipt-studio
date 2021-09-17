@@ -958,7 +958,7 @@ public class StudioPanel extends JPanel implements Observer,WindowListener {
         SettingsDialog dialog = new SettingsDialog(frame);
         dialog.alignAndShow();
         if (dialog.getResult() == CANCELLED) return;
-
+        //@TODO Need rework - we are reading from Config inside SettingDialog; while saving happens outside
         String auth = dialog.getDefaultAuthenticationMechanism();
         Config.getInstance().setDefaultAuthMechanism(auth);
         Config.getInstance().setDefaultCredentials(auth, new Credentials(dialog.getUser(), dialog.getPassword()));
@@ -966,6 +966,8 @@ public class StudioPanel extends JPanel implements Observer,WindowListener {
         Config.getInstance().setResultTabsCount(dialog.getResultTabsCount());
         Config.getInstance().setMaxCharsInResult(dialog.getMaxCharsInResult());
         Config.getInstance().setMaxCharsInTableCell(dialog.getMaxCharsInTableCell());
+        Config.getInstance().setDouble(Config.CELL_RIGHT_PADDING, dialog.getCellRightPadding());
+        Config.getInstance().setInt(Config.CELL_MAX_WIDTH, dialog.getCellMaxWidth());
         Config.getInstance().setExecAllOption(dialog.getExecAllOption());
         Config.getInstance().setBoolean(Config.SAVE_ON_EXIT, dialog.isSaveOnExit());
         Config.getInstance().setBoolean(Config.AUTO_SAVE, dialog.isAutoSave());

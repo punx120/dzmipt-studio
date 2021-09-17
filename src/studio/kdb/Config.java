@@ -35,6 +35,8 @@ public class Config {
     public static final String SAVE_ON_EXIT = configDefault("isSaveOnExit", ConfigType.BOOLEAN, true);
     public static final String SERVER_LIST_BOUNDS = configDefault("serverList", ConfigType.BOUNDS, new Dimension(ServerList.DEFAULT_WIDTH, ServerList.DEFAULT_HEIGHT));
     public static final String CHART_BOUNDS = configDefault("chartBounds", ConfigType.BOUNDS, 0.5);
+    public static final String CELL_RIGHT_PADDING = configDefault("cellRightPadding", ConfigType.DOUBLE, 0.5);
+    public static final String CELL_MAX_WIDTH = configDefault("cellMaxWidth", ConfigType.INT, 200);
 
     // The folder is also referenced in lon4j2.xml config
     private static final String PATH = System.getProperties().getProperty("user.home") + "/.studioforkdb";
@@ -766,6 +768,50 @@ public class Config {
 
     public void setBoolean(String key, boolean value) {
         checkAndGetDefaultValue(key, ConfigType.BOOLEAN);
+        p.setProperty(key, "" + value);
+        save();
+    }
+
+    private double get(String key, double defaultValue) {
+        String value = p.getProperty(key);
+        if (value == null) return defaultValue;
+
+        try {
+            return Double.parseDouble(value);
+        } catch (NumberFormatException e) {
+            log.error("Failed to parse config key " + key + " from config", e);
+        }
+        return defaultValue;
+    }
+
+    public double getDouble(String key) {
+        return get(key, (Double) checkAndGetDefaultValue(key, ConfigType.DOUBLE));
+    }
+
+    public void setDouble(String key, double value) {
+        checkAndGetDefaultValue(key, ConfigType.DOUBLE);
+        p.setProperty(key, "" + value);
+        save();
+    }
+
+    private int get(String key, int defaultValue) {
+        String value = p.getProperty(key);
+        if (value == null) return defaultValue;
+
+        try {
+            return Integer.parseInt(value);
+        } catch (NumberFormatException e) {
+            log.error("Failed to parse config key " + key + " from config", e);
+        }
+        return defaultValue;
+    }
+
+    public int getInt(String key) {
+        return get(key, (Integer) checkAndGetDefaultValue(key, ConfigType.INT));
+    }
+
+    public void setInt(String key, int value) {
+        checkAndGetDefaultValue(key, ConfigType.INT);
         p.setProperty(key, "" + value);
         save();
     }
