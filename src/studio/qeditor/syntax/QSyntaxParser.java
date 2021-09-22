@@ -30,6 +30,11 @@ public class QSyntaxParser  {
         CommentMLFirstLine, CommentMLInit, CommentML, CommentMLLastLine,
         InitBaskSlash, QCommandStart, QCommand, OSCommand
     }
+
+    public static final int InitState = State.Init.ordinal();
+
+    public static final int MLCommentInitState = State.CommentMLInit.ordinal();
+
     private static final State firstAtomState = State.Long;
     private static final State lastAtomState = State.MinusZero;
 
@@ -260,7 +265,7 @@ public class QSyntaxParser  {
         add(s(State.Init, State.AfterOperator, State.AfterWhitespace), "-", State.MinusForAtom, OPERATOR, LooksLike);
         add(State.AfterAtom, "-", State.AfterOperator, OPERATOR, Match);
 
-        add(State.Init, "/", State.CommentMLFirstLine, EOL_COMMENT, LooksLike);
+        add(State.Init, "/", State.CommentMLFirstLine, ML_COMMENT, LooksLike);
         add(State.AfterWhitespace, "/", State.CommentEOL, EOL_COMMENT, LooksLike);
         add(State.Init, "\\", State.InitBaskSlash, OPERATOR, LooksLike);
         add(State.AfterWhitespace, "\\", State.AfterOperator, OPERATOR, Match);
@@ -269,21 +274,21 @@ public class QSyntaxParser  {
         add(State.CommentEOL, "\n", State.Init, EOL_COMMENT, Match);
         add(State.CommentEOL, "", State.CommentEOL, EOL_COMMENT, LooksLike);
 
-        add(State.CommentMLFirstLine, whitespace, State.CommentMLFirstLine, EOL_COMMENT, LooksLike);
-        add(State.CommentMLFirstLine, "\n", State.CommentMLInit, EOL_COMMENT, Match);
+        add(State.CommentMLFirstLine, whitespace, State.CommentMLFirstLine, ML_COMMENT, LooksLike);
+        add(State.CommentMLFirstLine, "\n", State.CommentMLInit, ML_COMMENT, Match);
         add(State.CommentMLFirstLine, "", State.CommentEOL, EOL_COMMENT, LooksLike);
 
-        add(State.CommentMLInit, whitespace, State.CommentMLInit, EOL_COMMENT, LooksLike);
-        add(State.CommentMLInit, "\\", State.CommentMLLastLine, EOL_COMMENT, LooksLike);
-        add(State.CommentMLInit, "\n", State.CommentMLInit, EOL_COMMENT, Match);
-        add(State.CommentMLInit, "", State.CommentML, EOL_COMMENT, LooksLike);
+        add(State.CommentMLInit, whitespace, State.CommentMLInit, ML_COMMENT, LooksLike);
+        add(State.CommentMLInit, "\\", State.CommentMLLastLine, EOL_COMMENT, LooksLike); // should start with non comment in the next line. That's needed for RSyntaxTextArea
+        add(State.CommentMLInit, "\n", State.CommentMLInit, ML_COMMENT, Match);
+        add(State.CommentMLInit, "", State.CommentML, ML_COMMENT, LooksLike);
 
-        add(State.CommentML, "\n", State.CommentMLInit, EOL_COMMENT, Match);
-        add(State.CommentML, "", State.CommentML, EOL_COMMENT, LooksLike);
+        add(State.CommentML, "\n", State.CommentMLInit, ML_COMMENT, Match);
+        add(State.CommentML, "", State.CommentML, ML_COMMENT, LooksLike);
 
-        add(State.CommentMLLastLine, whitespace, State.CommentMLLastLine, EOL_COMMENT, LooksLike);
-        add(State.CommentMLLastLine, "\n", State.Init, EOL_COMMENT, Match);
-        add(State.CommentMLLastLine, "", State.CommentML, EOL_COMMENT, LooksLike);
+        add(State.CommentMLLastLine, whitespace, State.CommentMLLastLine, EOL_COMMENT, LooksLike); // should start with non comment in the next line. That's needed for RSyntaxTextArea
+        add(State.CommentMLLastLine, "\n", State.Init, EOL_COMMENT, Match); // should start with non comment in the next line. That's needed for RSyntaxTextArea
+        add(State.CommentMLLastLine, "", State.CommentML, ML_COMMENT, LooksLike);
 
         add(State.InitBaskSlash, alpha, State.QCommandStart, COMMAND, LooksLike);
         add(State.InitBaskSlash, "", State.AfterOperator, OPERATOR, MatchPrev);
@@ -307,7 +312,7 @@ public class QSyntaxParser  {
         add(s(State.Zero, State.One), except(digits,"01"), State.Digits, LONG, LooksLike);
         add(s(State.Zero, State.One, State.Two, State.MinusZero, State.ZeroOnes, State.Digits), ".", State.DigitsDot, FLOAT, LooksLike);
         add(s(State.Zero, State.One, State.Two, State.MinusZero,
-                State.ZeroOnes, State.Digits, State.DigitsDot, State.DigitsDotDigits),
+                        State.ZeroOnes, State.Digits, State.DigitsDot, State.DigitsDotDigits),
                 "e", State.FractionE, REAL, LooksLike);
         add(State.Zero, "x", State.Byte, BYTE, LooksLike);
         add(State.Zero, "n", State.NullFloat, FLOAT, LooksLike);

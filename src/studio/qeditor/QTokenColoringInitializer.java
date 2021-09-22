@@ -94,6 +94,7 @@ class QTokenColoringInitializer extends SettingsUtil.TokenColoringInitializer
                 case QTokenContext.CHARVECTOR_ID:
                     return CHARVECTOR_Coloring;
                 case QTokenContext.EOL_COMMENT_ID:
+                case QTokenContext.ML_COMMENT_ID:
                     return EOL_COMMENT_Coloring;
                 case QTokenContext.IDENTIFIER_ID:
                     return IDENTIFIER_Coloring;

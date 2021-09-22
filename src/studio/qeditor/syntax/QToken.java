@@ -7,6 +7,7 @@ public enum QToken {
     OPERATOR,
     BRACKET ,
     EOL_COMMENT,
+    ML_COMMENT,
     KEYWORD,
     WHITESPACE,
     UNKNOWN,

@@ -13,7 +13,7 @@ public class QSyntax extends Syntax {
 
     // Order should match QToken enum
     private final static TokenID[] nbTokens = new TokenID[] {
-                SYMBOL, CHAR_VECTOR, IDENTIFIER, OPERATOR, BRACKET, EOL_COMMENT, KEYWORD, WHITESPACE,
+                SYMBOL, CHAR_VECTOR, IDENTIFIER, OPERATOR, BRACKET, EOL_COMMENT, ML_COMMENT, KEYWORD, WHITESPACE,
                 UNKNOWN, INTEGER, MINUTE, SECOND, TIME, DATE, MONTH, FLOAT, LONG, SHORT, REAL, BYTE,
                 BOOLEAN, DATETIME, TIMESTAMP, TIMESPAN, SYSTEM, COMMAND};
 
