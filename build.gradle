@@ -111,8 +111,9 @@ task javadocJar(type: Jar) {
     from javadoc
 }
 
-artifacts {
-    archives javadocJar, sourcesJar
+java {
+    withJavadocJar()
+    withSourcesJar()
 }
 
 def pubUsername = project.findProperty("ossrhUsername") ?: ""
@@ -153,30 +154,33 @@ publishing {
         }
     }
     repositories {
-        maven {
-            url "https://oss.sonatype.org/service/local/staging/deploy/maven2/"
-            mavenContent {
-                releasesOnly()
+        if(project.version.endsWith('-SNAPSHOT')) {
+            maven {
+                url "https://oss.sonatype.org/content/repositories/snapshots/"
+                mavenContent {
+                    snapshotsOnly()
+                }
+                credentials {
+                    username pubUsername
+                    password pubPassword
+                }
+                authentication {
+                    basic(BasicAuthentication)
+                }
             }
-            credentials {
-                username pubUsername
-                password pubPassword
-            }
-            authentication {
-                basic(BasicAuthentication)
-            }
-        }
-        maven {
-            url "https://oss.sonatype.org/content/repositories/snapshots/"
-            mavenContent {
-                snapshotsOnly()
-            }
-            credentials {
-                username pubUsername
-                password pubPassword
-            }
-            authentication {
-                basic(BasicAuthentication)
+        } else {
+            maven {
+                url "https://oss.sonatype.org/service/local/staging/deploy/maven2/"
+                mavenContent {
+                    releasesOnly()
+                }
+                credentials {
+                    username pubUsername
+                    password pubPassword
+                }
+                authentication {
+                    basic(BasicAuthentication)
+                }
             }
         }
     }
