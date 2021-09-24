@@ -2,15 +2,18 @@ package studio.ui;
 
 import org.apache.logging.log4j.LogManager;
 import org.apache.logging.log4j.Logger;
+import org.fife.ui.rsyntaxtextarea.RSyntaxTextArea;
+import org.fife.ui.rtextarea.RTextScrollPane;
 import org.netbeans.editor.BaseDocument;
-import org.netbeans.editor.Utilities;
 import studio.kdb.Server;
-import studio.qeditor.QKit;
+import studio.qeditor.RSToken;
+import studio.qeditor.RSTokenMaker;
 import studio.ui.action.QueryExecutor;
 
 import javax.swing.*;
 import javax.swing.event.UndoableEditEvent;
 import javax.swing.text.Document;
+import javax.swing.text.JTextComponent;
 import javax.swing.undo.CannotRedoException;
 import javax.swing.undo.CannotUndoException;
 import javax.swing.undo.UndoManager;
@@ -26,7 +29,7 @@ public class EditorTab {
     private static int scriptNumber = 0;
 
     private StudioPanel panel;
-    private JEditorPane textArea;
+    private JTextComponent textArea;
 
     private static final Logger log = LogManager.getLogger();
 
@@ -34,10 +37,23 @@ public class EditorTab {
         this.panel = panel;
     }
 
-    public JEditorPane init() {
+    public JComponent init() {
         if (textArea != null) throw new IllegalStateException("The EditorTab has been already initialized");
 
-        textArea = new JEditorPane(QKit.CONTENT_TYPE,"");
+//        textArea = new JEditorPane(QKit.CONTENT_TYPE,"");
+
+        RSyntaxTextArea rsTextArea = new RSyntaxTextArea("");
+        textArea = rsTextArea;
+        rsTextArea.setLineWrap(true);
+        rsTextArea.setAnimateBracketMatching(true);
+        rsTextArea.setCodeFoldingEnabled(true);
+        rsTextArea.setCloseCurlyBraces(true);
+        rsTextArea.setCodeFoldingEnabled(true);
+
+        rsTextArea.setSyntaxEditingStyle(RSTokenMaker.CONTENT_TYPE);
+        rsTextArea.setSyntaxScheme(RSToken.getDefaulSyntaxScheme());
+
+
         textArea.putClientProperty(QueryExecutor.class, new QueryExecutor(this));
         Document doc = textArea.getDocument();
         doc.putProperty(MODIFIED, false);
@@ -59,7 +75,8 @@ public class EditorTab {
         };
         doc.putProperty(BaseDocument.UNDO_MANAGER_PROP,um);
         doc.addUndoableEditListener(um);
-        return textArea;
+
+        return new RTextScrollPane(rsTextArea);
     }
 
     public StudioPanel getPanel() {
@@ -70,7 +87,7 @@ public class EditorTab {
         this.panel = panel;
     }
 
-    public JEditorPane getTextArea() {
+    public JTextComponent getTextArea() {
         return textArea;
     }
 
@@ -122,7 +139,7 @@ public class EditorTab {
 
     public void setServer(Server server) {
         textArea.getDocument().putProperty(SERVER,server);
-        org.netbeans.editor.EditorUI editorUI = Utilities.getEditorUI(textArea);
+/*        org.netbeans.editor.EditorUI editorUI = Utilities.getEditorUI(textArea);
         if (editorUI == null) {
             log.info("Ups... That wasn't expected. Please send this to an author");
             log.info("textArray.class: " + textArea.getClass());
@@ -130,7 +147,8 @@ public class EditorTab {
             log.info("textArray text: " + textArea.getText().substring(0, Math.max(30, textArea.getText().length())));
             throw new IllegalStateException("Can't set server to editor");
         }
-        editorUI.getComponent().setBackground(server.getBackgroundColor());
+        editorUI.getComponent().setBackground(server.getBackgroundColor());*/
+        textArea.setBackground(server.getBackgroundColor());
     }
 
     public QueryExecutor getQueryExecutor() {

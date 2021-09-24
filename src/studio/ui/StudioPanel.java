@@ -26,6 +26,11 @@ import javax.swing.undo.UndoManager;
 import kx.c;
 import org.apache.logging.log4j.LogManager;
 import org.apache.logging.log4j.Logger;
+import org.fife.ui.rsyntaxtextarea.AbstractTokenMakerFactory;
+import org.fife.ui.rsyntaxtextarea.RSyntaxTextAreaDefaultInputMap;
+import org.fife.ui.rsyntaxtextarea.TokenMakerFactory;
+import org.fife.ui.rsyntaxtextarea.folding.CurlyFoldParser;
+import org.fife.ui.rsyntaxtextarea.folding.FoldParserManager;
 import org.netbeans.editor.*;
 import org.netbeans.editor.Utilities;
 import studio.core.AuthenticationManager;
@@ -35,6 +40,7 @@ import org.netbeans.editor.ext.ExtKit;
 import org.netbeans.editor.ext.ExtSettingsInitializer;
 import studio.qeditor.QSettingsInitializer;
 import studio.kdb.*;
+import studio.qeditor.RSTokenMaker;
 import studio.ui.action.QPadImport;
 import studio.ui.action.QueryResult;
 import studio.ui.action.WorkspaceSaver;
@@ -81,6 +87,19 @@ public class StudioPanel extends JPanel implements Observer,WindowListener {
         editorSelectAllAction = kit.getActionByName(BaseKit.selectAllAction);
         editorUndoAction = kit.getActionByName(BaseKit.undoAction);
         editorRedoAction = kit.getActionByName(BaseKit.redoAction);
+    }
+
+    static {
+        InputMap inputMap = new RSyntaxTextAreaDefaultInputMap();
+        //@TODO: what other hotkeys should we add?
+        //@TODO: Is it for MacOS only?
+        inputMap.put(KeyStroke.getKeyStroke(KeyEvent.VK_END, 0), DefaultEditorKit.endLineAction);
+        UIManager.put("RSyntaxTextAreaUI.inputMap", inputMap);
+
+        FoldParserManager.get().addFoldParserMapping(RSTokenMaker.CONTENT_TYPE, new CurlyFoldParser());
+
+        AbstractTokenMakerFactory atmf = (AbstractTokenMakerFactory) TokenMakerFactory.getDefaultInstance();
+        atmf.putMapping(RSTokenMaker.CONTENT_TYPE, RSTokenMaker.class.getName());
     }
 
     private static boolean loading = false;
@@ -607,7 +626,7 @@ public class StudioPanel extends JPanel implements Observer,WindowListener {
 
     private void initTextArea(String content) {
         try {
-            JEditorPane textArea = editor.getTextArea();
+            JTextComponent textArea = editor.getTextArea();
             textArea.getDocument().remove(0, textArea.getDocument().getLength());
             textArea.getDocument().insertString(0, content,null);
             textArea.setCaretPosition(0);
@@ -1547,11 +1566,12 @@ public class StudioPanel extends JPanel implements Observer,WindowListener {
 
     public EditorTab addTab(Server server, String filename) {
         editor = new EditorTab(this);
-        JEditorPane textArea = editor.init();
-        removeFocusChangeKeysForWindows(textArea);
+        JComponent editorComponent = editor.init();
+        removeFocusChangeKeysForWindows(editorComponent);
 
-        overrideDefaultKeymap(textArea, toggleCommaFormatAction, newTabAction, closeTabAction, nextEditorTab, prevEditorTab);
-        JComponent component = Utilities.getEditorUI(textArea).getExtComponent();
+        overrideDefaultKeymap(editorComponent, toggleCommaFormatAction, newTabAction, closeTabAction, nextEditorTab, prevEditorTab);
+        //JComponent component = Utilities.getEditorUI(textArea).getExtComponent();
+        JComponent component = editorComponent;
         component.putClientProperty(EditorTab.class, editor);
         tabbedEditors.add(component);
         tabbedEditors.setSelectedIndex(tabbedEditors.getTabCount()-1);
@@ -1563,8 +1583,8 @@ public class StudioPanel extends JPanel implements Observer,WindowListener {
             editor.setFilename(null);
             initTextArea("");
         }
-        textArea.getDocument().addDocumentListener(new MarkingDocumentListener(editor));
-        textArea.requestFocus();
+        editor.getTextArea().getDocument().addDocumentListener(new MarkingDocumentListener(editor));
+        editorComponent.requestFocus();
         refreshActionState();
         return editor;
     }
@@ -1793,7 +1813,7 @@ public class StudioPanel extends JPanel implements Observer,WindowListener {
         return editor.getServer();
     }
 
-    private String getEditorText(JEditorPane editor) {
+    private String getEditorText(JTextComponent editor) {
         String text = editor.getSelectedText();
         if (text != null) return text;
 
@@ -1817,7 +1837,7 @@ public class StudioPanel extends JPanel implements Observer,WindowListener {
         return null;
     }
 
-    private String getCurrentLineEditorText(JEditorPane editor) {
+    private String getCurrentLineEditorText(JTextComponent editor) {
         String newLine = "\n";
         String text = null;
 
@@ -1882,14 +1902,14 @@ public class StudioPanel extends JPanel implements Observer,WindowListener {
 
     // if the query is canceld execTime=-1, result and error are null's
     public static void queryExecutionComplete(EditorTab editor, QueryResult queryResult) {
-        JEditorPane textArea = editor.getTextArea();
+        JTextComponent textArea = editor.getTextArea();
         textArea.setCursor(textCursor);
 
         Throwable error = queryResult.getError();
         if (queryResult.isComplete()) {
             long execTime = queryResult.getExecutionTime();
             if (execTime >= 0) {
-                Utilities.setStatusText(textArea, "Last execution time:" + (execTime > 0 ? "" + execTime : "<1") + " mS");
+//                Utilities.setStatusText(textArea, "Last execution time:" + (execTime > 0 ? "" + execTime : "<1") + " mS");
             }
         }
 
