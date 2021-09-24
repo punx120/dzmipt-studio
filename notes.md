@@ -1,3 +1,5 @@
+`dz1.11` 2021.09.24
+-----
 * Output grid:
     * add vertical lines and make header compact
     * Settings: adding right padding and max width for columns
