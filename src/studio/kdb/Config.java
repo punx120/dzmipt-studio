@@ -104,19 +104,20 @@ public class Config {
         }
     }
 
-    public Workspace loadWorkspace() {
-        Workspace workspace = new Workspace();
-        try {
-            Properties p = new Properties();
-            InputStream inp = new FileInputStream(getWorkspaceFilename());
-            p.load(inp);
-            inp.close();
-            workspace.load(p);
-        } catch (IOException e) {
-            log.error("Can't load workspace", e);
-        }
-        return workspace;
-    }
+	public Workspace loadWorkspace() {
+		Workspace workspace = new Workspace();
+		File workspaceFile = new File(getWorkspaceFilename());
+		if (workspaceFile.exists()) {
+			try (InputStream inp = new FileInputStream(workspaceFile)) {
+				Properties p = new Properties();
+				p.load(inp);
+				workspace.load(p);
+			} catch (IOException e) {
+				log.error("Can't load workspace", e);
+			}
+		}
+		return workspace;
+	}
 
     public void saveWorkspace(Workspace workspace) {
         try {
