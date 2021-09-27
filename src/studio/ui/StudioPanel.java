@@ -31,6 +31,7 @@ import org.fife.ui.rsyntaxtextarea.RSyntaxTextAreaDefaultInputMap;
 import org.fife.ui.rsyntaxtextarea.TokenMakerFactory;
 import org.fife.ui.rsyntaxtextarea.folding.CurlyFoldParser;
 import org.fife.ui.rsyntaxtextarea.folding.FoldParserManager;
+import org.fife.ui.rtextarea.RTextArea;
 import org.netbeans.editor.*;
 import org.netbeans.editor.Utilities;
 import studio.core.AuthenticationManager;
@@ -90,10 +91,19 @@ public class StudioPanel extends JPanel implements Observer,WindowListener {
     }
 
     static {
+        int shift = InputEvent.SHIFT_DOWN_MASK;
+        int defaultModifier = RTextArea.getDefaultModifier();
         InputMap inputMap = new RSyntaxTextAreaDefaultInputMap();
         //@TODO: what other hotkeys should we add?
         //@TODO: Is it for MacOS only?
         inputMap.put(KeyStroke.getKeyStroke(KeyEvent.VK_END, 0), DefaultEditorKit.endLineAction);
+        inputMap.put(KeyStroke.getKeyStroke(KeyEvent.VK_HOME, 0), DefaultEditorKit.beginLineAction);
+
+        inputMap.put(KeyStroke.getKeyStroke(KeyEvent.VK_END, shift), DefaultEditorKit.selectionEndLineAction);
+        inputMap.put(KeyStroke.getKeyStroke(KeyEvent.VK_HOME, shift), DefaultEditorKit.selectionBeginAction);
+
+        inputMap.remove(KeyStroke.getKeyStroke(KeyEvent.VK_ENTER, defaultModifier));
+
         UIManager.put("RSyntaxTextAreaUI.inputMap", inputMap);
 
         FoldParserManager.get().addFoldParserMapping(RSTokenMaker.CONTENT_TYPE, new CurlyFoldParser());
@@ -1584,7 +1594,8 @@ public class StudioPanel extends JPanel implements Observer,WindowListener {
             initTextArea("");
         }
         editor.getTextArea().getDocument().addDocumentListener(new MarkingDocumentListener(editor));
-        editorComponent.requestFocus();
+//        editorComponent.requestFocus();
+        editor.getTextArea().requestFocus();
         refreshActionState();
         return editor;
     }

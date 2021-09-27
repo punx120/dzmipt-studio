@@ -48,7 +48,6 @@ public class EditorTab {
         rsTextArea.setAnimateBracketMatching(true);
         rsTextArea.setCodeFoldingEnabled(true);
         rsTextArea.setCloseCurlyBraces(true);
-        rsTextArea.setCodeFoldingEnabled(true);
 
         rsTextArea.setSyntaxEditingStyle(RSTokenMaker.CONTENT_TYPE);
         rsTextArea.setSyntaxScheme(RSToken.getDefaulSyntaxScheme());
