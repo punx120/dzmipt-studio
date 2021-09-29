@@ -29,7 +29,7 @@ public class EditorTab {
     private static int scriptNumber = 0;
 
     private StudioPanel panel;
-    private JTextComponent textArea;
+    private EditorPane editorPane;
 
     private static final Logger log = LogManager.getLogger();
 
@@ -38,20 +38,10 @@ public class EditorTab {
     }
 
     public JComponent init() {
-        if (textArea != null) throw new IllegalStateException("The EditorTab has been already initialized");
+        if (editorPane != null) throw new IllegalStateException("The EditorTab has been already initialized");
 
-//        textArea = new JEditorPane(QKit.CONTENT_TYPE,"");
-
-        RSyntaxTextArea rsTextArea = new RSyntaxTextArea("");
-        textArea = rsTextArea;
-        rsTextArea.setLineWrap(true);
-        rsTextArea.setAnimateBracketMatching(true);
-        rsTextArea.setCodeFoldingEnabled(true);
-        rsTextArea.setCloseCurlyBraces(true);
-
-        rsTextArea.setSyntaxEditingStyle(RSTokenMaker.CONTENT_TYPE);
-        rsTextArea.setSyntaxScheme(RSToken.getDefaulSyntaxScheme());
-
+        editorPane = new EditorPane();
+        JTextComponent textArea = editorPane.getTextArea();
 
         textArea.putClientProperty(QueryExecutor.class, new QueryExecutor(this));
         Document doc = textArea.getDocument();
@@ -75,7 +65,7 @@ public class EditorTab {
         doc.putProperty(BaseDocument.UNDO_MANAGER_PROP,um);
         doc.addUndoableEditListener(um);
 
-        return new RTextScrollPane(rsTextArea);
+        return editorPane;
     }
 
     public StudioPanel getPanel() {
@@ -87,29 +77,29 @@ public class EditorTab {
     }
 
     public JTextComponent getTextArea() {
-        return textArea;
+        return editorPane.getTextArea();
     }
 
     public String getFilename() {
-        if (textArea == null) return null;
-        return (String) textArea.getDocument().getProperty(FILENAME);
+        if (editorPane == null) return null;
+        return (String) getTextArea().getDocument().getProperty(FILENAME);
     }
 
     public void setFilename(String filename) {
-        textArea.getDocument().putProperty(FILENAME, filename);
+        getTextArea().getDocument().putProperty(FILENAME, filename);
         String title;
         if (filename == null) {
             title = "Script" + scriptNumber++;
         } else {
             title = new File(filename).getName();
         }
-        textArea.getDocument().putProperty(TITLE, title);
+        getTextArea().getDocument().putProperty(TITLE, title);
         panel.refreshTitle();
     }
 
     public String getTitle() {
-        if (textArea == null) return null;
-        return (String) textArea.getDocument().getProperty(TITLE);
+        if (editorPane == null) return null;
+        return (String) getTextArea().getDocument().getProperty(TITLE);
     }
 
     public String getTabTitle() {
@@ -122,22 +112,22 @@ public class EditorTab {
     }
 
     public boolean isModified() {
-        if (textArea == null) return false;
-        return (Boolean)textArea.getDocument().getProperty(MODIFIED);
+        if (editorPane == null) return false;
+        return (Boolean)getTextArea().getDocument().getProperty(MODIFIED);
     }
 
     public void setModified(boolean value) {
-        textArea.getDocument().putProperty(MODIFIED, value);
+        getTextArea().getDocument().putProperty(MODIFIED, value);
         panel.refreshTitle();
     }
 
     public Server getServer() {
-        if (textArea == null) return null;
-        return (Server)textArea.getDocument().getProperty(SERVER);
+        if (editorPane == null) return null;
+        return (Server)getTextArea().getDocument().getProperty(SERVER);
     }
 
     public void setServer(Server server) {
-        textArea.getDocument().putProperty(SERVER,server);
+        getTextArea().getDocument().putProperty(SERVER,server);
 /*        org.netbeans.editor.EditorUI editorUI = Utilities.getEditorUI(textArea);
         if (editorUI == null) {
             log.info("Ups... That wasn't expected. Please send this to an author");
@@ -147,15 +137,15 @@ public class EditorTab {
             throw new IllegalStateException("Can't set server to editor");
         }
         editorUI.getComponent().setBackground(server.getBackgroundColor());*/
-        textArea.setBackground(server.getBackgroundColor());
+        getTextArea().setBackground(server.getBackgroundColor());
     }
 
     public QueryExecutor getQueryExecutor() {
-        return (QueryExecutor) textArea.getClientProperty(QueryExecutor.class);
+        return (QueryExecutor) getTextArea().getClientProperty(QueryExecutor.class);
     }
 
     public UndoManager getUndoManager() {
-        return (UndoManager) textArea.getDocument().getProperty(BaseDocument.UNDO_MANAGER_PROP);
+        return (UndoManager) getTextArea().getDocument().getProperty(BaseDocument.UNDO_MANAGER_PROP);
     }
 
 }
