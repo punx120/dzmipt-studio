@@ -127,17 +127,15 @@ public class EditorTab {
     }
 
     public void setServer(Server server) {
+        if (server.equals(getServer())) return;
+
         getTextArea().getDocument().putProperty(SERVER,server);
-/*        org.netbeans.editor.EditorUI editorUI = Utilities.getEditorUI(textArea);
-        if (editorUI == null) {
-            log.info("Ups... That wasn't expected. Please send this to an author");
-            log.info("textArray.class: " + textArea.getClass());
-            log.info("textArray.getUI class: " + textArea.getUI().getClass());
-            log.info("textArray text: " + textArea.getText().substring(0, Math.max(30, textArea.getText().length())));
-            throw new IllegalStateException("Can't set server to editor");
-        }
-        editorUI.getComponent().setBackground(server.getBackgroundColor());*/
         getTextArea().setBackground(server.getBackgroundColor());
+        setStatus("Changed server: " + server.getDescription(true));
+    }
+
+    public void setStatus(String status) {
+        editorPane.setStatus(status);
     }
 
     public QueryExecutor getQueryExecutor() {

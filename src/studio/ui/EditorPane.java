@@ -2,6 +2,7 @@ package studio.ui;
 
 import org.fife.ui.rsyntaxtextarea.RSyntaxTextArea;
 import org.fife.ui.rtextarea.RTextScrollPane;
+import studio.kdb.Config;
 import studio.qeditor.RSToken;
 import studio.qeditor.RSTokenMaker;
 
@@ -52,7 +53,7 @@ public class EditorPane extends JPanel {
         lblInsStatus.setHorizontalAlignment(JLabel.CENTER);
         lblInsStatus.setMinimumWidth("INS", "OVR");
         setBorder(lblInsStatus);
-        lblStatus = new JLabel("Ready status");
+        lblStatus = new JLabel("Ready");
         Box boxStatus = Box.createHorizontalBox();
         boxStatus.add(lblStatus);
         boxStatus.add(Box.createHorizontalGlue());
@@ -63,12 +64,20 @@ public class EditorPane extends JPanel {
         statusBar.add(lblInsStatus);
         statusBar.add(lblRowCol);
 
-        add(new RTextScrollPane(textArea), BorderLayout.CENTER);
+        Font font = Config.getInstance().getFont();
+        textArea.setFont(font);
+        RTextScrollPane scrollPane = new RTextScrollPane(textArea);
+        scrollPane.getGutter().setLineNumberFont(font);
+        add(scrollPane, BorderLayout.CENTER);
         add(statusBar, BorderLayout.SOUTH);
     }
 
     public RSyntaxTextArea getTextArea() {
         return textArea;
+    }
+
+    public void setStatus(String status) {
+        lblStatus.setText(status);
     }
 
     private void updateRowColStatus() {

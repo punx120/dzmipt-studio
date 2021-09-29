@@ -99,7 +99,7 @@ public class StudioPanel extends JPanel implements Observer,WindowListener {
         inputMap.put(KeyStroke.getKeyStroke(KeyEvent.VK_HOME, 0), DefaultEditorKit.beginLineAction);
 
         inputMap.put(KeyStroke.getKeyStroke(KeyEvent.VK_END, shift), DefaultEditorKit.selectionEndLineAction);
-        inputMap.put(KeyStroke.getKeyStroke(KeyEvent.VK_HOME, shift), DefaultEditorKit.selectionBeginAction);
+        inputMap.put(KeyStroke.getKeyStroke(KeyEvent.VK_HOME, shift), DefaultEditorKit.selectionBeginLineAction);
 
         inputMap.remove(KeyStroke.getKeyStroke(KeyEvent.VK_ENTER, defaultModifier));
 
@@ -1896,12 +1896,14 @@ public class StudioPanel extends JPanel implements Observer,WindowListener {
 
     private void executeK4Query(String text) {
         editor.getTextArea().setCursor(waitCursor);
+        editor.setStatus("Executing: " + text);
         editor.getQueryExecutor().execute(text);
         refreshActionState();
     }
 
     void executeK4Query(K.KBase query) {
         editor.getTextArea().setCursor(waitCursor);
+        editor.setStatus("Executing: " + query.toString());
         editor.getQueryExecutor().execute(query);
         refreshActionState();
     }
@@ -1910,7 +1912,7 @@ public class StudioPanel extends JPanel implements Observer,WindowListener {
         return (EditorTab) ((JComponent) tabbedEditors.getComponentAt(index)).getClientProperty(EditorTab.class);
     }
 
-    // if the query is canceld execTime=-1, result and error are null's
+    // if the query is cancelled execTime=-1, result and error are null's
     public static void queryExecutionComplete(EditorTab editor, QueryResult queryResult) {
         JTextComponent textArea = editor.getTextArea();
         textArea.setCursor(textCursor);
@@ -1918,9 +1920,9 @@ public class StudioPanel extends JPanel implements Observer,WindowListener {
         Throwable error = queryResult.getError();
         if (queryResult.isComplete()) {
             long execTime = queryResult.getExecutionTime();
-            if (execTime >= 0) {
-//                Utilities.setStatusText(textArea, "Last execution time:" + (execTime > 0 ? "" + execTime : "<1") + " mS");
-            }
+            editor.setStatus("Last execution time: " + (execTime > 0 ? "" + execTime : "<1") + " mS");
+        } else {
+            editor.setStatus("Last query was cancelled");
         }
 
         StudioPanel panel = editor.getPanel();
