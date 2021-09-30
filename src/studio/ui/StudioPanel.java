@@ -1299,7 +1299,7 @@ public class StudioPanel extends JPanel implements Observer,WindowListener {
         String connection = txtServer.getText().trim();
         if (connection.length() == 0) return;
         Server server = editor.getServer();
-        if (server != null && server.getConnectionString(false).equals(connection)) return;
+        if (server != null && server.getConnectionString().equals(connection)) return;
 
         try {
             setServer(Config.getInstance().getServerByConnectionString(connection));
@@ -1348,8 +1348,8 @@ public class StudioPanel extends JPanel implements Observer,WindowListener {
             txtServer.setText("");
             txtServer.setToolTipText("Select connection details");
         } else {
-            txtServer.setText(server.getConnectionString(false));
-            txtServer.setToolTipText(server.getConnectionString(true));
+            txtServer.setText(server.getConnectionString());
+            txtServer.setToolTipText(server.getConnectionStringWithPwd());
         }
     }
 
@@ -1900,18 +1900,19 @@ public class StudioPanel extends JPanel implements Observer,WindowListener {
                 message = "No message with exception. Exception is " + error.toString();
             JOptionPane.showMessageDialog(textArea,
                     "\nAn unexpected error occurred whilst communicating with " +
-                            editor.getServer().getConnectionString(false) +
+                            editor.getServer().getConnectionString() +
                             "\n\nError detail is\n\n" + message + "\n\n",
                     "Studio for kdb+",
                     JOptionPane.ERROR_MESSAGE,
                     Util.ERROR_ICON);
         } else if (queryResult.isComplete()) {
             JTabbedPane tabbedPane = panel.tabbedPane;
-            TabPanel tab = new TabPanel(panel, queryResult);
+            TabPanel tab = new TabPanel(panel, queryResult, editor.getServer());
             if(tabbedPane.getTabCount()>= Config.getInstance().getResultTabsCount()) {
                 tabbedPane.remove(0);
             }
             tab.addInto(tabbedPane);
+            tab.setToolTipText(editor.getServer().getConnectionString());
         }
         panel.refreshActionState();
     }

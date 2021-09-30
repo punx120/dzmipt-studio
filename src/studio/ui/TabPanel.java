@@ -22,11 +22,13 @@ public class TabPanel extends JPanel {
     private QGrid grid = null;
     private KFormatContext formatContext = new KFormatContext(KFormatContext.DEFAULT);
     private ResultType type;
+    private final String serverInfo;
 
-    public TabPanel(StudioPanel panel, QueryResult queryResult) {
+    public TabPanel(StudioPanel panel, QueryResult queryResult, Server server) {
         this.panel = panel;
         this.queryResult = queryResult;
         this.result = queryResult.getResult();
+        this.serverInfo = String.format("%s (%s)", server.getName(), server.getConnectionString());
         initComponents();
     }
 
@@ -115,7 +117,9 @@ public class TabPanel extends JPanel {
             title = title + " [" + grid.getRowCount() + " rows] ";
         }
         tabbedPane.addTab(title, type.icon, this);
-        tabbedPane.setSelectedIndex(tabbedPane.getTabCount()-1);
+        int tabIndex = tabbedPane.getTabCount() - 1;
+        tabbedPane.setSelectedIndex(tabIndex);
+        tabbedPane.setToolTipTextAt(tabIndex, serverInfo);
         updateToolbarLocation(tabbedPane);
     }
 
@@ -175,4 +179,3 @@ public class TabPanel extends JPanel {
         }
     };
 }
-
