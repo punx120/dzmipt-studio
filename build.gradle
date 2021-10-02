@@ -65,7 +65,7 @@ sourceSets {
 
 test {
     useJUnitPlatform()
-    jvmArgs "-Djava.awt.headless=true"
+    systemProperty 'java.awt.headless', 'true'
 }
 
 application {
