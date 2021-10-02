@@ -22,21 +22,6 @@ configurations {
     txtmark
 }
 
-dependencies {
-    txtmark group: 'com.github.rjeschke', name: 'txtmark', version: '0.13'
-
-    compile group: 'org.apache.logging.log4j', name: 'log4j-api', version: '2.14.0'
-    compile group: 'org.apache.logging.log4j', name: 'log4j-core', version: '2.14.0'
-    compile group: 'org.apache.logging.log4j', name: 'log4j-iostreams', version: '2.14.0'
-    compile group: 'org.netbeans.api', name: 'org-openide-awt', version: 'RELEASE113'
-    compile group: 'org.jfree', name: 'jfreechart', version: '1.5.3'
-    runtime files ('lib/images.jar')
-
-    testImplementation 'org.junit.jupiter:junit-jupiter-api:5.3.1'
-    testImplementation 'org.junit.jupiter:junit-jupiter-params:5.3.1'
-    testRuntimeOnly 'org.junit.jupiter:junit-jupiter-engine:5.3.1'
-}
-
 sourceSets {
     main {
         java {
@@ -61,6 +46,29 @@ sourceSets {
             include 'syntax.csv'
         }
     }
+
+    intTest {
+        java.srcDirs += ['test-integration']
+        compileClasspath += sourceSets.main.output
+        runtimeClasspath += sourceSets.main.output
+    }
+}
+
+dependencies {
+    txtmark group: 'com.github.rjeschke', name: 'txtmark', version: '0.13'
+
+    compile group: 'org.apache.logging.log4j', name: 'log4j-api', version: '2.14.0'
+    compile group: 'org.apache.logging.log4j', name: 'log4j-core', version: '2.14.0'
+    compile group: 'org.apache.logging.log4j', name: 'log4j-iostreams', version: '2.14.0'
+    compile group: 'org.netbeans.api', name: 'org-openide-awt', version: 'RELEASE113'
+    compile group: 'org.jfree', name: 'jfreechart', version: '1.5.3'
+    runtime files ('lib/images.jar')
+
+    testImplementation 'org.junit.jupiter:junit-jupiter-api:5.3.1'
+    testImplementation 'org.junit.jupiter:junit-jupiter-params:5.3.1'
+    intTestImplementation 'org.junit.jupiter:junit-jupiter-api:5.3.1'
+    intTestImplementation 'org.junit.jupiter:junit-jupiter-params:5.3.1'
+    testRuntimeOnly 'org.junit.jupiter:junit-jupiter-engine:5.3.1'
 }
 
 test {
