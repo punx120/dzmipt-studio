@@ -20,6 +20,8 @@ repositories {
 
 configurations {
     txtmark
+    intTestImplementation.extendsFrom implementation
+    intTestRunimeOnly.extendsFrom runtimeOnly
 }
 
 sourceSets {
@@ -74,6 +76,14 @@ dependencies {
 test {
     useJUnitPlatform()
     systemProperty 'java.awt.headless', 'true'
+}
+
+task integrationTest(type: Test) {
+    description = 'Runs integration tests.'
+    group = 'verification'
+
+    testClassesDirs = sourceSets.intTest.output.classesDirs
+    classpath = sourceSets.intTest.runtimeClasspath
 }
 
 application {
