@@ -785,7 +785,7 @@ public class StudioPanel extends JPanel implements Observer,WindowListener {
                 KeyStroke.getKeyStroke(KeyEvent.VK_N, menuShortcutKeyMask),
                 e -> addTab(editor.getServer(), null));
 
-        serverListAction = UserAction.create(I18n.getString("ServerList"), Util.TEXT_TREE_ICON, "Show sever list",
+        serverListAction = UserAction.create(I18n.getString("ServerList"), Util.TEXT_TREE_ICON, "Show server list",
                 KeyEvent.VK_L, KeyStroke.getKeyStroke(KeyEvent.VK_L, menuShortcutKeyMask | InputEvent.SHIFT_MASK),
                 e -> showServerList(false));
 
