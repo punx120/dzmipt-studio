@@ -1710,5 +1710,13 @@ public class K {
             if (context.showType()) builder.append("\"");
             return builder;
         }
+
+        @Override
+        public void serialiseData(OutputStream o) throws IOException {
+            write(o, getAttr());
+            byte[] b = getString().getBytes(Config.getInstance().getEncoding());
+            write(o, b.length);
+            o.write(b);
+        }
     }
 }
