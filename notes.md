@@ -1,3 +1,5 @@
+* Adding tooltip in output tab with server where the query was executed
+
 `dz1.11` 2021.09.24
 -----
 * Output grid:
