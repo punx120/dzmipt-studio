@@ -873,7 +873,7 @@ public class StudioPanel extends JPanel implements Observer,WindowListener {
         openInExcel = UserAction.create(I18n.getString("OpenInExcel"), Util.EXCEL_ICON, "Open in Excel",
                 KeyEvent.VK_O, null, e -> {
                     try {
-                        File file = File.createTempFile("studioExport", ".xls");
+                        File file = File.createTempFile("studioExport", ".xlsx");
                         new ExcelExporter().exportTableX(frame, getSelectedTable(), file, true);
                     } catch (IOException ex) {
                         log.error("Failed to create temporary file", ex);
