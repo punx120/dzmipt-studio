@@ -813,7 +813,7 @@ public class StudioPanel extends JPanel implements Observer,WindowListener {
                 KeyStroke.getKeyStroke(KeyEvent.VK_N, menuShortcutKeyMask),
                 e -> addTab(editor.getServer(), null));
 
-        serverListAction = UserAction.create(I18n.getString("ServerList"), Util.TEXT_TREE_ICON, "Show sever list",
+        serverListAction = UserAction.create(I18n.getString("ServerList"), Util.TEXT_TREE_ICON, "Show server list",
                 KeyEvent.VK_L, KeyStroke.getKeyStroke(KeyEvent.VK_L, menuShortcutKeyMask | InputEvent.SHIFT_MASK),
                 e -> showServerList(false));
 
@@ -901,7 +901,7 @@ public class StudioPanel extends JPanel implements Observer,WindowListener {
         openInExcel = UserAction.create(I18n.getString("OpenInExcel"), Util.EXCEL_ICON, "Open in Excel",
                 KeyEvent.VK_O, null, e -> {
                     try {
-                        File file = File.createTempFile("studioExport", ".xls");
+                        File file = File.createTempFile("studioExport", ".xlsx");
                         new ExcelExporter().exportTableX(frame, getSelectedTable(), file, true);
                     } catch (IOException ex) {
                         log.error("Failed to create temporary file", ex);
@@ -1327,7 +1327,7 @@ public class StudioPanel extends JPanel implements Observer,WindowListener {
         String connection = txtServer.getText().trim();
         if (connection.length() == 0) return;
         Server server = editor.getServer();
-        if (server != null && server.getConnectionString(false).equals(connection)) return;
+        if (server != null && server.getConnectionString().equals(connection)) return;
 
         try {
             setServer(Config.getInstance().getServerByConnectionString(connection));
@@ -1376,8 +1376,8 @@ public class StudioPanel extends JPanel implements Observer,WindowListener {
             txtServer.setText("");
             txtServer.setToolTipText("Select connection details");
         } else {
-            txtServer.setText(server.getConnectionString(false));
-            txtServer.setToolTipText(server.getConnectionString(true));
+            txtServer.setText(server.getConnectionString());
+            txtServer.setToolTipText(server.getConnectionStringWithPwd());
         }
     }
 
@@ -1932,7 +1932,7 @@ public class StudioPanel extends JPanel implements Observer,WindowListener {
                 message = "No message with exception. Exception is " + error.toString();
             JOptionPane.showMessageDialog(textArea,
                     "\nAn unexpected error occurred whilst communicating with " +
-                            editor.getServer().getConnectionString(false) +
+                            editor.getServer().getConnectionString() +
                             "\n\nError detail is\n\n" + message + "\n\n",
                     "Studio for kdb+",
                     JOptionPane.ERROR_MESSAGE,
@@ -1944,6 +1944,7 @@ public class StudioPanel extends JPanel implements Observer,WindowListener {
                 tabbedPane.remove(0);
             }
             tab.addInto(tabbedPane);
+            tab.setToolTipText(editor.getServer().getConnectionString());
         }
         panel.refreshActionState();
     }

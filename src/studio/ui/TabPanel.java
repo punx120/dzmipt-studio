@@ -115,7 +115,9 @@ public class TabPanel extends JPanel {
             title = title + " [" + grid.getRowCount() + " rows] ";
         }
         tabbedPane.addTab(title, type.icon, this);
-        tabbedPane.setSelectedIndex(tabbedPane.getTabCount()-1);
+        int tabIndex = tabbedPane.getTabCount() - 1;
+        tabbedPane.setSelectedIndex(tabIndex);
+        tabbedPane.setToolTipTextAt(tabIndex, "Executed at server: " + queryResult.getServer().getDescription(true));
         updateToolbarLocation(tabbedPane);
     }
 
@@ -175,4 +177,3 @@ public class TabPanel extends JPanel {
         }
     };
 }
-

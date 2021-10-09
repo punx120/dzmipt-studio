@@ -237,4 +237,10 @@ public class KSerialiseTest {
     public void testFlip() {
         test(getFlip(4,"a", "bb", "ccc"));
     }
+
+    @Test
+    public void testNonAsciiStringEncoding() {
+        test(new K.KCharacterVector("Дима"));
+    }
+
 }

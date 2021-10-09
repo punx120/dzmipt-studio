@@ -10,7 +10,7 @@ apply plugin: 'signing'
 
 group = "com.github.dzmipt"
 archivesBaseName = "kdbStudio"
-version = "dz1.10"
+version = "dz1.11"
 
 compileJava {
     sourceCompatibility = JavaVersion.VERSION_1_8
@@ -34,6 +34,8 @@ dependencies {
     implementation group: 'org.netbeans.api', name: 'org-openide-awt', version: 'RELEASE113'
     implementation group: 'com.fifesoft', name: 'rsyntaxtextarea', version: '3.1.3'
     implementation group: 'org.jfree', name: 'jfreechart', version: '1.5.3'
+    implementation group: 'org.apache.poi', name: 'poi', version: '4.1.2'
+    implementation group: 'org.apache.poi', name: 'poi-ooxml', version: '4.1.2'
     runtimeOnly files ('lib/images.jar')
 
     testImplementation 'org.junit.jupiter:junit-jupiter-api:5.3.1'
@@ -112,8 +114,9 @@ task javadocJar(type: Jar) {
     from javadoc
 }
 
-artifacts {
-    archives javadocJar, sourcesJar
+java {
+    withJavadocJar()
+    withSourcesJar()
 }
 
 def pubUsername = project.findProperty("ossrhUsername") ?: ""
@@ -154,30 +157,33 @@ publishing {
         }
     }
     repositories {
-        maven {
-            url "https://oss.sonatype.org/service/local/staging/deploy/maven2/"
-            mavenContent {
-                releasesOnly()
+        if(project.version.endsWith('-SNAPSHOT')) {
+            maven {
+                url "https://oss.sonatype.org/content/repositories/snapshots/"
+                mavenContent {
+                    snapshotsOnly()
+                }
+                credentials {
+                    username pubUsername
+                    password pubPassword
+                }
+                authentication {
+                    basic(BasicAuthentication)
+                }
             }
-            credentials {
-                username pubUsername
-                password pubPassword
-            }
-            authentication {
-                basic(BasicAuthentication)
-            }
-        }
-        maven {
-            url "https://oss.sonatype.org/content/repositories/snapshots/"
-            mavenContent {
-                snapshotsOnly()
-            }
-            credentials {
-                username pubUsername
-                password pubPassword
-            }
-            authentication {
-                basic(BasicAuthentication)
+        } else {
+            maven {
+                url "https://oss.sonatype.org/service/local/staging/deploy/maven2/"
+                mavenContent {
+                    releasesOnly()
+                }
+                credentials {
+                    username pubUsername
+                    password pubPassword
+                }
+                authentication {
+                    basic(BasicAuthentication)
+                }
             }
         }
     }

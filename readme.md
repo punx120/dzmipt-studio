@@ -39,6 +39,7 @@ Studio for kdb+ uses the following open source projects:
 * [Log4j 2] - Apache logging
 * [Gradle] - Build tool
 * [Txtmark] - Java markdown processor - to convert notes.md to HTML during build
+* [Apache] - POI for Excel export
 
 Installation
 --------------
@@ -81,3 +82,4 @@ of a license from Icon Experience.
 [Log4j 2]:https://logging.apache.org/log4j/2.x/index.html
 [Gradle]:https://gradle.org/
 [Txtmark]:https://github.com/rjeschke/txtmark
+[Apache]:https://www.apache.org/
