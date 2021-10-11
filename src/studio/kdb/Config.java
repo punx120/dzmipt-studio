@@ -38,6 +38,11 @@ public class Config {
     public static final String CELL_RIGHT_PADDING = configDefault("cellRightPadding", ConfigType.DOUBLE, 0.5);
     public static final String CELL_MAX_WIDTH = configDefault("cellMaxWidth", ConfigType.INT, 200);
 
+    public static final String RSTA_ANIMATE_BRACKET_MATCHING = configDefault("rstaAnimateBracketMatching", ConfigType.BOOLEAN, true);
+    public static final String RSTA_HIGHLIGHT_CURRENT_LINE = configDefault("rstaHighlightCurrentLine", ConfigType.BOOLEAN, true);
+    public static final String RSTA_WORD_WRAP = configDefault("rstaWordWrap", ConfigType.BOOLEAN, false);
+
+
     // The folder is also referenced in lon4j2.xml config
     private static final String PATH = System.getProperties().getProperty("user.home") + "/.studioforkdb";
     private static final String CONFIG_FILENAME = "studio.properties";
@@ -767,10 +772,16 @@ public class Config {
         return get(key, (Boolean) checkAndGetDefaultValue(key, ConfigType.BOOLEAN));
     }
 
-    public void setBoolean(String key, boolean value) {
-        checkAndGetDefaultValue(key, ConfigType.BOOLEAN);
+    // Returns whether the value was changed
+    public boolean setBoolean(String key, boolean value) {
+        boolean currentValue = getBoolean(key);
+        if (currentValue == value) {
+            return false;
+        }
+
         p.setProperty(key, "" + value);
         save();
+        return true;
     }
 
     private double get(String key, double defaultValue) {
@@ -789,10 +800,16 @@ public class Config {
         return get(key, (Double) checkAndGetDefaultValue(key, ConfigType.DOUBLE));
     }
 
-    public void setDouble(String key, double value) {
-        checkAndGetDefaultValue(key, ConfigType.DOUBLE);
+    // Returns whether the value was changed
+    public boolean setDouble(String key, double value) {
+        double currentValue = getDouble(key);
+        if (currentValue == value) {
+            return false;
+        }
+
         p.setProperty(key, "" + value);
         save();
+        return true;
     }
 
     private int get(String key, int defaultValue) {
@@ -811,10 +828,16 @@ public class Config {
         return get(key, (Integer) checkAndGetDefaultValue(key, ConfigType.INT));
     }
 
-    public void setInt(String key, int value) {
-        checkAndGetDefaultValue(key, ConfigType.INT);
+    // Returns whether the value was changed
+    public boolean setInt(String key, int value) {
+        int currentValue = getInt(key);
+        if (currentValue == value) {
+            return false;
+        }
+
         p.setProperty(key, "" + value);
         save();
+        return true;
     }
 
     private Rectangle getBounds(String key, Object defaultBoundOrScale) {

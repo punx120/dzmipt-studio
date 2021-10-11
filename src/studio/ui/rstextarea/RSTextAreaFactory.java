@@ -6,6 +6,7 @@ import org.fife.ui.rsyntaxtextarea.folding.FoldParserManager;
 import org.fife.ui.rtextarea.ClipboardHistory;
 import org.fife.ui.rtextarea.RTextArea;
 import org.fife.ui.rtextarea.RecordableTextAction;
+import studio.kdb.Config;
 import studio.qeditor.RSToken;
 import studio.qeditor.RSTokenMaker;
 
@@ -53,7 +54,8 @@ public class RSTextAreaFactory {
         inputMap.put(KeyStroke.getKeyStroke(KeyEvent.VK_CUT,    0),      CopyCutAsStyledTextAction.rstaCutAsStyledTextAction);
         inputMap.put(KeyStroke.getKeyStroke(KeyEvent.VK_DELETE, shift),           CopyCutAsStyledTextAction.rstaCutAsStyledTextAction);
 
-        inputMap.remove(KeyStroke.getKeyStroke(KeyEvent.VK_ENTER, defaultModifier));
+        inputMap.remove(KeyStroke.getKeyStroke(KeyEvent.VK_ENTER, defaultModifier)); // used for execute current line
+        inputMap.remove(KeyStroke.getKeyStroke(KeyEvent.VK_J, defaultModifier)); // used for adding thousand commas
 
         UIManager.put("RSyntaxTextAreaUI.inputMap", inputMap);
 
@@ -66,8 +68,9 @@ public class RSTextAreaFactory {
 
     public static RSyntaxTextArea newTextArea() {
         RSyntaxTextArea textArea = new RSyntaxTextArea("");
-        textArea.setLineWrap(true);
-        textArea.setAnimateBracketMatching(true);
+        textArea.setLineWrap(Config.getInstance().getBoolean(Config.RSTA_WORD_WRAP));
+        textArea.setAnimateBracketMatching(Config.getInstance().getBoolean(Config.RSTA_ANIMATE_BRACKET_MATCHING));
+        textArea.setHighlightCurrentLine(Config.getInstance().getBoolean(Config.RSTA_HIGHLIGHT_CURRENT_LINE));
         textArea.setCodeFoldingEnabled(true);
         textArea.setCloseCurlyBraces(true);
 

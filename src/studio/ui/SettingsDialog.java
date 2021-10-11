@@ -22,6 +22,9 @@ public class SettingsDialog extends EscapeDialog {
     private JCheckBox chBoxShowServerCombo;
     private JCheckBox chBoxAutoSave;
     private JCheckBox chBoxSaveOnExit;
+    private JCheckBox chBoxRTSAAnimateBracketMatching;
+    private JCheckBox chBoxRTSAHighlightCurrentLine;
+    private JCheckBox chBoxRTSAWordWrap;
     private JComboBox<CustomiszedLookAndFeelInfo> comboBoxLookAndFeel;
     private JFormattedTextField txtTabsCount;
     private JFormattedTextField txtMaxCharsInResult;
@@ -91,6 +94,18 @@ public class SettingsDialog extends EscapeDialog {
         return chBoxSaveOnExit.isSelected();
     }
 
+    public boolean isAnimateBracketMatching() {
+        return chBoxRTSAAnimateBracketMatching.isSelected();
+    }
+
+    public boolean isHighlightCurrentLine() {
+        return chBoxRTSAHighlightCurrentLine.isSelected();
+    }
+
+    public boolean isWordWrap() {
+        return chBoxRTSAWordWrap.isSelected();
+    }
+
     private void refreshCredentials() {
         Credentials credentials = Config.getInstance().getDefaultCredentials(getDefaultAuthenticationMechanism());
 
@@ -122,6 +137,16 @@ public class SettingsDialog extends EscapeDialog {
         if (lf == null) {
             lf = lookAndFeels.getLookAndFeel(UIManager.getLookAndFeel().getClass().getName());
         }
+
+        chBoxRTSAAnimateBracketMatching = new JCheckBox("Animate bracket matching");
+        chBoxRTSAAnimateBracketMatching.setSelected(Config.getInstance().getBoolean(Config.RSTA_ANIMATE_BRACKET_MATCHING));
+
+        chBoxRTSAHighlightCurrentLine = new JCheckBox("Highlight current line");
+        chBoxRTSAHighlightCurrentLine.setSelected(Config.getInstance().getBoolean(Config.RSTA_HIGHLIGHT_CURRENT_LINE));
+
+        chBoxRTSAWordWrap = new JCheckBox("Word wrap");
+        chBoxRTSAWordWrap.setSelected(Config.getInstance().getBoolean(Config.RSTA_WORD_WRAP));
+
         comboBoxLookAndFeel.setSelectedItem(lf);
         JLabel lblResultTabsCount = new JLabel("Result tabs count");
         NumberFormatter formatter = new NumberFormatter();
@@ -172,6 +197,7 @@ public class SettingsDialog extends EscapeDialog {
         Component glue2 = Box.createGlue();
         Component glue3 = Box.createGlue();
         Component glue4 = Box.createGlue();
+        Component glue5 = Box.createGlue();
 
         btnOk = new JButton("OK");
         btnCancel = new JButton("Cancel");
@@ -191,6 +217,13 @@ public class SettingsDialog extends EscapeDialog {
                                         .addComponent(lblLookAndFeel)
                                         .addComponent(comboBoxLookAndFeel)
                                         .addComponent(glue2)
+                        )
+                        .addGroup(
+                                layout.createSequentialGroup()
+                                        .addComponent(chBoxRTSAAnimateBracketMatching)
+                                        .addComponent(chBoxRTSAHighlightCurrentLine)
+                                        .addComponent(chBoxRTSAWordWrap)
+                                        .addComponent(glue5)
                         )
                         .addGroup(
                             layout.createSequentialGroup()
@@ -244,6 +277,12 @@ public class SettingsDialog extends EscapeDialog {
                                 .addComponent(lblLookAndFeel)
                                 .addComponent(comboBoxLookAndFeel)
                                 .addComponent(glue2)
+                    ).addGroup(
+                        layout.createParallelGroup(GroupLayout.Alignment.BASELINE)
+                                .addComponent(chBoxRTSAAnimateBracketMatching)
+                                .addComponent(chBoxRTSAHighlightCurrentLine)
+                                .addComponent(chBoxRTSAWordWrap)
+                                .addComponent(glue5)
                     ).addGroup(
                         layout.createParallelGroup(GroupLayout.Alignment.BASELINE)
                                 .addComponent(lblResultTabsCount)

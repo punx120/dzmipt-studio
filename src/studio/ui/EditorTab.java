@@ -76,7 +76,7 @@ public class EditorTab {
         this.panel = panel;
     }
 
-    public JTextComponent getTextArea() {
+    public RSyntaxTextArea getTextArea() {
         return editorPane.getTextArea();
     }
 

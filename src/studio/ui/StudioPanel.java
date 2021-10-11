@@ -25,6 +25,7 @@ import javax.swing.undo.UndoManager;
 import kx.c;
 import org.apache.logging.log4j.LogManager;
 import org.apache.logging.log4j.Logger;
+import org.fife.ui.rsyntaxtextarea.RSyntaxTextArea;
 import org.netbeans.editor.*;
 import studio.core.AuthenticationManager;
 import studio.core.Credentials;
@@ -147,6 +148,8 @@ public class StudioPanel extends JPanel implements Observer,WindowListener {
 
     private final static int MAX_SERVERS_TO_CLONE = 20;
 
+    private static final Config CONFIG = Config.getInstance();
+    
     public void refreshTitle() {
         if (editor.getTitle() == null) return;
 
@@ -562,11 +565,11 @@ public class StudioPanel extends JPanel implements Observer,WindowListener {
 
         Vector v = new Vector();
         v.add(filename);
-        String[] mru = Config.getInstance().getMRUFiles();
+        String[] mru = CONFIG.getMRUFiles();
         for (int i = 0;i < mru.length;i++)
             if (!v.contains(mru[i]))
                 v.add(mru[i]);
-        Config.getInstance().saveMRUFiles((String[]) v.toArray(new String[0]));
+        CONFIG.saveMRUFiles((String[]) v.toArray(new String[0]));
         rebuildMenuBar();
     }
 
@@ -745,7 +748,7 @@ public class StudioPanel extends JPanel implements Observer,WindowListener {
         editor.setServer(server);
 
         if (!loading) {
-            Config.getInstance().addServerToHistory(server);
+            CONFIG.addServerToHistory(server);
             serverHistory.add(server);
 
             refreshTitle();
@@ -806,10 +809,10 @@ public class StudioPanel extends JPanel implements Observer,WindowListener {
                             stopAction.actionPerformed(e);
 
                         ConnectionPool.getInstance().purge(editor.getServer());
-                        Config.getInstance().removeServer(editor.getServer());
+                        CONFIG.removeServer(editor.getServer());
 
                         s = f.getServer();
-                        Config.getInstance().addServer(s);
+                        CONFIG.addServer(s);
                         setServer(s);
                         rebuildAll();
                     }
@@ -822,7 +825,7 @@ public class StudioPanel extends JPanel implements Observer,WindowListener {
                     f.alignAndShow();
                     if (f.getResult() == ACCEPTED) {
                         Server s = f.getServer();
-                        Config.getInstance().addServer(s);
+                        CONFIG.addServer(s);
                         ConnectionPool.getInstance().purge(s);   //?
                         setServer(s);
                         rebuildAll();
@@ -841,9 +844,9 @@ public class StudioPanel extends JPanel implements Observer,WindowListener {
                             null);      // no default selection
 
                     if (choice == 0) {
-                        Config.getInstance().removeServer(editor.getServer());
+                        CONFIG.removeServer(editor.getServer());
 
-                        Server[] servers = Config.getInstance().getServers();
+                        Server[] servers = CONFIG.getServers();
 
                         if (servers.length > 0)
                             setServer(servers[0]);
@@ -959,25 +962,45 @@ public class StudioPanel extends JPanel implements Observer,WindowListener {
         if (dialog.getResult() == CANCELLED) return;
         //@TODO Need rework - we are reading from Config inside SettingDialog; while saving happens outside
         String auth = dialog.getDefaultAuthenticationMechanism();
-        Config.getInstance().setDefaultAuthMechanism(auth);
-        Config.getInstance().setDefaultCredentials(auth, new Credentials(dialog.getUser(), dialog.getPassword()));
-        Config.getInstance().setShowServerComboBox(dialog.isShowServerComboBox());
-        Config.getInstance().setResultTabsCount(dialog.getResultTabsCount());
-        Config.getInstance().setMaxCharsInResult(dialog.getMaxCharsInResult());
-        Config.getInstance().setMaxCharsInTableCell(dialog.getMaxCharsInTableCell());
-        Config.getInstance().setDouble(Config.CELL_RIGHT_PADDING, dialog.getCellRightPadding());
-        Config.getInstance().setInt(Config.CELL_MAX_WIDTH, dialog.getCellMaxWidth());
-        Config.getInstance().setExecAllOption(dialog.getExecAllOption());
-        Config.getInstance().setBoolean(Config.SAVE_ON_EXIT, dialog.isSaveOnExit());
-        Config.getInstance().setBoolean(Config.AUTO_SAVE, dialog.isAutoSave());
+        CONFIG.setDefaultAuthMechanism(auth);
+        CONFIG.setDefaultCredentials(auth, new Credentials(dialog.getUser(), dialog.getPassword()));
+        CONFIG.setShowServerComboBox(dialog.isShowServerComboBox());
+        CONFIG.setResultTabsCount(dialog.getResultTabsCount());
+        CONFIG.setMaxCharsInResult(dialog.getMaxCharsInResult());
+        CONFIG.setMaxCharsInTableCell(dialog.getMaxCharsInTableCell());
+        CONFIG.setDouble(Config.CELL_RIGHT_PADDING, dialog.getCellRightPadding());
+        CONFIG.setInt(Config.CELL_MAX_WIDTH, dialog.getCellMaxWidth());
+        CONFIG.setExecAllOption(dialog.getExecAllOption());
+        CONFIG.setBoolean(Config.SAVE_ON_EXIT, dialog.isSaveOnExit());
+        CONFIG.setBoolean(Config.AUTO_SAVE, dialog.isAutoSave());
+        
+        boolean changed = CONFIG.setBoolean(Config.RSTA_ANIMATE_BRACKET_MATCHING, dialog.isAnimateBracketMatching());
+        changed |= CONFIG.setBoolean(Config.RSTA_HIGHLIGHT_CURRENT_LINE, dialog.isHighlightCurrentLine());
+        changed |= CONFIG.setBoolean(Config.RSTA_WORD_WRAP, dialog.isWordWrap());
+
+        if (changed) {
+            refreshEditorsSettings();
+        }
 
         String lfClass = dialog.getLookAndFeelClassName();
         if (!lfClass.equals(UIManager.getLookAndFeel().getClass().getName())) {
-            Config.getInstance().setLookAndFeel(lfClass);
+            CONFIG.setLookAndFeel(lfClass);
             JOptionPane.showMessageDialog(frame, "Look and Feel was changed. New L&F will take effect on the next start up.", "Look and Feel Setting Changed", JOptionPane.INFORMATION_MESSAGE);
         }
 
         rebuildToolbar();
+    }
+
+    private static void refreshEditorsSettings() {
+        for (StudioPanel panel: allPanels) {
+            int count = panel.tabbedEditors.getTabCount();
+            for (int index=0; index<count; index++) {
+                RSyntaxTextArea editor = panel.getEditor(index).getTextArea();
+                editor.setHighlightCurrentLine(CONFIG.getBoolean(Config.RSTA_HIGHLIGHT_CURRENT_LINE));
+                editor.setAnimateBracketMatching(CONFIG.getBoolean(Config.RSTA_ANIMATE_BRACKET_MATCHING));
+                editor.setLineWrap(CONFIG.getBoolean(Config.RSTA_WORD_WRAP));
+            }
+        }
     }
 
     public static StudioPanel[] getPanels() {
@@ -995,7 +1018,7 @@ public class StudioPanel extends JPanel implements Observer,WindowListener {
     public boolean quit() {
         WorkspaceSaver.setEnabled(false);
         try {
-            if (Config.getInstance().getBoolean(Config.SAVE_ON_EXIT)) {
+            if (CONFIG.getBoolean(Config.SAVE_ON_EXIT)) {
                 for (StudioPanel panel : allPanels.toArray(new StudioPanel[0])) {
                     panel.getFrame().toFront();
                     JTabbedPane tabbedEditors = panel.tabbedEditors;
@@ -1127,7 +1150,7 @@ public class StudioPanel extends JPanel implements Observer,WindowListener {
         menu.addSeparator();
         menu.add(new JMenuItem(chartAction));
 
-        String[] mru = Config.getInstance().getMRUFiles();
+        String[] mru = CONFIG.getMRUFiles();
 
         if (mru.length > 0) {
             menu.addSeparator();
@@ -1180,7 +1203,7 @@ public class StudioPanel extends JPanel implements Observer,WindowListener {
         menu.add(new JMenuItem(removeServerAction));
 
         Server server = editor.getServer();
-        Server[] servers = Config.getInstance().getServers();
+        Server[] servers = CONFIG.getServers();
         if (servers.length > 0) {
             JMenu subMenu = new JMenu(I18n.getString("Clone"));
             subMenu.setIcon(Util.DATA_COPY_ICON);
@@ -1202,7 +1225,7 @@ public class StudioPanel extends JPanel implements Observer,WindowListener {
 
                         if (f.getResult() == ACCEPTED) {
                             clone = f.getServer();
-                            Config.getInstance().addServer(clone);
+                            CONFIG.addServer(clone);
                             //ebuildToolbar();
                             setServer(clone);
                             ConnectionPool.getInstance().purge(clone); //?
@@ -1301,7 +1324,7 @@ public class StudioPanel extends JPanel implements Observer,WindowListener {
         if (server != null && server.getConnectionString().equals(connection)) return;
 
         try {
-            setServer(Config.getInstance().getServerByConnectionString(connection));
+            setServer(CONFIG.getServerByConnectionString(connection));
 
             rebuildToolbar();
             toolbar.validate();
@@ -1315,13 +1338,13 @@ public class StudioPanel extends JPanel implements Observer,WindowListener {
         if (serverList == null) {
             serverList = new ServerList(frame);
         }
-        serverList.updateServerTree(Config.getInstance().getServerTree(), editor.getServer());
+        serverList.updateServerTree(CONFIG.getServerTree(), editor.getServer());
         serverList.updateServerHistory(serverHistory);
         serverList.selectHistoryTab(selectHistory);
         serverList.setVisible(true);
 
         Rectangle bounds = serverList.getBounds();
-        Config.getInstance().setBounds(Config.SERVER_LIST_BOUNDS, bounds);
+        CONFIG.setBounds(Config.SERVER_LIST_BOUNDS, bounds);
 
         Server selectedServer = serverList.getSelectedServer();
         if (selectedServer == null || selectedServer.equals(editor.getServer())) return;
@@ -1333,9 +1356,9 @@ public class StudioPanel extends JPanel implements Observer,WindowListener {
 
     private void selectServerName() {
         String selection = comboServer.getSelectedItem().toString();
-        if(! Config.getInstance().getServerNames().contains(selection)) return;
+        if(! CONFIG.getServerNames().contains(selection)) return;
 
-        setServer(Config.getInstance().getServer(selection));
+        setServer(CONFIG.getServer(selection));
         rebuildToolbar();
         toolbar.validate();
         toolbar.repaint();
@@ -1354,7 +1377,7 @@ public class StudioPanel extends JPanel implements Observer,WindowListener {
 
     private void toolbarAddServerSelection() {
         Server server = editor.getServer();
-        Collection<String> names = Config.getInstance().getServerNames();
+        Collection<String> names = CONFIG.getServerNames();
         String name = server == null ? "" : server.getFullName();
         if (!names.contains(name)) {
             List<String> newNames = new ArrayList<>();
@@ -1368,7 +1391,7 @@ public class StudioPanel extends JPanel implements Observer,WindowListener {
         comboServer.addActionListener(e->selectServerName());
         // Cut the width if it is too wide.
         comboServer.setMinimumSize(new Dimension(0, 0));
-        comboServer.setVisible(Config.getInstance().isShowServerComboBox());
+        comboServer.setVisible(CONFIG.isShowServerComboBox());
 
         txtServer = new JTextField(32);
         txtServer.addActionListener(e -> {
@@ -1590,8 +1613,8 @@ public class StudioPanel extends JPanel implements Observer,WindowListener {
         editor = new EditorTab(this);
         registerForMacOSXEvents();
         initActions();
-        serverHistory = new HistoricalList<>(Config.getInstance().getServerHistoryDepth(),
-                Config.getInstance().getServerHistory());
+        serverHistory = new HistoricalList<>(CONFIG.getServerHistoryDepth(),
+                CONFIG.getServerHistory());
 
         splitpane = new JSplitPane();
         frame = new JFrame();
@@ -1710,13 +1733,13 @@ public class StudioPanel extends JPanel implements Observer,WindowListener {
         Server server = null;
         String serverFullname = tab.getServerFullName();
         if (serverFullname != null) {
-            server = Config.getInstance().getServer(serverFullname);
+            server = CONFIG.getServer(serverFullname);
         }
         if (server != null) return server;
 
         String connectionString = tab.getServerConnection();
         if (connectionString != null) {
-            server = Config.getInstance().getServerByConnectionString(connectionString);
+            server = CONFIG.getServerByConnectionString(connectionString);
         }
         if (server == null) return null;
 
@@ -1798,7 +1821,7 @@ public class StudioPanel extends JPanel implements Observer,WindowListener {
         String text = editor.getSelectedText();
         if (text != null) return text;
 
-        Config.ExecAllOption option = Config.getInstance().getExecAllOption();
+        Config.ExecAllOption option = CONFIG.getExecAllOption();
         if (option == Config.ExecAllOption.Ignore) {
             log.info("Nothing is selected. Ignore execution of the whole script");
             return null;
@@ -1911,7 +1934,7 @@ public class StudioPanel extends JPanel implements Observer,WindowListener {
         } else if (queryResult.isComplete()) {
             JTabbedPane tabbedPane = panel.tabbedPane;
             TabPanel tab = new TabPanel(panel, queryResult);
-            if(tabbedPane.getTabCount()>= Config.getInstance().getResultTabsCount()) {
+            if(tabbedPane.getTabCount()>= CONFIG.getResultTabsCount()) {
                 tabbedPane.remove(0);
             }
             tab.addInto(tabbedPane);
@@ -1933,7 +1956,7 @@ public class StudioPanel extends JPanel implements Observer,WindowListener {
                 Server server = editor.getServer();
                 String filename = editor.getFilename();
                 boolean modified = editor.isModified();
-                if (modified && Config.getInstance().getBoolean(Config.AUTO_SAVE)) {
+                if (modified && CONFIG.getBoolean(Config.AUTO_SAVE)) {
                     panel.saveFileOnDisk(editor);
                 }
 
