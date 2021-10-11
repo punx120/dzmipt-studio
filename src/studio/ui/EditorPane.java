@@ -3,8 +3,7 @@ package studio.ui;
 import org.fife.ui.rsyntaxtextarea.RSyntaxTextArea;
 import org.fife.ui.rtextarea.RTextScrollPane;
 import studio.kdb.Config;
-import studio.qeditor.RSToken;
-import studio.qeditor.RSTokenMaker;
+import studio.ui.rstextarea.RSTextAreaFactory;
 
 import javax.swing.*;
 import java.awt.*;
@@ -27,15 +26,7 @@ public class EditorPane extends JPanel {
         yGap = Math.round(0.1f * fm.getHeight());
         xGap = Math.round(0.25f * SwingUtilities.computeStringWidth(fm, "x"));
 
-        textArea = new RSyntaxTextArea("");
-        textArea.setLineWrap(true);
-        textArea.setAnimateBracketMatching(true);
-        textArea.setCodeFoldingEnabled(true);
-        textArea.setCloseCurlyBraces(true);
-
-        textArea.setSyntaxEditingStyle(RSTokenMaker.CONTENT_TYPE);
-        textArea.setSyntaxScheme(RSToken.getDefaulSyntaxScheme());
-
+        textArea = RSTextAreaFactory.newTextArea();
         textArea.addCaretListener(e -> updateRowColStatus());
         textArea.addKeyListener(new KeyAdapter() {
             @Override

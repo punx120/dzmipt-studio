@@ -25,14 +25,7 @@ import javax.swing.undo.UndoManager;
 import kx.c;
 import org.apache.logging.log4j.LogManager;
 import org.apache.logging.log4j.Logger;
-import org.fife.ui.rsyntaxtextarea.AbstractTokenMakerFactory;
-import org.fife.ui.rsyntaxtextarea.RSyntaxTextAreaDefaultInputMap;
-import org.fife.ui.rsyntaxtextarea.TokenMakerFactory;
-import org.fife.ui.rsyntaxtextarea.folding.CurlyFoldParser;
-import org.fife.ui.rsyntaxtextarea.folding.FoldParserManager;
-import org.fife.ui.rtextarea.RTextArea;
 import org.netbeans.editor.*;
-import org.netbeans.editor.Utilities;
 import studio.core.AuthenticationManager;
 import studio.core.Credentials;
 import studio.qeditor.QKit;
@@ -40,7 +33,6 @@ import org.netbeans.editor.ext.ExtKit;
 import org.netbeans.editor.ext.ExtSettingsInitializer;
 import studio.qeditor.QSettingsInitializer;
 import studio.kdb.*;
-import studio.qeditor.RSTokenMaker;
 import studio.ui.action.QPadImport;
 import studio.ui.action.QueryResult;
 import studio.ui.action.WorkspaceSaver;
@@ -89,27 +81,6 @@ public class StudioPanel extends JPanel implements Observer,WindowListener {
         editorRedoAction = kit.getActionByName(BaseKit.redoAction);
     }
 
-    static {
-        int shift = InputEvent.SHIFT_DOWN_MASK;
-        int defaultModifier = RTextArea.getDefaultModifier();
-        InputMap inputMap = new RSyntaxTextAreaDefaultInputMap();
-        //@TODO: what other hotkeys should we add?
-        //@TODO: Is it for MacOS only?
-        inputMap.put(KeyStroke.getKeyStroke(KeyEvent.VK_END, 0), DefaultEditorKit.endLineAction);
-        inputMap.put(KeyStroke.getKeyStroke(KeyEvent.VK_HOME, 0), DefaultEditorKit.beginLineAction);
-
-        inputMap.put(KeyStroke.getKeyStroke(KeyEvent.VK_END, shift), DefaultEditorKit.selectionEndLineAction);
-        inputMap.put(KeyStroke.getKeyStroke(KeyEvent.VK_HOME, shift), DefaultEditorKit.selectionBeginLineAction);
-
-        inputMap.remove(KeyStroke.getKeyStroke(KeyEvent.VK_ENTER, defaultModifier));
-
-        UIManager.put("RSyntaxTextAreaUI.inputMap", inputMap);
-
-        FoldParserManager.get().addFoldParserMapping(RSTokenMaker.CONTENT_TYPE, new CurlyFoldParser());
-
-        AbstractTokenMakerFactory atmf = (AbstractTokenMakerFactory) TokenMakerFactory.getDefaultInstance();
-        atmf.putMapping(RSTokenMaker.CONTENT_TYPE, RSTokenMaker.class.getName());
-    }
 
     private static boolean loading = false;
 

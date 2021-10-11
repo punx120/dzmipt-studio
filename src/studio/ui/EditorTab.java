@@ -127,10 +127,10 @@ public class EditorTab {
     }
 
     public void setServer(Server server) {
+        getTextArea().setBackground(server.getBackgroundColor());
         if (server.equals(getServer())) return;
 
         getTextArea().getDocument().putProperty(SERVER,server);
-        getTextArea().setBackground(server.getBackgroundColor());
         setStatus("Changed server: " + server.getDescription(true));
     }
 
