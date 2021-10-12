@@ -25,7 +25,7 @@ import java.util.stream.Stream;
 public class Config {
     private static final Logger log = LogManager.getLogger();
 
-    private enum ConfigType { STRING, INT, DOUBLE, BOOLEAN, FONT, BOUNDS}
+    private enum ConfigType { STRING, INT, DOUBLE, BOOLEAN, FONT, BOUNDS, COLOR}
 
     private static final Map<String,? super Object> defaultValues = new HashMap();
     private static final Map<String, ConfigType> configTypes = new HashMap();
@@ -42,6 +42,36 @@ public class Config {
     public static final String RSTA_HIGHLIGHT_CURRENT_LINE = configDefault("rstaHighlightCurrentLine", ConfigType.BOOLEAN, true);
     public static final String RSTA_WORD_WRAP = configDefault("rstaWordWrap", ConfigType.BOOLEAN, false);
 
+    public static final String COLOR_CHARVECTOR = configDefault("token.CHARVECTOR", ConfigType.COLOR, new Color(0,200,20));
+    public static final String COLOR_EOLCOMMENT = configDefault("token.EOLCOMMENT", ConfigType.COLOR,  Color.GRAY);
+    public static final String COLOR_IDENTIFIER = configDefault("token.IDENTIFIER", ConfigType.COLOR, new Color(180,160,0));
+    public static final String COLOR_OPERATOR = configDefault("token.OPERATOR", ConfigType.COLOR, Color.BLACK);
+    public static final String COLOR_BOOLEAN = configDefault("token.BOOLEAN", ConfigType.COLOR, new Color(51,204,255));
+    public static final String COLOR_BYTE = configDefault("token.BYTE", ConfigType.COLOR, new Color(51,104,255));
+    public static final String COLOR_SHORT = configDefault("token.SHORT", ConfigType.COLOR, new Color(51,104,255));
+    public static final String COLOR_LONG = configDefault("token.LONG", ConfigType.COLOR, new Color(51,104,255));
+    public static final String COLOR_REAL = configDefault("token.REAL", ConfigType.COLOR, new Color(51,104,255));
+    public static final String COLOR_INTEGER = configDefault("token.INTEGER", ConfigType.COLOR, new Color(51,104,255));
+    public static final String COLOR_FLOAT = configDefault("token.FLOAT", ConfigType.COLOR, new Color(51,104,255));
+    public static final String COLOR_TIMESTAMP = configDefault("token.TIMESTAMP", ConfigType.COLOR, new Color(184,138,0));
+    public static final String COLOR_TIMESPAN = configDefault("token.TIMESPAN", ConfigType.COLOR, new Color(184,138,0));
+    public static final String COLOR_DATETIME = configDefault("token.DATETIME", ConfigType.COLOR, new Color(184,138,0));
+    public static final String COLOR_DATE = configDefault("token.DATE", ConfigType.COLOR, new Color(184,138,0));
+    public static final String COLOR_MONTH = configDefault("token.MONTH", ConfigType.COLOR, new Color(184,138,0));
+    public static final String COLOR_MINUTE = configDefault("token.MINUTE", ConfigType.COLOR, new Color(184,138,0));
+    public static final String COLOR_SECOND = configDefault("token.SECOND", ConfigType.COLOR, new Color(184,138,0));
+    public static final String COLOR_TIME = configDefault("token.TIME", ConfigType.COLOR, new Color(184,138,0));
+    public static final String COLOR_SYMBOL = configDefault("token.SYMBOL", ConfigType.COLOR, new Color(179,0,134));
+    public static final String COLOR_KEYWORD = configDefault("token.KEYWORD", ConfigType.COLOR, new Color(0,0,255));
+    public static final String COLOR_COMMAND = configDefault("token.COMMAND", ConfigType.COLOR, new Color(240,180,0));
+    public static final String COLOR_SYSTEM = configDefault("token.SYSTEM", ConfigType.COLOR, new Color(240,180,0));
+    public static final String COLOR_WHITESPACE = configDefault("token.WHITESPACE", ConfigType.COLOR, Color.BLACK);
+    public static final String COLOR_DEFAULT = configDefault("token.DEFAULT", ConfigType.COLOR, Color.BLACK);
+    public static final String COLOR_BRACKET = configDefault("token.BRACKET", ConfigType.COLOR, Color.BLACK);
+
+    public static final String COLOR_ERROR = configDefault("token.ERROR", ConfigType.COLOR, Color.RED);
+
+    public static final String COLOR_BACKGROUND = configDefault("token.BACKGROUND", ConfigType.COLOR, Color.WHITE);
 
     // The folder is also referenced in lon4j2.xml config
     private static final String PATH = System.getProperties().getProperty("user.home") + "/.studioforkdb";
@@ -238,25 +268,6 @@ public class Config {
         p.setProperty("font.name", f.getFamily());
         p.setProperty("font.size", "" + f.getSize());
         save();
-    }
-
-    public Color getColorForToken(String tokenType, Color defaultColor) {
-        String s = p.getProperty("token." + tokenType);
-        if (s != null) {
-            return new Color(Integer.parseInt(s, 16));
-        }
-
-        setColorForToken(tokenType, defaultColor);
-        return defaultColor;
-    }
-
-    public void setColorForToken(String tokenType, Color c) {
-        p.setProperty("token." + tokenType, Integer.toHexString(c.getRGB()).substring(2));
-        save();
-    }
-
-    public Color getDefaultBackgroundColor() {
-        return getColorForToken("BACKGROUND", Color.white);
     }
 
     public static Config getInstance() {
@@ -537,11 +548,10 @@ public class Config {
         int port = Integer.parseInt(p.getProperty("server." + key + ".port", "-1"));
         String username = p.getProperty("server." + key + ".user", "");
         String password = p.getProperty("server." + key + ".password", "");
-        String backgroundColor = p.getProperty("server." + key + ".backgroundColor", "FFFFFF");
+        Color backgroundColor = get("server." + key + ".backgroundColor", Color.WHITE);
         String authenticationMechanism = p.getProperty("server." + key + ".authenticationMechanism", DefaultAuthenticationMechanism.NAME);
         boolean useTLS = Boolean.parseBoolean(p.getProperty("server." + key + ".useTLS", "false"));
-        Color c = new Color(Integer.parseInt(backgroundColor, 16));
-        return new Server("", host, port, username, password, c, authenticationMechanism, useTLS);
+        return new Server("", host, port, username, password, backgroundColor, authenticationMechanism, useTLS);
     }
 
     private Server initServerFromProperties(int number) {
@@ -903,6 +913,33 @@ public class Config {
         p.setProperty(key + ".width", "" + bound.width);
         p.setProperty(key + ".height", "" + bound.height);
         save();
+    }
+    
+    private Color get(String key, Color defaultValue) {
+        String value = p.getProperty(key);
+        if (value == null) return defaultValue;
+
+        try {
+            return new Color(Integer.parseInt(value, 16));
+        } catch (NumberFormatException e) {
+            log.error("Failed to parse config key " + key + " from config", e);
+        }
+        return defaultValue;
+    }
+
+    public Color getColor(String key) {
+        return get(key, (Color) checkAndGetDefaultValue(key, ConfigType.COLOR));
+    }
+
+    // Returns whether the value was changed
+    public boolean setColor(String key, Color value) {
+        Color currentValue = getColor(key);
+        if (currentValue == value) {
+            return false;
+        }
+        p.setProperty(key, Integer.toHexString(value.getRGB()).substring(2));
+        save();
+        return true;
     }
 
 }

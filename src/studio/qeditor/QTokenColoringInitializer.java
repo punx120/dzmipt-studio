@@ -44,43 +44,43 @@ class QTokenColoringInitializer extends SettingsUtil.TokenColoringInitializer
     private Coloring DEFAULT_Coloring;
     private Coloring BRACKET_Coloring;
 
-    private Coloring buildColoring(String name, Font font, Color defaultColor)
+    private Coloring buildColoring(String tokenName, Font font)
     {
         return new Coloring(font,
                             Coloring.FONT_MODE_APPLY_STYLE,
-                            Config.getInstance().getColorForToken(name, defaultColor),
+                            Config.getInstance().getColor("token." + tokenName),
                             null);
     }
 
     public QTokenColoringInitializer()
     {
         super(QTokenContext.context);
-        CHARVECTOR_Coloring=buildColoring("CHARVECTOR", SettingsDefaults.defaultFont,new Color(0,200,20));
-        EOL_COMMENT_Coloring=buildColoring("EOLCOMMENT", italicFont, Color.GRAY);
-        IDENTIFIER_Coloring=buildColoring("IDENTIFIER", SettingsDefaults.defaultFont,new Color(180,160,0));
-        OPERATOR_Coloring=buildColoring("OPERATOR", SettingsDefaults.defaultFont,Color.BLACK);
-        BOOLEAN_Coloring=buildColoring("BOOLEAN", SettingsDefaults.defaultFont,new Color(51,204,255));
-        BYTE_Coloring=buildColoring("BYTE",SettingsDefaults.defaultFont,new Color(51,104,255));
-        SHORT_Coloring=buildColoring("SHORT",SettingsDefaults.defaultFont,new Color(51,104,255));
-        LONG_Coloring=buildColoring("LONG",SettingsDefaults.defaultFont,new Color(51,104,255));
-        REAL_Coloring=buildColoring("REAL",SettingsDefaults.defaultFont,new Color(51,104,255));
-        INTEGER_Coloring=buildColoring("INTEGER",SettingsDefaults.defaultFont,new Color(51,104,255));
-        FLOAT_Coloring=buildColoring("FLOAT",SettingsDefaults.defaultFont,new Color(51,104,255));
-        TIMESTAMP_Coloring=buildColoring("TIMESTAMP",SettingsDefaults.defaultFont,new Color(184,138,0));
-        TIMESPAN_Coloring=buildColoring("TIMESPAN",SettingsDefaults.defaultFont,new Color(184,138,0));
-        DATETIME_Coloring=buildColoring("DATETIME",SettingsDefaults.defaultFont,new Color(184,138,0));
-        DATE_Coloring=buildColoring("DATE",SettingsDefaults.defaultFont,new Color(184,138,0));
-        MONTH_Coloring=buildColoring("MONTH",SettingsDefaults.defaultFont,new Color(184,138,0));
-        MINUTE_Coloring=buildColoring("MINUTE",SettingsDefaults.defaultFont,new Color(184,138,0));
-        SECOND_Coloring=buildColoring("SECOND",SettingsDefaults.defaultFont,new Color(184,138,0));
-        TIME_Coloring=buildColoring("TIME",SettingsDefaults.defaultFont,new Color(184,138,0));
-        SYMBOL_Coloring=buildColoring("SYMBOL",SettingsDefaults.defaultFont,new Color(179,0,134));
-        KEYWORD_Coloring=buildColoring("KEYWORD", boldFont,new Color(0,0,255));
-        COMMAND_Coloring=buildColoring("COMMAND", SettingsDefaults.defaultFont,new Color(240,180,0));
-        SYSTEM_Coloring=buildColoring("SYSTEM", SettingsDefaults.defaultFont,new Color(240,180,0));
-        WHITESPACE_Coloring=buildColoring("WHITESPACE", SettingsDefaults.defaultFont,Color.black);
-        DEFAULT_Coloring=buildColoring("DEFAULT", SettingsDefaults.defaultFont,Color.black);
-        BRACKET_Coloring=buildColoring("BRACKET", SettingsDefaults.defaultFont,Color.BLACK);
+        CHARVECTOR_Coloring=buildColoring("CHARVECTOR", SettingsDefaults.defaultFont);
+        EOL_COMMENT_Coloring=buildColoring("EOLCOMMENT", italicFont);
+        IDENTIFIER_Coloring=buildColoring("IDENTIFIER", SettingsDefaults.defaultFont);
+        OPERATOR_Coloring=buildColoring("OPERATOR", SettingsDefaults.defaultFont);
+        BOOLEAN_Coloring=buildColoring("BOOLEAN", SettingsDefaults.defaultFont);
+        BYTE_Coloring=buildColoring("BYTE",SettingsDefaults.defaultFont);
+        SHORT_Coloring=buildColoring("SHORT",SettingsDefaults.defaultFont);
+        LONG_Coloring=buildColoring("LONG",SettingsDefaults.defaultFont);
+        REAL_Coloring=buildColoring("REAL",SettingsDefaults.defaultFont);
+        INTEGER_Coloring=buildColoring("INTEGER",SettingsDefaults.defaultFont);
+        FLOAT_Coloring=buildColoring("FLOAT",SettingsDefaults.defaultFont);
+        TIMESTAMP_Coloring=buildColoring("TIMESTAMP",SettingsDefaults.defaultFont);
+        TIMESPAN_Coloring=buildColoring("TIMESPAN",SettingsDefaults.defaultFont);
+        DATETIME_Coloring=buildColoring("DATETIME",SettingsDefaults.defaultFont);
+        DATE_Coloring=buildColoring("DATE",SettingsDefaults.defaultFont);
+        MONTH_Coloring=buildColoring("MONTH",SettingsDefaults.defaultFont);
+        MINUTE_Coloring=buildColoring("MINUTE",SettingsDefaults.defaultFont);
+        SECOND_Coloring=buildColoring("SECOND",SettingsDefaults.defaultFont);
+        TIME_Coloring=buildColoring("TIME",SettingsDefaults.defaultFont);
+        SYMBOL_Coloring=buildColoring("SYMBOL",SettingsDefaults.defaultFont);
+        KEYWORD_Coloring=buildColoring("KEYWORD", boldFont);
+        COMMAND_Coloring=buildColoring("COMMAND", SettingsDefaults.defaultFont);
+        SYSTEM_Coloring=buildColoring("SYSTEM", SettingsDefaults.defaultFont);
+        WHITESPACE_Coloring=buildColoring("WHITESPACE", SettingsDefaults.defaultFont);
+        DEFAULT_Coloring=buildColoring("DEFAULT", SettingsDefaults.defaultFont);
+        BRACKET_Coloring=buildColoring("BRACKET", SettingsDefaults.defaultFont);
     }
 
     public Object getTokenColoring(TokenContextPath tokenContextPath,
@@ -135,7 +135,7 @@ class QTokenColoringInitializer extends SettingsUtil.TokenColoringInitializer
                 case QTokenContext.SYMBOL_ID:
                     return SYMBOL_Coloring;
                 case QTokenContext.UNKNOWN_ID:
-                    return new Coloring(boldFont,Coloring.FONT_MODE_APPLY_STYLE,Color.red,null);
+                    return new Coloring(boldFont,Coloring.FONT_MODE_APPLY_STYLE,Config.getInstance().getColor(Config.COLOR_ERROR), null);
                 case QTokenContext.KEYWORD_ID:
                     return KEYWORD_Coloring;
                 case QTokenContext.COMMAND_ID:
