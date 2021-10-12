@@ -698,8 +698,8 @@ public class StudioPanel extends JPanel implements Observer,WindowListener {
         String filename = editor.getFilename();
         if (filename == null) return false;
 
-        try {
-            editor.getTextArea().write(new BufferedWriter(new OutputStreamWriter(new FileOutputStream(filename), "UTF-8")));
+        try (Writer writer = new BufferedWriter(new OutputStreamWriter(new FileOutputStream(filename), "UTF-8"))) {
+            editor.getTextArea().write(writer);
             rebuildAll();
             editor.setModified(false);
             editor.getPanel().addToMruFiles(filename);
