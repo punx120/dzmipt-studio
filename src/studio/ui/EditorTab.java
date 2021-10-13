@@ -102,13 +102,19 @@ public class EditorTab {
         return (String) getTextArea().getDocument().getProperty(TITLE);
     }
 
-    public String getTabTitle() {
+    private String getTabTitleInternal() {
         if (getFilename() != null) return getTitle();
         Server server = getServer();
         if (server == null) return getTitle();
 
         if (server.getName().length() > 0) return server.getName();
         return server.getHost() + ":" + server.getPort();
+    }
+
+    public String getTabTitle() {
+        String title = getTabTitleInternal();
+        if (isModified()) title = title + " *";
+        return title;
     }
 
     public boolean isModified() {

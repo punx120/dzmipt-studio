@@ -107,6 +107,7 @@ public class StudioPanel extends JPanel implements Observer,WindowListener {
     private UserAction newWindowAction;
     private UserAction newTabAction;
     private UserAction saveFileAction;
+    private UserAction saveAllFilesAction;
     private UserAction saveAsFileAction;
     private UserAction exportAction;
     private UserAction chartAction;
@@ -153,9 +154,12 @@ public class StudioPanel extends JPanel implements Observer,WindowListener {
     public void refreshTitle() {
         if (editor.getTitle() == null) return;
 
-        int index = tabbedEditors.getSelectedIndex();
-        if (index != -1) {
-            tabbedEditors.setTitleAt(index, editor.getTabTitle());
+        int count = tabbedEditors.getTabCount();
+        for (int index=0; index<count; index++) {
+            String oldTitle = tabbedEditors.getTitleAt(index);
+            String title = getEditor(index).getTabTitle();
+            if (oldTitle!= null && oldTitle.equals(title)) continue;
+            tabbedEditors.setTitleAt(index, title);
         }
 
         if (! loading) {
@@ -693,6 +697,15 @@ public class StudioPanel extends JPanel implements Observer,WindowListener {
         }
     }
 
+    private void saveAll() {
+        for (StudioPanel panel: allPanels) {
+            int count = panel.tabbedEditors.getTabCount();
+            for (int index=0; index<count; index++) {
+                saveFileOnDisk(panel.getEditor(index));
+            }
+        }
+    }
+
     // returns true if saved, false if error or cancelled
     private static boolean saveFileOnDisk(EditorTab editor) {
         String filename = editor.getFilename();
@@ -859,6 +872,10 @@ public class StudioPanel extends JPanel implements Observer,WindowListener {
         saveFileAction = UserAction.create(I18n.getString("Save"), Util.DISKS_ICON, "Save the script",
                 KeyEvent.VK_S, KeyStroke.getKeyStroke(KeyEvent.VK_S, menuShortcutKeyMask),
                 e -> saveEditor(editor));
+
+        saveAllFilesAction = UserAction.create("Save All...", Util.BLANK_ICON, "Save all files",
+                KeyEvent.VK_L, KeyStroke.getKeyStroke(KeyEvent.VK_S, menuShortcutKeyMask | InputEvent.SHIFT_MASK),
+                e -> saveAll());
 
         saveAsFileAction = UserAction.create(I18n.getString("SaveAs"), Util.SAVE_AS_ICON, "Save script as",
                 KeyEvent.VK_A, null, e -> saveAsFile(editor));
@@ -1135,6 +1152,7 @@ public class StudioPanel extends JPanel implements Observer,WindowListener {
         menu.add(new JMenuItem(openFileAction));
         menu.add(new JMenuItem(saveFileAction));
         menu.add(new JMenuItem(saveAsFileAction));
+        menu.add(new JMenuItem(saveAllFilesAction));
 
         menu.add(new JMenuItem(closeTabAction));
         menu.add(new JMenuItem(closeFileAction));
