@@ -151,9 +151,12 @@ public class StudioPanel extends JPanel implements Observer,WindowListener {
     public void refreshTitle() {
         if (editor.getTitle() == null) return;
 
-        int index = tabbedEditors.getSelectedIndex();
-        if (index != -1) {
-            tabbedEditors.setTitleAt(index, editor.getTabTitle());
+        int count = tabbedEditors.getTabCount();
+        for (int index=0; index<count; index++) {
+            String oldTitle = tabbedEditors.getTitleAt(index);
+            String title = getEditor(index).getTabTitle();
+            if (oldTitle!= null && oldTitle.equals(title)) continue;
+            tabbedEditors.setTitleAt(index, title);
         }
 
         if (! loading) {
