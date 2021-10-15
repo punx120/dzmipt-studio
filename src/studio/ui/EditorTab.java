@@ -19,6 +19,7 @@ import javax.swing.undo.CannotUndoException;
 import javax.swing.undo.UndoManager;
 import java.io.File;
 
+//@TODO: Do we really need both EditorTab and EditorPane?
 public class EditorTab {
 
     private static final String TITLE = "title";
@@ -35,9 +36,10 @@ public class EditorTab {
 
     public EditorTab(StudioPanel panel) {
         this.panel = panel;
+        init();
     }
 
-    public JComponent init() {
+    private void init() {
         if (editorPane != null) throw new IllegalStateException("The EditorTab has been already initialized");
 
         editorPane = new EditorPane();
@@ -64,8 +66,6 @@ public class EditorTab {
         };
         doc.putProperty(BaseDocument.UNDO_MANAGER_PROP,um);
         doc.addUndoableEditListener(um);
-
-        return editorPane;
     }
 
     public StudioPanel getPanel() {
@@ -74,6 +74,10 @@ public class EditorTab {
 
     public void setPanel(StudioPanel panel) {
         this.panel = panel;
+    }
+
+    public JComponent getPane() {
+        return editorPane;
     }
 
     public RSyntaxTextArea getTextArea() {

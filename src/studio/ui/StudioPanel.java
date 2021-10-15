@@ -1587,14 +1587,13 @@ public class StudioPanel extends JPanel implements Observer,WindowListener {
 
     public EditorTab addTab(Server server, String filename) {
         editor = new EditorTab(this);
-        JComponent editorComponent = editor.init();
-        removeFocusChangeKeysForWindows(editorComponent);
+        JComponent editorPane = editor.getPane();
+        JTextComponent textArea = editor.getTextArea();
+        removeFocusChangeKeysForWindows(editorPane);
 
-        overrideDefaultKeymap(editorComponent, toggleCommaFormatAction, newTabAction, closeTabAction, nextEditorTab, prevEditorTab);
-        //JComponent component = Utilities.getEditorUI(textArea).getExtComponent();
-        JComponent component = editorComponent;
-        component.putClientProperty(EditorTab.class, editor);
-        tabbedEditors.add(component);
+        overrideDefaultKeymap(textArea, toggleCommaFormatAction, newTabAction, closeTabAction, nextEditorTab, prevEditorTab);
+        editorPane.putClientProperty(EditorTab.class, editor);
+        tabbedEditors.add(editorPane);
         tabbedEditors.setSelectedIndex(tabbedEditors.getTabCount()-1);
         setServer(server);
 
@@ -1604,9 +1603,8 @@ public class StudioPanel extends JPanel implements Observer,WindowListener {
             editor.setFilename(null);
             initTextArea("");
         }
-        editor.getTextArea().getDocument().addDocumentListener(new MarkingDocumentListener(editor));
-//        editorComponent.requestFocus();
-        editor.getTextArea().requestFocus();
+        textArea.getDocument().addDocumentListener(new MarkingDocumentListener(editor));
+        textArea.requestFocus();
         refreshActionState();
         return editor;
     }
@@ -1628,7 +1626,6 @@ public class StudioPanel extends JPanel implements Observer,WindowListener {
     }
 
     public StudioPanel() {
-        editor = new EditorTab(this);
         registerForMacOSXEvents();
         initActions();
         serverHistory = new HistoricalList<>(CONFIG.getServerHistoryDepth(),
@@ -1693,7 +1690,7 @@ public class StudioPanel extends JPanel implements Observer,WindowListener {
 
         Dimension screenSize = Toolkit.getDefaultToolkit().getScreenSize();
 
-        rebuildMenuAndTooblar();
+//        rebuildMenuAndTooblar();
 
         frame.getContentPane().add(toolbar,BorderLayout.NORTH);
         frame.getContentPane().add(splitpane,BorderLayout.CENTER);
@@ -1759,7 +1756,7 @@ public class StudioPanel extends JPanel implements Observer,WindowListener {
         if (connectionString != null) {
             server = CONFIG.getServerByConnectionString(connectionString);
         }
-        if (server == null) return null;
+        if (server == null) server = new Server();
 
         String auth = tab.getServerAuth();
         if (auth == null) return server;
