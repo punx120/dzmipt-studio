@@ -1759,6 +1759,7 @@ public class StudioPanel extends JPanel implements Observer,WindowListener {
                 EditorTab editor = panel.addTab(getServer(tab), tab.getFilename());
                 editor.getTextArea().setText(tab.getContent());
                 editor.setModified(tab.isModified());
+                editor.getUndoManager().discardAllEdits();
             }
             if (window.getSelectedTab() != -1) {
                 panel.tabbedEditors.setSelectedIndex(window.getSelectedTab());
