@@ -117,6 +117,8 @@ public class EditorTab {
 
     public String getTabTitle() {
         String title = getTabTitleInternal();
+
+        if (getFilename() == null) return title;
         if (isModified()) title = title + " *";
         return title;
     }
