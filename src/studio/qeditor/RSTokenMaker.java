@@ -46,10 +46,6 @@ public class RSTokenMaker extends TokenMakerBase {
 
         parser.init(initState, text.array, offset, text.offset + text.count);
 
-//        System.out.printf("getToken %d - %d%n", initialTokenType, startOffset);
-//        System.out.println("getTokenList for: " + text);
-//        System.out.printf("Buffer %s; %d-%d%n", new String(text.array, offset, text.count), offset, text.offset + text.count);
-
         QToken lastToken = null;
         for (;;) {
             QToken token = parser.next();
@@ -61,15 +57,6 @@ public class RSTokenMaker extends TokenMakerBase {
         if (lastToken != QToken.ML_COMMENT) {
             addNullToken();
         }
-
-        StringBuilder debug = new StringBuilder();
-        Token t = firstToken;
-        while (t!= null) {
-            if (debug.length()>0) debug.append(", ");
-            debug.append(RSToken.fromTokenType(t.getType()));
-            t = t.getNextToken();
-        }
-//        System.out.println("  return token list: " + debug);
 
         return firstToken;
     }
