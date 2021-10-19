@@ -40,9 +40,7 @@ import studio.ui.action.WorkspaceSaver;
 import studio.ui.chart.Chart;
 import studio.ui.dndtabbedpane.DragEvent;
 import studio.ui.dndtabbedpane.DraggableTabbedPane;
-import studio.utils.BrowserLaunch;
-import studio.utils.HistoricalList;
-import studio.utils.OSXAdapter;
+import studio.utils.*;
 
 public class StudioPanel extends JPanel implements Observer,WindowListener {
 
@@ -544,7 +542,7 @@ public class StudioPanel extends JPanel implements Observer,WindowListener {
         if (!checkAndSaveTab(editor)) return;
 
         editor.setFilename(null);
-        initTextArea("");
+        initTextArea(Content.getEmpty());
     }
 
     private void openFile() {
@@ -577,28 +575,10 @@ public class StudioPanel extends JPanel implements Observer,WindowListener {
         rebuildMenuBar();
     }
 
-    static public String getContents(String filename) throws IOException {
-
-        try (BufferedReader input = new BufferedReader(
-                new InputStreamReader(
-                        new FileInputStream(filename),"UTF-8"))) {
-
-            StringBuilder contents = new StringBuilder();
-            String line;
-            while ((line = input.readLine()) != null) {
-                contents.append(line);
-                contents.append(System.getProperty("line.separator"));
-            }
-            return contents.toString();
-
-        }
-
-    }
-
     public boolean loadFile(String filename) {
-        String content = "";
+        Content content = Content.getEmpty();
         try {
-            content = getContents(filename);
+            content = FileReaderWriter.read(filename);
             return true;
         } catch (IOException e) {
             log.error("Failed to load file {}", filename, e);
@@ -611,13 +591,14 @@ public class StudioPanel extends JPanel implements Observer,WindowListener {
         return false;
     }
 
-    private void initTextArea(String content) {
+    private void initTextArea(Content content) {
         try {
             JTextComponent textArea = editor.getTextArea();
             textArea.getDocument().remove(0, textArea.getDocument().getLength());
-            textArea.getDocument().insertString(0, content,null);
+            textArea.getDocument().insertString(0, content.getContent(),null);
             textArea.setCaretPosition(0);
             editor.setModified(false);
+            editor.setLineEnding(content.getLineEnding());
             UndoManager um = (UndoManager) textArea.getDocument().getProperty(BaseDocument.UNDO_MANAGER_PROP);
             um.discardAllEdits();
             rebuildAll();
@@ -711,8 +692,8 @@ public class StudioPanel extends JPanel implements Observer,WindowListener {
         String filename = editor.getFilename();
         if (filename == null) return false;
 
-        try (Writer writer = new BufferedWriter(new OutputStreamWriter(new FileOutputStream(filename), "UTF-8"))) {
-            editor.getTextArea().write(writer);
+        try {
+            FileReaderWriter.write(filename, editor.getTextArea().getText(), editor.getLineEnding());
             rebuildAll();
             editor.setModified(false);
             editor.getPanel().addToMruFiles(filename);
@@ -1601,7 +1582,7 @@ public class StudioPanel extends JPanel implements Observer,WindowListener {
             loadFile(filename);
         } else {
             editor.setFilename(null);
-            initTextArea("");
+            initTextArea(Content.getEmpty());
         }
         textArea.getDocument().addDocumentListener(new MarkingDocumentListener(editor));
         textArea.requestFocus();
@@ -1780,6 +1761,11 @@ public class StudioPanel extends JPanel implements Observer,WindowListener {
             for (Workspace.Tab tab: tabs) {
                 EditorTab editor = panel.addTab(getServer(tab), tab.getFilename());
                 editor.getTextArea().setText(tab.getContent());
+                editor.setLineEnding(tab.getLineEnding());
+                int caretPosition = tab.getCaret();
+                if (caretPosition>=0 && caretPosition < editor.getTextArea().getDocument().getLength()) {
+                    editor.getTextArea().setCaretPosition(caretPosition);
+                }
                 editor.setModified(tab.isModified());
                 editor.getUndoManager().discardAllEdits();
             }
@@ -1975,14 +1961,15 @@ public class StudioPanel extends JPanel implements Observer,WindowListener {
                 if (modified && CONFIG.getBoolean(Config.AUTO_SAVE)) {
                     panel.saveFileOnDisk(editor);
                 }
-
-                String content = editor.getTextArea().getText();
+                JTextComponent textArea = editor.getTextArea();
 
                 window.addTab(index == panel.tabbedEditors.getSelectedIndex())
                         .addFilename(filename)
                         .addServer(server)
-                        .addContent(content)
-                        .setModified(modified);
+                        .addContent(textArea.getText())
+                        .setCaret(textArea.getCaretPosition())
+                        .setModified(modified)
+                        .setLineEnding(editor.getLineEnding());
             }
 
         }

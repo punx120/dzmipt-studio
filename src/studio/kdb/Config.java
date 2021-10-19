@@ -7,6 +7,7 @@ import studio.core.Credentials;
 import studio.core.DefaultAuthenticationMechanism;
 import studio.ui.ServerList;
 import studio.utils.HistoricalList;
+import studio.utils.LineEnding;
 import studio.utils.QConnection;
 import studio.utils.TableConnExtractor;
 
@@ -25,7 +26,7 @@ import java.util.stream.Stream;
 public class Config {
     private static final Logger log = LogManager.getLogger();
 
-    private enum ConfigType { STRING, INT, DOUBLE, BOOLEAN, FONT, BOUNDS, COLOR}
+    private enum ConfigType { STRING, INT, DOUBLE, BOOLEAN, FONT, BOUNDS, COLOR, ENUM}
 
     private static final Map<String,? super Object> defaultValues = new HashMap();
     private static final Map<String, ConfigType> configTypes = new HashMap();
@@ -41,6 +42,8 @@ public class Config {
     public static final String RSTA_ANIMATE_BRACKET_MATCHING = configDefault("rstaAnimateBracketMatching", ConfigType.BOOLEAN, true);
     public static final String RSTA_HIGHLIGHT_CURRENT_LINE = configDefault("rstaHighlightCurrentLine", ConfigType.BOOLEAN, true);
     public static final String RSTA_WORD_WRAP = configDefault("rstaWordWrap", ConfigType.BOOLEAN, false);
+
+    public static final String DEFAULT_LINE_ENDING = configDefault("defaultLineEnding", ConfigType.ENUM, LineEnding.Unix);
 
     public static final String COLOR_CHARVECTOR = configDefault("token.CHARVECTOR", ConfigType.COLOR, new Color(0,200,20));
     public static final String COLOR_EOLCOMMENT = configDefault("token.EOLCOMMENT", ConfigType.COLOR,  Color.GRAY);
@@ -765,8 +768,8 @@ public class Config {
         return defaultValues.get(key);
     }
 
-    private static String configDefault(String key, ConfigType type, Object value) {
-        defaultValues.put(key, value);
+    private static String configDefault(String key, ConfigType type, Object defaultValue) {
+        defaultValues.put(key, defaultValue);
         configTypes.put(key, type);
         return key;
     }
@@ -922,7 +925,7 @@ public class Config {
         try {
             return new Color(Integer.parseInt(value, 16));
         } catch (NumberFormatException e) {
-            log.error("Failed to parse config key " + key + " from config", e);
+            log.error("Failed to parse {} for config key {}", value, key, e);
         }
         return defaultValue;
     }
@@ -938,6 +941,33 @@ public class Config {
             return false;
         }
         p.setProperty(key, Integer.toHexString(value.getRGB()).substring(2));
+        save();
+        return true;
+    }
+
+    private <T extends Enum<T>> T get(String key, T defaultValue) {
+        String value = p.getProperty(key);
+        if (value == null) return defaultValue;
+
+        try {
+            return (T) Enum.valueOf(defaultValue.getClass(), value);
+        } catch (IllegalArgumentException e) {
+            log.error("Failed to parse {} for config key {}", value, key, e);
+        }
+        return defaultValue;
+    }
+
+    public <T extends Enum<T>> T getEnum(String key) {
+        return get(key, (T) checkAndGetDefaultValue(key, ConfigType.ENUM));
+    }
+
+    public <T extends Enum<T>> boolean setEnum(String key, T value) {
+        T currentValue = getEnum(key);
+        if (currentValue == value) {
+            return false;
+        }
+
+        p.setProperty(key, value.toString());
         save();
         return true;
     }

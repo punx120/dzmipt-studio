@@ -2,9 +2,9 @@ package studio.kdb;
 
 import org.apache.logging.log4j.LogManager;
 import org.apache.logging.log4j.Logger;
-import studio.ui.StudioPanel;
+import studio.utils.Content;
+import studio.utils.LineEnding;
 
-import java.io.IOException;
 import java.util.ArrayList;
 import java.util.List;
 import java.util.Properties;
@@ -24,6 +24,9 @@ public class Workspace {
     private final static String SERVER_AUTH = "serverAuth";
     private final static String CONTENT = "content";
     private final static String MODIFIED = "modified";
+    private final static String LINE_ENDING = "lineEnding";
+    private final static String CARET = "caret";
+
 
     private final static Logger log = LogManager.getLogger();
 
@@ -123,6 +126,8 @@ public class Workspace {
         private String serverAuth = null;
         private String content = null;
         private boolean modified = false;
+        private LineEnding lineEnding = LineEnding.Unix;
+        private int caret = 0;
 
         public String getFilename() {
             return filename;
@@ -146,6 +151,14 @@ public class Workspace {
 
         public boolean isModified() {
             return modified;
+        }
+
+        public LineEnding getLineEnding() {
+            return lineEnding;
+        }
+
+        public int getCaret() {
+            return caret;
         }
 
         public Tab addFilename(String filename) {
@@ -172,8 +185,22 @@ public class Workspace {
             return this;
         }
 
+        public Tab addContent(Content content) {
+            return addContent(content.getContent()).setLineEnding(content.getLineEnding());
+        }
+
         public Tab setModified(boolean modified) {
             this.modified = modified;
+            return this;
+        }
+
+        public Tab setLineEnding(LineEnding lineEnding) {
+            this.lineEnding = lineEnding;
+            return this;
+        }
+
+        public Tab setCaret(int caret) {
+            this.caret = caret;
             return this;
         }
 
@@ -184,6 +211,8 @@ public class Workspace {
             if (serverAuth != null) p.setProperty(prefix + SERVER_AUTH, serverAuth);
             if (content != null) p.setProperty(prefix + CONTENT, content);
             p.setProperty(prefix + MODIFIED, Boolean.toString(modified));
+            p.setProperty(prefix + LINE_ENDING, lineEnding.toString());
+            p.setProperty(prefix + CARET, Integer.toString(caret));
         }
 
         private void load(String prefix, Properties p) {
@@ -193,6 +222,18 @@ public class Workspace {
             serverAuth = p.getProperty(prefix + SERVER_AUTH);
             content = p.getProperty(prefix + CONTENT);
             modified = Boolean.parseBoolean(p.getProperty(prefix + MODIFIED, "false"));
+
+            try {
+                lineEnding = LineEnding.valueOf(p.getProperty(prefix + LINE_ENDING, "Unix"));
+            } catch (IllegalArgumentException e) {
+                log.error("Failed to parse {} of key {}", p.getProperty(prefix + LINE_ENDING, "Unix"), prefix + LINE_ENDING, e);
+            }
+
+            try {
+                caret = Integer.parseInt(p.getProperty(prefix + CARET, "0"));
+            } catch (NumberFormatException e) {
+                log.error("Failed to parse {} of key {}", p.getProperty(prefix + CARET, "0"), prefix + CARET, e);
+            }
         }
     }
 }

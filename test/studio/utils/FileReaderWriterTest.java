@@ -11,7 +11,7 @@ import static org.junit.jupiter.api.Assertions.*;
 
 public class FileReaderWriterTest {
 
-    private FileReaderWriter.Content read(String text) throws IOException {
+    private Content read(String text) throws IOException {
         File tmpFile = File.createTempFile("fileReaderWriterTest", ".tmp");
         tmpFile.deleteOnExit();
         Files.write(Paths.get(tmpFile.getPath()),text.getBytes(FileReaderWriter.DEFAULT_CHARSET));
@@ -21,7 +21,7 @@ public class FileReaderWriterTest {
 
     @Test
     public void testReadContent() throws IOException {
-        FileReaderWriter.Content content = read("something ha-ha-ha");
+        Content content = read("something ha-ha-ha");
         assertEquals("something ha-ha-ha", content.getContent());
         assertNull(content.getLineEnding());
 

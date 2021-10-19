@@ -3,12 +3,10 @@ package studio.ui;
 import org.apache.logging.log4j.LogManager;
 import org.apache.logging.log4j.Logger;
 import org.fife.ui.rsyntaxtextarea.RSyntaxTextArea;
-import org.fife.ui.rtextarea.RTextScrollPane;
 import org.netbeans.editor.BaseDocument;
 import studio.kdb.Server;
-import studio.qeditor.RSToken;
-import studio.qeditor.RSTokenMaker;
 import studio.ui.action.QueryExecutor;
+import studio.utils.LineEnding;
 
 import javax.swing.*;
 import javax.swing.event.UndoableEditEvent;
@@ -22,10 +20,11 @@ import java.io.File;
 //@TODO: Do we really need both EditorTab and EditorPane?
 public class EditorTab {
 
-    private static final String TITLE = "title";
-    private static final String FILENAME = "filename";
-    private static final String SERVER = "server";
-    private static final String MODIFIED = "modified";
+    private String title;
+    private String filename;
+    private Server server;
+    private boolean modified = false;
+    private LineEnding lineEnding = LineEnding.Unix;
 
     private static int scriptNumber = 0;
 
@@ -47,7 +46,6 @@ public class EditorTab {
 
         textArea.putClientProperty(QueryExecutor.class, new QueryExecutor(this));
         Document doc = textArea.getDocument();
-        doc.putProperty(MODIFIED, false);
         UndoManager um = new UndoManager() {
             public void undoableEditHappened(UndoableEditEvent e) {
                 super.undoableEditHappened(e);
@@ -85,25 +83,21 @@ public class EditorTab {
     }
 
     public String getFilename() {
-        if (editorPane == null) return null;
-        return (String) getTextArea().getDocument().getProperty(FILENAME);
+        return filename;
     }
 
     public void setFilename(String filename) {
-        getTextArea().getDocument().putProperty(FILENAME, filename);
-        String title;
+        this.filename = filename;
         if (filename == null) {
             title = "Script" + scriptNumber++;
         } else {
             title = new File(filename).getName();
         }
-        getTextArea().getDocument().putProperty(TITLE, title);
         panel.refreshTitle();
     }
 
     public String getTitle() {
-        if (editorPane == null) return null;
-        return (String) getTextArea().getDocument().getProperty(TITLE);
+        return title;
     }
 
     private String getTabTitleInternal() {
@@ -124,26 +118,32 @@ public class EditorTab {
     }
 
     public boolean isModified() {
-        if (editorPane == null) return false;
-        return (Boolean)getTextArea().getDocument().getProperty(MODIFIED);
+        return modified;
     }
 
     public void setModified(boolean value) {
-        getTextArea().getDocument().putProperty(MODIFIED, value);
+        modified = value;
         panel.refreshTitle();
     }
 
     public Server getServer() {
-        if (editorPane == null) return null;
-        return (Server)getTextArea().getDocument().getProperty(SERVER);
+        return server;
     }
 
     public void setServer(Server server) {
-        getTextArea().getDocument().putProperty(SERVER,server);
+        this.server = server;
         getTextArea().setBackground(server.getBackgroundColor());
         if (server.equals(getServer())) return;
 
         setStatus("Changed server: " + server.getDescription(true));
+    }
+
+    public LineEnding getLineEnding() {
+        return lineEnding;
+    }
+
+    public void setLineEnding(LineEnding lineEnding) {
+        this.lineEnding = lineEnding;
     }
 
     public void setStatus(String status) {

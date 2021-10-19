@@ -17,6 +17,8 @@ import studio.kdb.Server;
 import studio.kdb.Workspace;
 import studio.ui.StudioPanel;
 import studio.ui.action.WorkspaceSaver;
+import studio.utils.Content;
+import studio.utils.FileReaderWriter;
 
 import java.util.TimeZone;
 import javax.swing.*;
@@ -92,7 +94,7 @@ public class Studio {
                 for (Workspace.Tab tab: window.getTabs()) {
                     if (tab.getFilename() != null && !tab.isModified()) {
                         try {
-                            String content = StudioPanel.getContents(tab.getFilename());
+                            Content content = FileReaderWriter.read(tab.getFilename());
                             tab.addContent(content);
                             tab.setModified(false);
                         } catch(IOException e) {
