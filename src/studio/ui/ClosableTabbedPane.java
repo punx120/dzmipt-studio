@@ -50,7 +50,7 @@ public class ClosableTabbedPane {
         UserAction closeAction = UserAction.create("Close", "Close current tab",
                 0, e-> closeTabAction.close(index) );
 
-        UserAction closeOthersAction = UserAction.create("Close others tab", "Close others tab",
+        UserAction closeOthersAction = UserAction.create("Close other tabs", "Close other tabs",
                 0, e -> {
                     for (int count = index; count>0; count--) {
                         if (! closeTabAction.close(0)) return;
