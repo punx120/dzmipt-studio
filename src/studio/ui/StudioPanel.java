@@ -133,6 +133,7 @@ public class StudioPanel extends JPanel implements Observer,WindowListener {
     private UserAction toggleCommaFormatAction;
     private UserAction nextEditorTabAction;
     private UserAction prevEditorTabAction;
+    private UserAction[] lineEndingActions;
     private JFrame frame;
 
     private static JFileChooser fileChooser;
@@ -217,6 +218,10 @@ public class StudioPanel extends JPanel implements Observer,WindowListener {
         UndoManager um = editor.getUndoManager();
         undoAction.setEnabled(um.canUndo());
         redoAction.setEnabled(um.canRedo());
+
+        for (LineEnding lineEnding: LineEnding.values() ) {
+            lineEndingActions[lineEnding.ordinal()].setSelected(editor.getLineEnding() == lineEnding);
+        }
 
         boolean queryRunning = editor.getQueryExecutor().running();
         stopAction.setEnabled(queryRunning);
@@ -542,7 +547,7 @@ public class StudioPanel extends JPanel implements Observer,WindowListener {
         if (!checkAndSaveTab(editor)) return;
 
         editor.setFilename(null);
-        initTextArea(Content.getEmpty());
+        editor.init(Content.getEmpty());
     }
 
     private void openFile() {
@@ -579,6 +584,11 @@ public class StudioPanel extends JPanel implements Observer,WindowListener {
         Content content = Content.getEmpty();
         try {
             content = FileReaderWriter.read(filename);
+            if (content.hasMixedLineEnding()) {
+                JOptionPane.showMessageDialog(frame, "The file " + filename + " has mixed line endings. Mixed line endings are not supported.\n\n" +
+                                "All line endings are set to " + content.getLineEnding() + " style.",
+                        "Mixed Line Ending", JOptionPane.INFORMATION_MESSAGE);
+            }
             return true;
         } catch (IOException e) {
             log.error("Failed to load file {}", filename, e);
@@ -586,27 +596,9 @@ public class StudioPanel extends JPanel implements Observer,WindowListener {
                     "Error in file load", JOptionPane.ERROR_MESSAGE);
         } finally {
             editor.setFilename(filename);
-            initTextArea(content);
+            editor.init(content);
         }
         return false;
-    }
-
-    private void initTextArea(Content content) {
-        try {
-            JTextComponent textArea = editor.getTextArea();
-            textArea.getDocument().remove(0, textArea.getDocument().getLength());
-            textArea.getDocument().insertString(0, content.getContent(),null);
-            textArea.setCaretPosition(0);
-            editor.setModified(false);
-            editor.setLineEnding(content.getLineEnding());
-            UndoManager um = (UndoManager) textArea.getDocument().getProperty(BaseDocument.UNDO_MANAGER_PROP);
-            um.discardAllEdits();
-            rebuildAll();
-            textArea.requestFocus();
-        }
-        catch (BadLocationException e) {
-            log.error("Unexpected exception", e);
-        }
     }
 
     private boolean saveAsFile(EditorTab editor) {
@@ -952,6 +944,14 @@ public class StudioPanel extends JPanel implements Observer,WindowListener {
                         KeyStroke.getKeyStroke(KeyEvent.VK_TAB, menuShortcutKeyMask | InputEvent.SHIFT_MASK),
                 e -> selectNextTab(false));
 
+        lineEndingActions = new UserAction[LineEnding.values().length];
+        for(LineEnding lineEnding: LineEnding.values()) {
+            lineEndingActions[lineEnding.ordinal()] = UserAction.create(lineEnding.getDescription(),
+                e -> {
+                    editor.setLineEnding(lineEnding);
+                    refreshActionState();
+                } );
+        }
     }
 
     public void settings() {
@@ -971,6 +971,7 @@ public class StudioPanel extends JPanel implements Observer,WindowListener {
         CONFIG.setExecAllOption(dialog.getExecAllOption());
         CONFIG.setBoolean(Config.SAVE_ON_EXIT, dialog.isSaveOnExit());
         CONFIG.setBoolean(Config.AUTO_SAVE, dialog.isAutoSave());
+        CONFIG.setEnum(Config.DEFAULT_LINE_ENDING, dialog.getDefaultLineEnding());
         
         boolean changed = CONFIG.setBoolean(Config.RSTA_ANIMATE_BRACKET_MATCHING, dialog.isAnimateBracketMatching());
         changed |= CONFIG.setBoolean(Config.RSTA_HIGHLIGHT_CURRENT_LINE, dialog.isHighlightCurrentLine());
@@ -1102,7 +1103,7 @@ public class StudioPanel extends JPanel implements Observer,WindowListener {
         return true;
     }
 
-    private static void rebuildAll() {
+    public static void rebuildAll() {
         for (StudioPanel panel: allPanels) {
             panel.rebuildMenuAndTooblar();
         }
@@ -1186,6 +1187,13 @@ public class StudioPanel extends JPanel implements Observer,WindowListener {
         menu.add(new JMenuItem(copyAction));
         menu.add(new JMenuItem(pasteAction));
         menu.addSeparator();
+
+        JMenu lineEndingSubMenu = new JMenu("Line Ending");
+        for (Action action: lineEndingActions) {
+            lineEndingSubMenu.add(new JCheckBoxMenuItem(action));
+        }
+        menu.add(lineEndingSubMenu);
+
         menu.add(new JMenuItem(cleanAction));
         menu.add(new JMenuItem(selectAllAction));
         menu.addSeparator();
@@ -1582,7 +1590,7 @@ public class StudioPanel extends JPanel implements Observer,WindowListener {
             loadFile(filename);
         } else {
             editor.setFilename(null);
-            initTextArea(Content.getEmpty());
+            editor.init(Content.getEmpty());
         }
         textArea.getDocument().addDocumentListener(new MarkingDocumentListener(editor));
         textArea.requestFocus();
@@ -1760,13 +1768,12 @@ public class StudioPanel extends JPanel implements Observer,WindowListener {
             StudioPanel panel = new StudioPanel();
             for (Workspace.Tab tab: tabs) {
                 EditorTab editor = panel.addTab(getServer(tab), tab.getFilename());
-                editor.getTextArea().setText(tab.getContent());
-                editor.setLineEnding(tab.getLineEnding());
+                editor.init(Content.newContent(tab.getContent(), tab.getLineEnding()));
+                editor.setModified(tab.isModified());
                 int caretPosition = tab.getCaret();
                 if (caretPosition>=0 && caretPosition < editor.getTextArea().getDocument().getLength()) {
                     editor.getTextArea().setCaretPosition(caretPosition);
                 }
-                editor.setModified(tab.isModified());
                 editor.getUndoManager().discardAllEdits();
             }
             if (window.getSelectedTab() != -1) {

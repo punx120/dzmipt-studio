@@ -6,10 +6,12 @@ import org.fife.ui.rsyntaxtextarea.RSyntaxTextArea;
 import org.netbeans.editor.BaseDocument;
 import studio.kdb.Server;
 import studio.ui.action.QueryExecutor;
+import studio.utils.Content;
 import studio.utils.LineEnding;
 
 import javax.swing.*;
 import javax.swing.event.UndoableEditEvent;
+import javax.swing.text.BadLocationException;
 import javax.swing.text.Document;
 import javax.swing.text.JTextComponent;
 import javax.swing.undo.CannotRedoException;
@@ -64,6 +66,25 @@ public class EditorTab {
         };
         doc.putProperty(BaseDocument.UNDO_MANAGER_PROP,um);
         doc.addUndoableEditListener(um);
+    }
+
+    public void init(Content content) {
+        try {
+            JTextComponent textArea = getTextArea();
+            textArea.getDocument().remove(0, textArea.getDocument().getLength());
+            textArea.getDocument().insertString(0, content.getContent(),null);
+            textArea.setCaretPosition(0);
+            setModified(content.hasMixedLineEnding());
+            setLineEnding(content.getLineEnding());
+            UndoManager um = (UndoManager) textArea.getDocument().getProperty(BaseDocument.UNDO_MANAGER_PROP);
+            um.discardAllEdits();
+            StudioPanel.rebuildAll();
+            textArea.requestFocus();
+        }
+        catch (BadLocationException e) {
+            log.error("Unexpected exception", e);
+        }
+
     }
 
     public StudioPanel getPanel() {
@@ -122,6 +143,7 @@ public class EditorTab {
     }
 
     public void setModified(boolean value) {
+        if (modified == value) return;
         modified = value;
         panel.refreshTitle();
     }
@@ -143,7 +165,10 @@ public class EditorTab {
     }
 
     public void setLineEnding(LineEnding lineEnding) {
+        if (this.lineEnding == lineEnding) return;
+
         this.lineEnding = lineEnding;
+        setModified(true);
     }
 
     public void setStatus(String status) {

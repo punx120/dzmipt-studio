@@ -1,6 +1,7 @@
 package studio.utils;
 
 import org.junit.jupiter.api.Test;
+import studio.kdb.Config;
 
 import java.io.File;
 import java.io.IOException;
@@ -23,37 +24,42 @@ public class FileReaderWriterTest {
     public void testReadContent() throws IOException {
         Content content = read("something ha-ha-ha");
         assertEquals("something ha-ha-ha", content.getContent());
-        assertNull(content.getLineEnding());
+        assertEquals(Config.getInstance().getEnum(Config.DEFAULT_LINE_ENDING), content.getLineEnding());
 
         content = read("something\nha-ha-ha");
         assertEquals("something\nha-ha-ha", content.getContent());
         assertEquals(LineEnding.Unix, content.getLineEnding());
-        assertFalse(content.isMixedLineEnding());
+        assertFalse(content.hasMixedLineEnding());
 
         content = read("something\r\nha-ha-ha");
         assertEquals("something\nha-ha-ha", content.getContent());
         assertEquals(LineEnding.Windows, content.getLineEnding());
-        assertFalse(content.isMixedLineEnding());
+        assertFalse(content.hasMixedLineEnding());
 
         content = read("something\n\rha-ha-ha");
         assertEquals("something\n\nha-ha-ha", content.getContent());
         assertEquals(LineEnding.Unix, content.getLineEnding());
-        assertTrue(content.isMixedLineEnding());
+        assertTrue(content.hasMixedLineEnding());
 
         content = read("\r\nsomething\n\rha-ha-ha");
         assertEquals("\nsomething\n\nha-ha-ha", content.getContent());
         assertEquals(LineEnding.Unix, content.getLineEnding());
-        assertTrue(content.isMixedLineEnding());
+        assertTrue(content.hasMixedLineEnding());
 
         content = read("something\n\rha-ha-ha\r");
         assertEquals("something\n\nha-ha-ha\n", content.getContent());
         assertEquals(LineEnding.MacOS9, content.getLineEnding());
-        assertTrue(content.isMixedLineEnding());
+        assertTrue(content.hasMixedLineEnding());
+
+        content = read("\r\nsomething\n\r\nha-ha-ha");
+        assertEquals("\nsomething\n\nha-ha-ha", content.getContent());
+        assertEquals(LineEnding.Windows, content.getLineEnding());
+        assertTrue(content.hasMixedLineEnding());
 
         content = read("something\r\rha-ha-ha");
         assertEquals("something\n\nha-ha-ha", content.getContent());
         assertEquals(LineEnding.MacOS9, content.getLineEnding());
-        assertFalse(content.isMixedLineEnding());
+        assertFalse(content.hasMixedLineEnding());
     }
 
 

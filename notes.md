@@ -1,3 +1,4 @@
+* Support of different line ending styles
 * Adding SaveAll action
 * Adding (*) to the tile if the tab has modified content
 * Adding tooltip in output tab with server where the query was executed

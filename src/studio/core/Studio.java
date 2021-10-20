@@ -96,7 +96,6 @@ public class Studio {
                         try {
                             Content content = FileReaderWriter.read(tab.getFilename());
                             tab.addContent(content);
-                            tab.setModified(false);
                         } catch(IOException e) {
                             log.error("Can't load file " + tab.getFilename() + " from disk", e);
                             tab.setModified(true);

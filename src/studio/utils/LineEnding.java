@@ -10,8 +10,8 @@ public enum LineEnding {
         this.chars = chars;
     }
 
-    private String description;
-    private String chars;
+    private final String description;
+    private final String chars;
 
     public String getDescription() {
         return description;
@@ -19,5 +19,10 @@ public enum LineEnding {
 
     public String getChars() {
         return chars;
+    }
+
+    @Override
+    public String toString() {
+        return description;
     }
 }

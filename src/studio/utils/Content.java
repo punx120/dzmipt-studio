@@ -4,12 +4,17 @@ import studio.kdb.Config;
 
 public class Content {
     private final String content;
-    private LineEnding lineEnding = null;
-    private final boolean mixedLineEnding;
+    private LineEnding lineEnding = Config.getInstance().getEnum(Config.DEFAULT_LINE_ENDING);
+    private boolean mixedLineEnding;
 
     public static Content getEmpty() {
-        Content content = new Content("");
-        content.lineEnding = Config.getInstance().getEnum(Config.DEFAULT_LINE_ENDING);
+        return new Content("");
+    }
+
+    public static Content newContent(String text, LineEnding lineEnding) {
+        Content content = new Content(text);
+        content.lineEnding = lineEnding;
+        content.mixedLineEnding = false;
         return content;
     }
 
@@ -75,7 +80,7 @@ public class Content {
         return lineEnding;
     }
 
-    public boolean isMixedLineEnding() {
+    public boolean hasMixedLineEnding() {
         return mixedLineEnding;
     }
 

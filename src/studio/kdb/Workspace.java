@@ -186,7 +186,9 @@ public class Workspace {
         }
 
         public Tab addContent(Content content) {
-            return addContent(content.getContent()).setLineEnding(content.getLineEnding());
+            return addContent(content.getContent())
+                    .setLineEnding(content.getLineEnding())
+                    .setModified(content.hasMixedLineEnding());
         }
 
         public Tab setModified(boolean modified) {

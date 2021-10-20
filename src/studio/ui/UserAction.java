@@ -35,6 +35,10 @@ public abstract class UserAction extends AbstractAction {
         };
     }
 
+    public void setSelected(boolean value) {
+        putValue(SELECTED_KEY, value);
+    }
+
     public static UserAction create(String text, ImageIcon icon,
                              String desc, int mnemonic,
                              ActionListener listener) {
@@ -54,6 +58,6 @@ public abstract class UserAction extends AbstractAction {
     }
 
     public static UserAction create(String text, ActionListener listener) {
-        return create(text, Util.BLANK_ICON, "", 0, null, listener);
+        return create(text, null, null, 0, null, listener);
     }
 }

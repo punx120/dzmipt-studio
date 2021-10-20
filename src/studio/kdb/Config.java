@@ -967,7 +967,7 @@ public class Config {
             return false;
         }
 
-        p.setProperty(key, value.toString());
+        p.setProperty(key, value.name());
         save();
         return true;
     }
