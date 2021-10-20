@@ -131,8 +131,8 @@ public class StudioPanel extends JPanel implements Observer,WindowListener {
     private UserAction addServerAction;
     private UserAction removeServerAction;
     private UserAction toggleCommaFormatAction;
-    private UserAction nextEditorTab;
-    private UserAction prevEditorTab;
+    private UserAction nextEditorTabAction;
+    private UserAction prevEditorTabAction;
     private JFrame frame;
 
     private static JFileChooser fileChooser;
@@ -940,13 +940,13 @@ public class StudioPanel extends JPanel implements Observer,WindowListener {
         redoAction = UserAction.create(I18n.getString("Redo"), Util.REDO_ICON, "Redo the last change to the document",
                 KeyEvent.VK_R, KeyStroke.getKeyStroke(KeyEvent.VK_Y,menuShortcutKeyMask), editorRedoAction);
 
-        nextEditorTab = UserAction.create("Next tab", Util.BLANK_ICON,
+        nextEditorTabAction = UserAction.create("Next tab", Util.BLANK_ICON,
                 "Select next editor tab", KeyEvent.VK_N,
                     Util.MAC_OS_X ? KeyStroke.getKeyStroke(KeyEvent.VK_RIGHT, menuShortcutKeyMask | InputEvent.ALT_MASK ) :
                                     KeyStroke.getKeyStroke(KeyEvent.VK_TAB, menuShortcutKeyMask),
                 e -> selectNextTab(true));
 
-        prevEditorTab = UserAction.create("Previous tab", Util.BLANK_ICON,
+        prevEditorTabAction = UserAction.create("Previous tab", Util.BLANK_ICON,
                 "Select previous editor tab", KeyEvent.VK_P,
                 Util.MAC_OS_X ? KeyStroke.getKeyStroke(KeyEvent.VK_LEFT, menuShortcutKeyMask | InputEvent.ALT_MASK ) :
                         KeyStroke.getKeyStroke(KeyEvent.VK_TAB, menuShortcutKeyMask | InputEvent.SHIFT_MASK),
@@ -1261,8 +1261,8 @@ public class StudioPanel extends JPanel implements Observer,WindowListener {
         menu.add(new JMenuItem(minMaxDividerAction));
         menu.add(new JMenuItem(toggleDividerOrientationAction));
         menu.add(new JMenuItem(arrangeAllAction));
-        menu.add(new JMenuItem(nextEditorTab));
-        menu.add(new JMenuItem(prevEditorTab));
+        menu.add(new JMenuItem(nextEditorTabAction));
+        menu.add(new JMenuItem(prevEditorTabAction));
 
         if (allPanels.size() > 0) {
             menu.addSeparator();
@@ -1572,7 +1572,7 @@ public class StudioPanel extends JPanel implements Observer,WindowListener {
         JTextComponent textArea = editor.getTextArea();
         removeFocusChangeKeysForWindows(editorPane);
 
-        overrideDefaultKeymap(textArea, toggleCommaFormatAction, newTabAction, closeTabAction, nextEditorTab, prevEditorTab);
+        overrideDefaultKeymap(textArea, toggleCommaFormatAction, newTabAction, closeTabAction, nextEditorTabAction, prevEditorTabAction);
         editorPane.putClientProperty(EditorTab.class, editor);
         tabbedEditors.add(editorPane);
         tabbedEditors.setSelectedIndex(tabbedEditors.getTabCount()-1);
