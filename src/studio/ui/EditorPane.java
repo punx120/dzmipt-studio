@@ -17,6 +17,8 @@ public class EditorPane extends JPanel {
     private final MinSizeLabel lblInsStatus;
     private final JLabel lblStatus;
 
+    private final SearchPanel searchPanel;
+
     private final int yGap;
     private final int xGap;
 
@@ -59,6 +61,10 @@ public class EditorPane extends JPanel {
         textArea.setFont(font);
         RTextScrollPane scrollPane = new RTextScrollPane(textArea);
         scrollPane.getGutter().setLineNumberFont(font);
+
+        searchPanel = new SearchPanel();
+
+        add(searchPanel, BorderLayout.NORTH);
         add(scrollPane, BorderLayout.CENTER);
         add(statusBar, BorderLayout.SOUTH);
     }
