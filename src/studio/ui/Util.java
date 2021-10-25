@@ -63,6 +63,13 @@ public class Util {
     public final static ImageIcon ASC_ICON = getImage("/asc.png");
     public final static ImageIcon DESC_ICON = getImage("/desc.png");
 
+    public final static ImageIcon SEARCH_WHOLE_WORD_ICON = getImage("/searchWholeWord.png");
+    public final static ImageIcon SEARCH_WHOLE_WORD_SHADED_ICON = getImage("/searchWholeWord_shaded.png");
+    public final static ImageIcon SEARCH_REGEX_ICON = getImage("/searchRegex.png");
+    public final static ImageIcon SEARCH_REGEX_SHADED_ICON = getImage("/searchRegex_shaded.png");
+    public final static ImageIcon SEARCH_CASE_SENSITIVE_ICON = getImage("/searchCaseSensitive.png");
+    public final static ImageIcon SEARCH_CASE_SENSITIVE_SHADED_ICON = getImage("/searchCaseSensitive_shaded.png");
+
     public static boolean MAC_OS_X = (System.getProperty("os.name").toLowerCase().startsWith("mac os x"));
 
     public static ImageIcon getImage(String strFilename) {

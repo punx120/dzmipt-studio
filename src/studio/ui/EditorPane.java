@@ -7,6 +7,7 @@ import studio.ui.rstextarea.RSTextAreaFactory;
 
 import javax.swing.*;
 import java.awt.*;
+import java.awt.event.ActionEvent;
 import java.awt.event.KeyAdapter;
 import java.awt.event.KeyEvent;
 
@@ -19,8 +20,12 @@ public class EditorPane extends JPanel {
 
     private final SearchPanel searchPanel;
 
+    private Timer tempStatusTimer = new Timer(3000, this::tempStatusTimerAction);
+    private String oldStatus = "";
+
     private final int yGap;
     private final int xGap;
+
 
     public EditorPane() {
         super(new BorderLayout());
@@ -62,7 +67,7 @@ public class EditorPane extends JPanel {
         RTextScrollPane scrollPane = new RTextScrollPane(textArea);
         scrollPane.getGutter().setLineNumberFont(font);
 
-        searchPanel = new SearchPanel();
+        searchPanel = new SearchPanel(this);
 
         add(searchPanel, BorderLayout.NORTH);
         add(scrollPane, BorderLayout.CENTER);
@@ -75,6 +80,18 @@ public class EditorPane extends JPanel {
 
     public void setStatus(String status) {
         lblStatus.setText(status);
+    }
+
+    public void setTemporaryStatus(String status) {
+        if (!tempStatusTimer.isRunning()) {
+            oldStatus = lblStatus.getText();
+        }
+        setStatus(status);
+        tempStatusTimer.restart();
+    }
+
+    private void tempStatusTimerAction(ActionEvent event) {
+        setStatus(oldStatus);
     }
 
     private void updateRowColStatus() {

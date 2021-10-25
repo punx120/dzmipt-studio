@@ -1,22 +1,49 @@
 package studio.ui;
 
+import org.fife.ui.rsyntaxtextarea.RSyntaxTextArea;
+import org.fife.ui.rtextarea.SearchContext;
+import org.fife.ui.rtextarea.SearchEngine;
+import org.fife.ui.rtextarea.SearchResult;
+
 import javax.swing.*;
-import java.awt.*;
+import javax.swing.border.Border;
+import javax.swing.border.EtchedBorder;
 
 public class SearchPanel extends JPanel {
 
-    private JCheckBox chWholeWord;
-    private JCheckBox chRegexp;
-    private JCheckBox chCaseSensitive;
-    private JCheckBox chWrapSearch;
+    private JToggleButton tglWholeWord;
+    private JToggleButton tglRegex;
+    private JToggleButton tglCaseSensitive;
     private JTextField txtFind;
     private JTextField txtReplace;
 
-    public SearchPanel() {
-        chWholeWord = new JCheckBox("W");
-        chRegexp = new JCheckBox(".*");
-        chCaseSensitive = new JCheckBox("Aa");
-        chWrapSearch = new JCheckBox("∫");
+    private final RSyntaxTextArea textArea;
+    private final EditorPane editorPane;
+
+    private enum SearchAction {Find, Replace, ReplaceAll};
+
+    private static final Border ICON_BORDER = BorderFactory.createCompoundBorder(
+            BorderFactory.createEtchedBorder(EtchedBorder.LOWERED),
+            BorderFactory.createEmptyBorder(1,1,1,1)
+
+    );
+
+    private JToggleButton getButton(Icon icon, Icon selectedIcon, String tooltip) {
+        JToggleButton button = new JToggleButton(icon);
+        button.setSelectedIcon(selectedIcon);
+        button.setBorder(ICON_BORDER);
+        button.setToolTipText(tooltip);
+        button.setFocusable(false);
+        return button;
+    }
+
+    public SearchPanel(EditorPane editorPane) {
+        this.editorPane = editorPane;
+        this.textArea = editorPane.getTextArea();
+
+        tglWholeWord = getButton(Util.SEARCH_WHOLE_WORD_SHADED_ICON, Util.SEARCH_WHOLE_WORD_ICON,"Whole word");
+        tglRegex = getButton(Util.SEARCH_REGEX_SHADED_ICON, Util.SEARCH_REGEX_ICON, "Regular expression");
+        tglCaseSensitive = getButton(Util.SEARCH_CASE_SENSITIVE_SHADED_ICON, Util.SEARCH_CASE_SENSITIVE_ICON, "Case sensitive");
 
         txtFind = new JTextField();
         txtReplace = new JTextField();
@@ -38,12 +65,8 @@ public class SearchPanel extends JPanel {
         JButton btnReplaceAll = new JButton(replaceAllAction);
         JButton btnClose = new JButton(closeAction);
 
-        JPanel find = new JPanel(new FlowLayout(FlowLayout.LEFT));
-        JPanel replace = new JPanel(new FlowLayout(FlowLayout.LEFT));
-
         GroupLayout layout = new GroupLayout(this);
         setLayout(layout);
-        layout.setAutoCreateGaps(true);
         layout.setAutoCreateContainerGaps(true);
 
         layout.setHorizontalGroup(
@@ -56,10 +79,9 @@ public class SearchPanel extends JPanel {
                                         layout.createParallelGroup()
                                                 .addGroup(
                                                         layout.createSequentialGroup()
-                                                            .addComponent(chWholeWord)
-                                                            .addComponent(chRegexp)
-                                                            .addComponent(chCaseSensitive)
-                                                            .addComponent(chWrapSearch)
+                                                            .addComponent(tglWholeWord)
+                                                            .addComponent(tglRegex)
+                                                            .addComponent(tglCaseSensitive)
                                                             .addComponent(btnFind)
                                                             .addComponent(btnFindBack)
                                                             .addComponent(btnMarkAll)
@@ -79,10 +101,9 @@ public class SearchPanel extends JPanel {
                                 layout.createParallelGroup(GroupLayout.Alignment.BASELINE)
                                         .addComponent(lblFind)
                                         .addComponent(txtFind)
-                                        .addComponent(chWholeWord)
-                                        .addComponent(chRegexp)
-                                        .addComponent(chCaseSensitive)
-                                        .addComponent(chWrapSearch)
+                                        .addComponent(tglWholeWord)
+                                        .addComponent(tglRegex)
+                                        .addComponent(tglCaseSensitive)
                                         .addComponent(btnFind)
                                         .addComponent(btnFindBack)
                                         .addComponent(btnMarkAll)
@@ -97,26 +118,76 @@ public class SearchPanel extends JPanel {
         );
 
 
-        lblReplace.setVisible(false);
+/*        lblReplace.setVisible(false);
         txtReplace.setVisible(false);
         btnReplace.setVisible(false);
         btnReplaceAll.setVisible(false);
+ */
+    }
+
+    private SearchContext buildSearchContext() {
+        SearchContext context = new SearchContext();
+        String text = txtFind.getText();
+        context.setSearchFor(text);
+        context.setMatchCase(tglCaseSensitive.isSelected());
+        context.setRegularExpression(tglRegex.isSelected());
+        context.setSearchForward(true);
+        context.setWholeWord(tglWholeWord.isSelected());
+        context.setMarkAll(false);
+        context.setSearchWrap(true);
+        return context;
+    }
+
+    private void doSearch(SearchContext context, SearchAction action) {
+        int pos = textArea.getCaretPosition();
+        textArea.setSelectionStart(pos);
+        textArea.setSelectionEnd(pos);
+        SearchResult result;
+        if (action == SearchAction.Find) {
+            result = SearchEngine.find(textArea, context);
+        } else if (action == SearchAction.Replace) {
+            result = SearchEngine.replace(textArea, context);
+        } else { //ReplaceAll
+            result = SearchEngine.replaceAll(textArea, context);
+        }
+
+        String status;
+        if (! result.wasFound()) {
+            status = "Nothing was found";
+        } else if (result.getMarkedCount() > 0) {
+            status = "Marked " + result.getMarkedCount() + " occurrence(s)";
+        } else if (action == SearchAction.Find) {
+            status = "Selected the first occurrence";
+        } else {
+            status = "Replaced " + result.getCount() + " occurrence(s)";
+        }
+        editorPane.setTemporaryStatus(status);
+
+        textArea.requestFocusInWindow();
     }
 
     private void find(boolean forward) {
-
+        SearchContext context = buildSearchContext();
+        context.setSearchForward(forward);
+        doSearch(context, SearchAction.Find);
     }
 
     private void markAll() {
-
+        SearchContext context = buildSearchContext();
+        context.setMarkAll(true);
+        doSearch(context, SearchAction.Find);
     }
 
     private void replace()  {
-
+        SearchContext context = buildSearchContext();
+        context.setReplaceWith(txtReplace.getText());
+        doSearch(context, SearchAction.Replace);
     }
 
     private void replaceAll() {
-
+        SearchContext context = buildSearchContext();
+        context.setReplaceWith(txtReplace.getText());
+        doSearch(context, SearchAction.ReplaceAll);
     }
 
     private void close() {
