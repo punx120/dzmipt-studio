@@ -9,6 +9,8 @@ import javax.swing.*;
 import javax.swing.border.Border;
 import javax.swing.border.EtchedBorder;
 import java.awt.event.KeyEvent;
+import java.util.regex.Pattern;
+import java.util.regex.PatternSyntaxException;
 
 public class SearchPanel extends JPanel {
 
@@ -154,16 +156,32 @@ public class SearchPanel extends JPanel {
     }
 
     private void doSearch(SearchContext context, SearchAction action) {
+        if (context.isRegularExpression()) {
+            try {
+                Pattern.compile(context.getSearchFor());
+            } catch (PatternSyntaxException e) {
+                editorPane.setTemporaryStatus("Error in regular expression: " + e.getMessage());
+                return;
+            }
+        }
+
         int pos = textArea.getCaretPosition();
         textArea.setSelectionStart(pos);
         textArea.setSelectionEnd(pos);
         SearchResult result;
         if (action == SearchAction.Find) {
             result = SearchEngine.find(textArea, context);
-        } else if (action == SearchAction.Replace) {
-            result = SearchEngine.replace(textArea, context);
-        } else { //ReplaceAll
-            result = SearchEngine.replaceAll(textArea, context);
+        } else {
+            try {
+                if (action == SearchAction.Replace) {
+                    result = SearchEngine.replace(textArea, context);
+                } else { //ReplaceAll
+                    result = SearchEngine.replaceAll(textArea, context);
+                }
+            } catch (IndexOutOfBoundsException e) {
+                editorPane.setTemporaryStatus("Error during replacement: " + e.getMessage());
+                return;
+            }
         }
 
         String status;

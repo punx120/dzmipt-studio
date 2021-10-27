@@ -77,6 +77,7 @@ public class EditorPane extends JPanel {
 
     public void hideSearchPanel() {
         searchPanel.setVisible(false);
+        textArea.setHighlighter(null); // workaround to clear all marks
     }
 
     public void showSearchPanel(boolean showReplace) {
