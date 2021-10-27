@@ -68,10 +68,20 @@ public class EditorPane extends JPanel {
         scrollPane.getGutter().setLineNumberFont(font);
 
         searchPanel = new SearchPanel(this);
+        hideSearchPanel();
 
         add(searchPanel, BorderLayout.NORTH);
         add(scrollPane, BorderLayout.CENTER);
         add(statusBar, BorderLayout.SOUTH);
+    }
+
+    public void hideSearchPanel() {
+        searchPanel.setVisible(false);
+    }
+
+    public void showSearchPanel(boolean showReplace) {
+        searchPanel.setReplaceVisible(showReplace);
+        searchPanel.setVisible(true);
     }
 
     public RSyntaxTextArea getTextArea() {

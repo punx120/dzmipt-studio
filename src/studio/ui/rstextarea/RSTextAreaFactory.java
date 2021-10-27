@@ -28,6 +28,10 @@ public class RSTextAreaFactory {
         actions.add(new CopyCutAsStyledTextAction(false));
         actions.add(new CopyCutAsStyledTextAction(true));
 
+        actions.add(new FindReplaceAction(false));
+        actions.add(new FindReplaceAction(true));
+        actions.add(new HideSearchPanelAction());
+
         ActionMap map = new ActionMapUIResource();
         for (Action a : actions) {
             map.put(a.getValue(Action.NAME), a);
@@ -56,6 +60,10 @@ public class RSTextAreaFactory {
 
         inputMap.remove(KeyStroke.getKeyStroke(KeyEvent.VK_ENTER, defaultModifier)); // used for execute current line
         inputMap.remove(KeyStroke.getKeyStroke(KeyEvent.VK_J, defaultModifier)); // used for adding thousand commas
+
+        inputMap.put(KeyStroke.getKeyStroke(KeyEvent.VK_F,      defaultModifier), FindReplaceAction.findAction);
+        inputMap.put(KeyStroke.getKeyStroke(KeyEvent.VK_R,      defaultModifier), FindReplaceAction.replaceAction);
+        inputMap.put(KeyStroke.getKeyStroke(KeyEvent.VK_ESCAPE,      0), HideSearchPanelAction.action);
 
         UIManager.put("RSyntaxTextAreaUI.inputMap", inputMap);
 

@@ -95,7 +95,7 @@ public class EditorTab {
         this.panel = panel;
     }
 
-    public JComponent getPane() {
+    public EditorPane getPane() {
         return editorPane;
     }
 

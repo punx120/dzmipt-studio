@@ -8,9 +8,13 @@ import org.fife.ui.rtextarea.SearchResult;
 import javax.swing.*;
 import javax.swing.border.Border;
 import javax.swing.border.EtchedBorder;
+import java.awt.event.KeyEvent;
 
 public class SearchPanel extends JPanel {
 
+    private final JLabel lblReplace;
+    private final JButton btnReplace;
+    private final JButton btnReplaceAll;
     private JToggleButton tglWholeWord;
     private JToggleButton tglRegex;
     private JToggleButton tglCaseSensitive;
@@ -49,7 +53,7 @@ public class SearchPanel extends JPanel {
         txtReplace = new JTextField();
 
         JLabel lblFind = new JLabel("Find: ");
-        JLabel lblReplace = new JLabel("Replace: " );
+        lblReplace = new JLabel("Replace: " );
 
         Action findAction = UserAction.create("Find", e -> find(true));
         Action findBackAction = UserAction.create("Find Back", e -> find(false));
@@ -61,9 +65,20 @@ public class SearchPanel extends JPanel {
         JButton btnFind = new JButton(findAction);
         JButton btnFindBack = new JButton(findBackAction);
         JButton btnMarkAll = new JButton(markAllAction);
-        JButton btnReplace = new JButton(replaceAction);
-        JButton btnReplaceAll = new JButton(replaceAllAction);
+        btnReplace = new JButton(replaceAction);
+        btnReplaceAll = new JButton(replaceAllAction);
         JButton btnClose = new JButton(closeAction);
+
+        ActionMap am = txtFind.getActionMap();
+        InputMap im = txtFind.getInputMap();
+        am.put("findAction", findAction);
+        im.put(KeyStroke.getKeyStroke(KeyEvent.VK_ENTER,0),"findAction");
+
+        am = txtReplace.getActionMap();
+        im = txtReplace.getInputMap();
+        am.put("replaceAction", replaceAction);
+        im.put(KeyStroke.getKeyStroke(KeyEvent.VK_ENTER,0),"replaceAction");
+
 
         GroupLayout layout = new GroupLayout(this);
         setLayout(layout);
@@ -116,13 +131,13 @@ public class SearchPanel extends JPanel {
                                         .addComponent(btnReplaceAll)
                         )
         );
+    }
 
-
-/*        lblReplace.setVisible(false);
-        txtReplace.setVisible(false);
-        btnReplace.setVisible(false);
-        btnReplaceAll.setVisible(false);
- */
+    public void setReplaceVisible(boolean visible) {
+        lblReplace.setVisible(visible);
+        txtReplace.setVisible(visible);
+        btnReplace.setVisible(visible);
+        btnReplaceAll.setVisible(visible);
     }
 
     private SearchContext buildSearchContext() {
@@ -191,6 +206,6 @@ public class SearchPanel extends JPanel {
     }
 
     private void close() {
-
+        editorPane.hideSearchPanel();
     }
 }

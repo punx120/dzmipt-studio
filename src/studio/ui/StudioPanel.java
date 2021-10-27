@@ -40,6 +40,7 @@ import studio.ui.action.WorkspaceSaver;
 import studio.ui.chart.Chart;
 import studio.ui.dndtabbedpane.DragEvent;
 import studio.ui.dndtabbedpane.DraggableTabbedPane;
+import studio.ui.rstextarea.FindReplaceAction;
 import studio.utils.*;
 
 public class StudioPanel extends JPanel implements Observer,WindowListener {
@@ -73,11 +74,15 @@ public class StudioPanel extends JPanel implements Observer,WindowListener {
         editorCopyAction = kit.getActionByName(BaseKit.copyAction);
         editorCutAction = kit.getActionByName(BaseKit.cutAction);
         editorPasteAction = kit.getActionByName(BaseKit.pasteAction);
-        editorFindAction = kit.getActionByName(ExtKit.findAction);
-        editorReplaceAction = kit.getActionByName(ExtKit.replaceAction);
+//        editorFindAction = kit.getActionByName(ExtKit.findAction);
+//        editorReplaceAction = kit.getActionByName(ExtKit.replaceAction);
         editorSelectAllAction = kit.getActionByName(BaseKit.selectAllAction);
         editorUndoAction = kit.getActionByName(BaseKit.undoAction);
         editorRedoAction = kit.getActionByName(BaseKit.redoAction);
+
+        //@TODO should we lookup from textArea ActionMap instead of creating new instance?
+        editorFindAction = new FindReplaceAction(false);
+        editorReplaceAction = new FindReplaceAction(true);
     }
 
 
