@@ -1583,7 +1583,7 @@ public class StudioPanel extends JPanel implements Observer,WindowListener {
         editor = new EditorTab(this);
         JComponent editorPane = editor.getPane();
         JTextComponent textArea = editor.getTextArea();
-        removeFocusChangeKeysForWindows(editorPane);
+        removeFocusChangeKeysForWindows(textArea);
 
         overrideDefaultKeymap(textArea, toggleCommaFormatAction, newTabAction, closeTabAction, nextEditorTabAction, prevEditorTabAction);
         editorPane.putClientProperty(EditorTab.class, editor);
