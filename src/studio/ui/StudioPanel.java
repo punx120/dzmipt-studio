@@ -30,7 +30,6 @@ import org.netbeans.editor.*;
 import studio.core.AuthenticationManager;
 import studio.core.Credentials;
 import studio.qeditor.QKit;
-import org.netbeans.editor.ext.ExtKit;
 import org.netbeans.editor.ext.ExtSettingsInitializer;
 import studio.qeditor.QSettingsInitializer;
 import studio.kdb.*;

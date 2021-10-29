@@ -33,6 +33,7 @@ Credits
 
 Studio for kdb+ uses the following open source projects:
 
+* [RSyntaxTextArea] - syntax highlighting text component
 * [NetBeans] - text editor component
 * [JFreeChart] - charting component
 * [Kx Systems] - kdb+ driver c.java
@@ -83,3 +84,4 @@ of a license from Icon Experience.
 [Gradle]:https://gradle.org/
 [Txtmark]:https://github.com/rjeschke/txtmark
 [Apache]:https://www.apache.org/
+[RSyntaxTextArea]:http://bobbylight.github.io/RSyntaxTextArea/
