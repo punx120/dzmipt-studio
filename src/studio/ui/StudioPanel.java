@@ -16,23 +16,17 @@ import javax.swing.event.DocumentEvent;
 import javax.swing.event.DocumentListener;
 import javax.swing.filechooser.FileFilter;
 import javax.swing.filechooser.FileNameExtensionFilter;
-import javax.swing.filechooser.FileView;
 import javax.swing.plaf.basic.BasicSplitPaneUI;
 import javax.swing.table.TableModel;
 import javax.swing.text.*;
-import javax.swing.undo.UndoManager;
 
 import kx.c;
 import org.apache.logging.log4j.LogManager;
 import org.apache.logging.log4j.Logger;
 import org.fife.ui.rsyntaxtextarea.RSyntaxTextArea;
 import org.fife.ui.rsyntaxtextarea.RSyntaxTextAreaEditorKit;
-import org.netbeans.editor.*;
 import studio.core.AuthenticationManager;
 import studio.core.Credentials;
-import studio.qeditor.QKit;
-import org.netbeans.editor.ext.ExtSettingsInitializer;
-import studio.qeditor.QSettingsInitializer;
 import studio.kdb.*;
 import studio.ui.action.QPadImport;
 import studio.ui.action.QueryResult;
@@ -57,29 +51,14 @@ public class StudioPanel extends JPanel implements Observer,WindowListener {
     private static final Action editorReplaceAction;
 
     static {
-
-        // Register us
-        LocaleSupport.addLocalizer(new Impl("org.netbeans.editor.Bundle"));
-
-        Settings.addInitializer(new BaseSettingsInitializer(),Settings.CORE_LEVEL);
-        Settings.addInitializer(new ExtSettingsInitializer(),Settings.CORE_LEVEL);
-
-        JEditorPane.registerEditorKitForContentType(QKit.CONTENT_TYPE,QKit.class.getName());
-
-        Settings.addInitializer(new QSettingsInitializer());
-        Settings.reset();
-
         // Action name will be used for text in menu items. Kit's actions have internal names.
         // We will create new actions for menu/toolbar and use kit's actions as action itself.
-        BaseKit kit = (BaseKit) JEditorPane.createEditorKitForContentType(QKit.CONTENT_TYPE);
         editorCopyAction = RSTextAreaFactory.getAction(RSTextAreaFactory.rstaCopyAsStyledTextAction);
         editorCutAction = RSTextAreaFactory.getAction(RSTextAreaFactory.rstaCutAsStyledTextAction);
         editorPasteAction = RSTextAreaFactory.getAction(RSyntaxTextAreaEditorKit.pasteAction);
         editorSelectAllAction = RSTextAreaFactory.getAction(RSyntaxTextAreaEditorKit.selectAllAction);
-//        editorUndoAction = RSTextAreaFactory.getAction(RSyntaxTextAreaEditorKit.rtaUndoAction);
-//        editorRedoAction = RSTextAreaFactory.getAction(RSyntaxTextAreaEditorKit.rtaRedoAction);
-        editorUndoAction = kit.getActionByName(BaseKit.undoAction);
-        editorRedoAction = kit.getActionByName(BaseKit.redoAction);
+        editorUndoAction = RSTextAreaFactory.getAction(RSyntaxTextAreaEditorKit.rtaUndoAction);
+        editorRedoAction = RSTextAreaFactory.getAction(RSyntaxTextAreaEditorKit.rtaRedoAction);
         editorFindAction = RSTextAreaFactory.getAction(FindReplaceAction.findAction);
         editorReplaceAction = RSTextAreaFactory.getAction(FindReplaceAction.replaceAction);
     }
@@ -209,7 +188,8 @@ public class StudioPanel extends JPanel implements Observer,WindowListener {
     }
 
     public void refreshActionState() {
-        if (editor.getTextArea() == null || tabbedPane == null) {
+        RSyntaxTextArea textArea = editor.getTextArea();
+        if (textArea == null || tabbedPane == null) {
             setActionsEnabled(false, undoAction, redoAction, stopAction, executeAction,
                     executeCurrentLineAction, refreshAction);
             return;
@@ -219,9 +199,8 @@ public class StudioPanel extends JPanel implements Observer,WindowListener {
         editServerAction.setEnabled(server != null);
         removeServerAction.setEnabled(server != null);
 
-        UndoManager um = editor.getUndoManager();
-        undoAction.setEnabled(um.canUndo());
-        redoAction.setEnabled(um.canRedo());
+        undoAction.setEnabled(textArea.canUndo());
+        redoAction.setEnabled(textArea.canRedo());
 
         for (LineEnding lineEnding: LineEnding.values() ) {
             lineEndingActions[lineEnding.ordinal()].setSelected(editor.getLineEnding() == lineEnding);
@@ -1474,49 +1453,6 @@ public class StudioPanel extends JPanel implements Observer,WindowListener {
         }
     }
 
-    private static class Impl extends FileView implements
-            LocaleSupport.Localizer {
-        // FileView implementation
-
-        public String getName(File f) {
-            return null;
-        }
-
-
-        public String getDescription(File f) {
-            return null;
-        }
-
-
-        public String getTypeDescription(File f) {
-            return null;
-        }
-
-
-        public Boolean isTraversable(File f) {
-            return null;
-        }
-
-
-        public Icon getIcon(File f) {
-            if (f.isDirectory())
-                return null;
-            //     KitInfo ki = KitInfo.getKitInfoForFile(f);
-            //   return ki == null ? null : ki.getIcon();
-            return null;
-        }
-        private ResourceBundle bundle;
-
-        public Impl(String bundleName) {
-            bundle = ResourceBundle.getBundle(bundleName);
-        }
-        // Localizer
-
-        public String getString(String key) {
-            return bundle.getString(key);
-        }
-    }
-
     private int dividerLastPosition; // updated from property change listener
     private void minMaxDivider(){
         //BasicSplitPaneDivider divider = ((BasicSplitPaneUI)splitpane.getUI()).getDivider();
@@ -1778,7 +1714,7 @@ public class StudioPanel extends JPanel implements Observer,WindowListener {
                 if (caretPosition>=0 && caretPosition < editor.getTextArea().getDocument().getLength()) {
                     editor.getTextArea().setCaretPosition(caretPosition);
                 }
-                editor.getUndoManager().discardAllEdits();
+                editor.getTextArea().discardAllEdits();
             }
             if (window.getSelectedTab() != -1) {
                 panel.tabbedEditors.setSelectedIndex(window.getSelectedTab());
@@ -2024,6 +1960,7 @@ public class StudioPanel extends JPanel implements Observer,WindowListener {
         }
         private void update() {
             editor.setModified(true);
+            refreshActionState();
         }
         public void changedUpdate(DocumentEvent evt) { update(); }
         public void insertUpdate(DocumentEvent evt) {

@@ -3,20 +3,13 @@ package studio.ui;
 import org.apache.logging.log4j.LogManager;
 import org.apache.logging.log4j.Logger;
 import org.fife.ui.rsyntaxtextarea.RSyntaxTextArea;
-import org.netbeans.editor.BaseDocument;
 import studio.kdb.Server;
 import studio.ui.action.QueryExecutor;
 import studio.utils.Content;
 import studio.utils.LineEnding;
 
-import javax.swing.*;
-import javax.swing.event.UndoableEditEvent;
 import javax.swing.text.BadLocationException;
-import javax.swing.text.Document;
 import javax.swing.text.JTextComponent;
-import javax.swing.undo.CannotRedoException;
-import javax.swing.undo.CannotUndoException;
-import javax.swing.undo.UndoManager;
 import java.io.File;
 
 //@TODO: Do we really need both EditorTab and EditorPane?
@@ -47,37 +40,17 @@ public class EditorTab {
         JTextComponent textArea = editorPane.getTextArea();
 
         textArea.putClientProperty(QueryExecutor.class, new QueryExecutor(this));
-        Document doc = textArea.getDocument();
-        UndoManager um = new UndoManager() {
-            public void undoableEditHappened(UndoableEditEvent e) {
-                super.undoableEditHappened(e);
-                panel.refreshActionState();
-            }
-
-            public synchronized void redo() throws CannotRedoException {
-                super.redo();
-                panel.refreshActionState();
-            }
-
-            public synchronized void undo() throws CannotUndoException {
-                super.undo();
-                panel.refreshActionState();
-            }
-        };
-        doc.putProperty(BaseDocument.UNDO_MANAGER_PROP,um);
-        doc.addUndoableEditListener(um);
     }
 
     public void init(Content content) {
         try {
-            JTextComponent textArea = getTextArea();
+            RSyntaxTextArea textArea = getTextArea();
             textArea.getDocument().remove(0, textArea.getDocument().getLength());
             textArea.getDocument().insertString(0, content.getContent(),null);
             textArea.setCaretPosition(0);
             setModified(content.hasMixedLineEnding());
             setLineEnding(content.getLineEnding());
-            UndoManager um = (UndoManager) textArea.getDocument().getProperty(BaseDocument.UNDO_MANAGER_PROP);
-            um.discardAllEdits();
+            textArea.discardAllEdits();
             StudioPanel.rebuildAll();
             textArea.requestFocus();
         }
@@ -178,9 +151,4 @@ public class EditorTab {
     public QueryExecutor getQueryExecutor() {
         return (QueryExecutor) getTextArea().getClientProperty(QueryExecutor.class);
     }
-
-    public UndoManager getUndoManager() {
-        return (UndoManager) getTextArea().getDocument().getProperty(BaseDocument.UNDO_MANAGER_PROP);
-    }
-
 }
