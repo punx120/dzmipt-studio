@@ -43,7 +43,7 @@ public class EditorTab {
     private void init() {
         if (editorPane != null) throw new IllegalStateException("The EditorTab has been already initialized");
 
-        editorPane = new EditorPane();
+        editorPane = new EditorPane(true);
         JTextComponent textArea = editorPane.getTextArea();
 
         textArea.putClientProperty(QueryExecutor.class, new QueryExecutor(this));

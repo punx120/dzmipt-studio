@@ -1,13 +1,14 @@
 package studio.ui;
 
-import org.netbeans.editor.Utilities;
+import org.fife.ui.rsyntaxtextarea.RSyntaxTextArea;
+import org.fife.ui.rtextarea.ConfigurableCaret;
 import studio.kdb.*;
 import studio.kdb.ListModel;
-import studio.qeditor.QKit;
 import studio.ui.action.QueryResult;
 
 import javax.swing.*;
 import javax.swing.border.EtchedBorder;
+import javax.swing.text.JTextComponent;
 import java.awt.*;
 
 public class TabPanel extends JPanel {
@@ -18,7 +19,7 @@ public class TabPanel extends JPanel {
     private JButton uploadBtn = null;
     private QueryResult queryResult;
     private K.KBase result;
-    private JEditorPane textArea = null;
+    private JTextComponent textArea = null;
     private QGrid grid = null;
     private KFormatContext formatContext = new KFormatContext(KFormatContext.DEFAULT);
     private ResultType type;
@@ -66,9 +67,9 @@ public class TabPanel extends JPanel {
                     type = ResultType.TABLE;
                 }
             } else {
-                textArea = new JEditorPane(QKit.CONTENT_TYPE, "");
-                textArea.setEditable(false);
-                component = Utilities.getEditorUI(textArea).getExtComponent();
+                EditorPane editor = new EditorPane(false);
+                textArea = editor.getTextArea();
+                component = editor;
                 type = ResultType.TEXT;
             }
 

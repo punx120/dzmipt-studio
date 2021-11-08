@@ -26,6 +26,7 @@ import kx.c;
 import org.apache.logging.log4j.LogManager;
 import org.apache.logging.log4j.Logger;
 import org.fife.ui.rsyntaxtextarea.RSyntaxTextArea;
+import org.fife.ui.rsyntaxtextarea.RSyntaxTextAreaEditorKit;
 import org.netbeans.editor.*;
 import studio.core.AuthenticationManager;
 import studio.core.Credentials;
@@ -40,6 +41,7 @@ import studio.ui.chart.Chart;
 import studio.ui.dndtabbedpane.DragEvent;
 import studio.ui.dndtabbedpane.DraggableTabbedPane;
 import studio.ui.rstextarea.FindReplaceAction;
+import studio.ui.rstextarea.RSTextAreaFactory;
 import studio.utils.*;
 
 public class StudioPanel extends JPanel implements Observer,WindowListener {
@@ -70,18 +72,16 @@ public class StudioPanel extends JPanel implements Observer,WindowListener {
         // Action name will be used for text in menu items. Kit's actions have internal names.
         // We will create new actions for menu/toolbar and use kit's actions as action itself.
         BaseKit kit = (BaseKit) JEditorPane.createEditorKitForContentType(QKit.CONTENT_TYPE);
-        editorCopyAction = kit.getActionByName(BaseKit.copyAction);
-        editorCutAction = kit.getActionByName(BaseKit.cutAction);
-        editorPasteAction = kit.getActionByName(BaseKit.pasteAction);
-//        editorFindAction = kit.getActionByName(ExtKit.findAction);
-//        editorReplaceAction = kit.getActionByName(ExtKit.replaceAction);
-        editorSelectAllAction = kit.getActionByName(BaseKit.selectAllAction);
+        editorCopyAction = RSTextAreaFactory.getAction(RSTextAreaFactory.rstaCopyAsStyledTextAction);
+        editorCutAction = RSTextAreaFactory.getAction(RSTextAreaFactory.rstaCutAsStyledTextAction);
+        editorPasteAction = RSTextAreaFactory.getAction(RSyntaxTextAreaEditorKit.pasteAction);
+        editorSelectAllAction = RSTextAreaFactory.getAction(RSyntaxTextAreaEditorKit.selectAllAction);
+//        editorUndoAction = RSTextAreaFactory.getAction(RSyntaxTextAreaEditorKit.rtaUndoAction);
+//        editorRedoAction = RSTextAreaFactory.getAction(RSyntaxTextAreaEditorKit.rtaRedoAction);
         editorUndoAction = kit.getActionByName(BaseKit.undoAction);
         editorRedoAction = kit.getActionByName(BaseKit.redoAction);
-
-        //@TODO should we lookup from textArea ActionMap instead of creating new instance?
-        editorFindAction = new FindReplaceAction(false);
-        editorReplaceAction = new FindReplaceAction(true);
+        editorFindAction = RSTextAreaFactory.getAction(FindReplaceAction.findAction);
+        editorReplaceAction = RSTextAreaFactory.getAction(FindReplaceAction.replaceAction);
     }
 
 

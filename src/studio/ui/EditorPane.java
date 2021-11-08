@@ -1,11 +1,13 @@
 package studio.ui;
 
 import org.fife.ui.rsyntaxtextarea.RSyntaxTextArea;
+import org.fife.ui.rtextarea.ConfigurableCaret;
 import org.fife.ui.rtextarea.RTextScrollPane;
 import studio.kdb.Config;
 import studio.ui.rstextarea.RSTextAreaFactory;
 
 import javax.swing.*;
+import javax.xml.soap.Text;
 import java.awt.*;
 import java.awt.event.ActionEvent;
 import java.awt.event.KeyAdapter;
@@ -17,6 +19,7 @@ public class EditorPane extends JPanel {
     private final MinSizeLabel lblRowCol;
     private final MinSizeLabel lblInsStatus;
     private final JLabel lblStatus;
+    private final Box statusBar;
 
     private final SearchPanel searchPanel;
 
@@ -27,13 +30,13 @@ public class EditorPane extends JPanel {
     private final int xGap;
 
 
-    public EditorPane() {
+    public EditorPane(boolean editable) {
         super(new BorderLayout());
         FontMetrics fm = getFontMetrics(UIManager.getFont("Label.font"));
         yGap = Math.round(0.1f * fm.getHeight());
         xGap = Math.round(0.25f * SwingUtilities.computeStringWidth(fm, "x"));
 
-        textArea = RSTextAreaFactory.newTextArea();
+        textArea = RSTextAreaFactory.newTextArea(editable);
         textArea.addCaretListener(e -> updateRowColStatus());
         textArea.addKeyListener(new KeyAdapter() {
             @Override
@@ -57,10 +60,11 @@ public class EditorPane extends JPanel {
         boxStatus.add(Box.createHorizontalGlue());
         setBorder(boxStatus);
 
-        Box statusBar = Box.createHorizontalBox();
+        statusBar = Box.createHorizontalBox();
         statusBar.add(boxStatus);
         statusBar.add(lblInsStatus);
         statusBar.add(lblRowCol);
+        statusBar.setVisible(editable);
 
         Font font = Config.getInstance().getFont();
         textArea.setFont(font);
