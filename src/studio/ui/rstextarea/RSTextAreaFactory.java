@@ -139,7 +139,7 @@ public class RSTextAreaFactory {
 
         @Override
         public void actionPerformedImpl(ActionEvent e, RTextArea textArea) {
-            if (!textArea.isEditable() || !textArea.isEnabled()) {
+            if (cutAction && (!textArea.isEditable() || !textArea.isEnabled())) {
                 UIManager.getLookAndFeel().provideErrorFeedback(textArea);
                 return;
             }
