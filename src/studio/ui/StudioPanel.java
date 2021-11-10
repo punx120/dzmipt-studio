@@ -117,6 +117,7 @@ public class StudioPanel extends JPanel implements Observer,WindowListener {
     private UserAction nextEditorTabAction;
     private UserAction prevEditorTabAction;
     private UserAction[] lineEndingActions;
+    private UserAction wordWrapAction;
     private JFrame frame;
 
     private static JFileChooser fileChooser;
@@ -201,6 +202,8 @@ public class StudioPanel extends JPanel implements Observer,WindowListener {
 
         undoAction.setEnabled(textArea.canUndo());
         redoAction.setEnabled(textArea.canRedo());
+
+        wordWrapAction.setSelected(CONFIG.getBoolean(Config.RSTA_WORD_WRAP));
 
         for (LineEnding lineEnding: LineEnding.values() ) {
             lineEndingActions[lineEnding.ordinal()].setSelected(editor.getLineEnding() == lineEnding);
@@ -935,6 +938,10 @@ public class StudioPanel extends JPanel implements Observer,WindowListener {
                     refreshActionState();
                 } );
         }
+
+        wordWrapAction = UserAction.create("Word wrap", Util.BLANK_ICON, "Word wrap for all tabs",
+                KeyEvent.VK_W, KeyStroke.getKeyStroke(KeyEvent.VK_W, menuShortcutKeyMask | InputEvent.SHIFT_MASK),
+                e -> toggleWordWrap());
     }
 
     public void settings() {
@@ -971,6 +978,14 @@ public class StudioPanel extends JPanel implements Observer,WindowListener {
         }
 
         rebuildToolbar();
+    }
+
+    private void toggleWordWrap() {
+        boolean value = CONFIG.getBoolean(Config.RSTA_WORD_WRAP);
+        CONFIG.setBoolean(Config.RSTA_WORD_WRAP, !value);
+        refreshEditorsSettings();
+        refreshActionState();
+        rebuildAll();
     }
 
     private static void refreshEditorsSettings() {
@@ -1171,7 +1186,10 @@ public class StudioPanel extends JPanel implements Observer,WindowListener {
         menu.add(new JMenuItem(pasteAction));
         menu.addSeparator();
 
+        menu.add(new JCheckBoxMenuItem(wordWrapAction));
+
         JMenu lineEndingSubMenu = new JMenu("Line Ending");
+        lineEndingSubMenu.setIcon(Util.BLANK_ICON);
         for (Action action: lineEndingActions) {
             lineEndingSubMenu.add(new JCheckBoxMenuItem(action));
         }
