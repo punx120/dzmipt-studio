@@ -1,7 +1,7 @@
 * Support of different line ending styles
 * Adding SaveAll action
-* Adding (*) to the tile if the tab has modified content
-* Adding tooltip in output tab with server where the query was executed
+* Adding (*) to the title if the tab has modified content
+* Adding tooltip into output tab with server where the query was executed
 
 `dz1.11` 2021.09.24
 -----
