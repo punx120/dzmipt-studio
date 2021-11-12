@@ -48,8 +48,8 @@ public class EditorTab {
             textArea.getDocument().remove(0, textArea.getDocument().getLength());
             textArea.getDocument().insertString(0, content.getContent(),null);
             textArea.setCaretPosition(0);
-            setModified(content.hasMixedLineEnding());
             setLineEnding(content.getLineEnding());
+            setModified(content.hasMixedLineEnding());
             textArea.discardAllEdits();
             StudioPanel.rebuildAll();
             textArea.requestFocus();
