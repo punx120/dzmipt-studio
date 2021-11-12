@@ -21,7 +21,7 @@ Additionally the application features
 
 Screenshot
 ---------
-![alt tag](https://raw.githubusercontent.com/CharlesSkelton/studio/master/meta/ssthumb.png)
+![alt tag](https://raw.githubusercontent.com/dzmipt/studio/master/meta/ssthumb.png)
 
 Current Version
 ----
@@ -34,7 +34,6 @@ Credits
 Studio for kdb+ uses the following open source projects:
 
 * [RSyntaxTextArea] - syntax highlighting text component
-* [NetBeans] - text editor component
 * [JFreeChart] - charting component
 * [Kx Systems] - kdb+ driver c.java
 * [Log4j 2] - Apache logging
@@ -59,13 +58,13 @@ Studio for kdb+ has been developed since October 2002, and the source was releas
 
 Studio is written 100% in Java. The primary motivation for its development was to be able to comfortably access remote kdb+ processes. In time, it has become clear that it is not an IDE as such, but is better described as a rapid execution environment. One can edit text in the "scratch" window, highlight a selection and execute it against a remote kdb+ process via tcp/ip, with the results displayed as a grid or as in the classic kdb+ console.
 
-In 2020, the [git-repo] was forked and enhanced in a separate [dzmipt-git-repo].  
+In 2020, the [git repo] was forked. And now it is developed in a separate [dzmipt git repo].  
 
 License
 -------
 Apache 2 , see LICENSE file in repository root.
 
-N.B. Netbeans, JFreeChart and c.java components have their own respective licenses.
+N.B. JFreeChart and c.java components have their own respective licenses.
 
 Icon Experience Collection
 
@@ -75,10 +74,9 @@ without charge, but may not be used separately from Studio for kdb+ without a pu
 of a license from Icon Experience.
 
 [Kx Systems]:http://www.kx.com
-[Netbeans]:http:///netbeans.org
 [license]:https://github.com/CharlesSkelton/studio/blob/master/license.md
-[git-repo]:https://github.com/CharlesSkelton/studio
-[dzmipt-git-repo]:https://github.com/dzmipt/studio
+[git repo]:https://github.com/CharlesSkelton/studio
+[dzmipt git repo]:https://github.com/dzmipt/studio
 [JFreeChart]:http://www.jfree.org/jfreechart/
 [Log4j 2]:https://logging.apache.org/log4j/2.x/index.html
 [Gradle]:https://gradle.org/
