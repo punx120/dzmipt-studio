@@ -1464,8 +1464,11 @@ public class StudioPanel extends JPanel implements Observer,WindowListener {
             for (int j = 0;j < toolbar.getComponentCount();j++) {
                 Component c = toolbar.getComponentAtIndex(j);
 
-                if (c instanceof JButton)
-                    ((JButton) c).setRequestFocusEnabled(false);
+                if (c instanceof JButton) {
+                    JButton btn = (JButton)c;
+                    btn.setRequestFocusEnabled(false);
+                    btn.setMnemonic(KeyEvent.VK_UNDEFINED);
+                }
             }
             refreshActionState();
         }
