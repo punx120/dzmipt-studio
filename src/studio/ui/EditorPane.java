@@ -66,7 +66,7 @@ public class EditorPane extends JPanel {
         statusBar.add(lblRowCol);
         statusBar.setVisible(editable);
 
-        Font font = Config.getInstance().getFont();
+        Font font = Config.getInstance().getFont(Config.FONT_EDITOR);
         textArea.setFont(font);
         RTextScrollPane scrollPane = new RTextScrollPane(textArea);
         scrollPane.getGutter().setLineNumberFont(font);

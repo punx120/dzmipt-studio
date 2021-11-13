@@ -76,6 +76,21 @@ public class Config {
 
     public static final String COLOR_BACKGROUND = configDefault("token.BACKGROUND", ConfigType.COLOR, Color.WHITE);
 
+    public static final String FONT_EDITOR = configDefault("font", ConfigType.FONT, new Font("Monospaced", Font.PLAIN, 14));
+    public static final String FONT_TABLE = configDefault("fontTable", ConfigType.FONT, new Font("Monospaced", Font.PLAIN, 14));
+
+    private enum FontStyle {
+        Plain(Font.PLAIN), Bold(Font.BOLD), Italic(Font.ITALIC), ItalicAndBold(Font.BOLD|Font.ITALIC);
+        private int style;
+
+        FontStyle(int style) {
+            this.style = style;
+        }
+        public int getStyle() {
+            return style;
+        }
+    }
+
     // The folder is also referenced in lon4j2.xml config
     private static final String PATH = System.getProperties().getProperty("user.home") + "/.studioforkdb";
     private static final String CONFIG_FILENAME = "studio.properties";
@@ -253,24 +268,8 @@ public class Config {
         save();
     }
 
-    public Font getFont() {
-        String name = p.getProperty("font.name", "Monospaced");
-        int  size = Integer.parseInt(p.getProperty("font.size","14"));
-
-        Font f = new Font(name, Font.PLAIN, size);
-        setFont(f);
-
-        return f;
-    }
-
     public String getEncoding() {
         return p.getProperty("encoding", "UTF-8");
-    }
-
-    public void setFont(Font f) {
-        p.setProperty("font.name", f.getFamily());
-        p.setProperty("font.size", "" + f.getSize());
-        save();
     }
 
     public static Config getInstance() {
@@ -972,4 +971,36 @@ public class Config {
         return true;
     }
 
+    private Font get(String key, Font defaultValue) {
+        String name = p.getProperty(key + ".name");
+        if (name == null) return defaultValue;
+
+        int size = get(key + ".size", 14);
+        int style = get(key +".style", FontStyle.Plain).getStyle();
+
+        return new Font(name, style, size);
+    }
+
+    public Font getFont(String key) {
+        return get(key, (Font) checkAndGetDefaultValue(key, ConfigType.FONT));
+    }
+
+    // Returns whether the value was changed
+    public boolean setFont(String key, Font value) {
+        Font currentValue = getFont(key);
+        if (currentValue.equals(value))
+        if (currentValue == value) {
+            return false;
+        }
+        p.setProperty(key + ".name", value.getName());
+        setInt(key + ".size", value.getSize());
+
+        int style = value.getStyle();
+        if (style < 0 || style > 3) style = 0; // Not sure if it is posible
+        FontStyle fontStyle = FontStyle.values()[style];
+        setEnum(key + ".style", fontStyle);
+
+        save();
+        return true;
+    }
 }
