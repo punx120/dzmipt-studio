@@ -126,11 +126,9 @@ public class SettingsDialog extends EscapeDialog {
     }
 
     private void initComponents() {
-        JPanel root = new JPanel();
-
-        txtUser = new JTextField();
-        txtPassword = new JPasswordField();
-        comboBoxAuthMechanism = new JComboBox(AuthenticationManager.getInstance().getAuthenticationMechanisms());
+        txtUser = new JTextField(12);
+        txtPassword = new JPasswordField(12);
+        comboBoxAuthMechanism = new JComboBox<>(AuthenticationManager.getInstance().getAuthenticationMechanisms());
         comboBoxAuthMechanism.getModel().setSelectedItem(Config.getInstance().getDefaultAuthMechanism());
         comboBoxAuthMechanism.addItemListener(e -> refreshCredentials());
         refreshCredentials();
@@ -138,7 +136,7 @@ public class SettingsDialog extends EscapeDialog {
         JLabel lblLookAndFeel = new JLabel("Look and Feel:");
 
         LookAndFeels lookAndFeels = new LookAndFeels();
-        comboBoxLookAndFeel = new JComboBox(lookAndFeels.getLookAndFeels());
+        comboBoxLookAndFeel = new JComboBox<>(lookAndFeels.getLookAndFeels());
         CustomiszedLookAndFeelInfo lf = lookAndFeels.getLookAndFeel(Config.getInstance().getLookAndFeel());
         if (lf == null) {
             lf = lookAndFeels.getLookAndFeel(UIManager.getLookAndFeel().getClass().getName());
@@ -157,7 +155,6 @@ public class SettingsDialog extends EscapeDialog {
         JLabel lblResultTabsCount = new JLabel("Result tabs count");
         NumberFormatter formatter = new NumberFormatter();
         formatter.setMinimum(1);
-        formatter.setAllowsInvalid(false);
         txtTabsCount = new JFormattedTextField(formatter);
         txtTabsCount.setValue(Config.getInstance().getResultTabsCount());
         chBoxShowServerCombo = new JCheckBox("Show server drop down list in the toolbar");
@@ -182,10 +179,8 @@ public class SettingsDialog extends EscapeDialog {
         JLabel lblCellMaxWidth = new JLabel("Max width of table columns");
         NumberFormatter maxWidthFormatter = new NumberFormatter();
         maxWidthFormatter.setMinimum(10);
-        maxWidthFormatter.setAllowsInvalid(false);
         txtCellMaxWidth = new JFormattedTextField(maxWidthFormatter);
         txtCellMaxWidth.setValue(Config.getInstance().getInt(Config.CELL_MAX_WIDTH));
-
 
         JLabel lblExecAll = new JLabel ("Execute the script when nothing is selected:");
         comboBoxExecAll = new JComboBox<>(Config.ExecAllOption.values());
@@ -203,151 +198,54 @@ public class SettingsDialog extends EscapeDialog {
         JLabel lblUser = new JLabel("  User:");
         JLabel lblPassword = new JLabel("  Password:");
 
-        Component glue = Box.createGlue();
-        Component glue1 = Box.createGlue();
-        Component glue2 = Box.createGlue();
-        Component glue3 = Box.createGlue();
-        Component glue4 = Box.createGlue();
-        Component glue5 = Box.createGlue();
-        Component glue6 = Box.createGlue();
-
         btnOk = new JButton("OK");
         btnCancel = new JButton("Cancel");
 
         btnOk.addActionListener(e->accept());
         btnCancel.addActionListener(e->cancel());
 
-        GroupLayout layout = new GroupLayout(root);
-        root.setLayout(layout);
-        layout.setAutoCreateGaps(true);
-        layout.setAutoCreateContainerGaps(true);
 
-        layout.setHorizontalGroup(
-                layout.createParallelGroup()
-                        .addGroup(
-                            layout.createSequentialGroup()
-                                        .addComponent(lblLookAndFeel)
-                                        .addComponent(comboBoxLookAndFeel)
-                                        .addComponent(glue2)
-                        ).addGroup(
-                                layout.createSequentialGroup()
-                                        .addComponent(chBoxRTSAAnimateBracketMatching)
-                                        .addComponent(chBoxRTSAHighlightCurrentLine)
-                                        .addComponent(chBoxRTSAWordWrap)
-                                        .addComponent(glue5)
-                        ).addGroup(
-                                layout.createSequentialGroup()
-                                        .addComponent(lblDefaultLineEnding)
-                                        .addComponent(comboBoxLineEnding)
-                                        .addComponent(glue6)
-                        ).addGroup(
-                            layout.createSequentialGroup()
-                                        .addComponent(lblResultTabsCount)
-                                        .addComponent(txtTabsCount)
-                                        .addComponent(chBoxShowServerCombo)
-                        ).addGroup(
-                            layout.createSequentialGroup()
-                                        .addComponent(lblMaxCharsInResult)
-                                        .addComponent(txtMaxCharsInResult)
-                                        .addComponent(lblMaxCharsInTableCell)
-                                        .addComponent(txtMaxCharsInTableCell)
-                        ).addGroup(
-                            layout.createSequentialGroup()
-                                        .addComponent(lblCellRightPadding)
-                                        .addComponent(txtCellRightPadding)
-                                        .addComponent(lblCellMaxWidth)
-                                        .addComponent(txtCellMaxWidth)
-                        ).addGroup(
-                            layout.createSequentialGroup()
-                                        .addComponent(lblExecAll)
-                                        .addComponent(comboBoxExecAll)
-                                        .addComponent(glue3)
-                        ).addGroup(
-                            layout.createSequentialGroup()
-                                        .addComponent(chBoxAutoSave)
-                                        .addComponent(chBoxSaveOnExit)
-                                        .addComponent(glue4)
-                        ).addGroup(
-                            layout.createSequentialGroup()
-                                        .addComponent(lblAuthMechanism)
-                                        .addComponent(comboBoxAuthMechanism, PREFERRED_SIZE, PREFERRED_SIZE, PREFERRED_SIZE)
-                                        .addComponent(lblUser)
-                                        .addComponent(txtUser, FIELD_SIZE, FIELD_SIZE, FIELD_SIZE)
-                                        .addComponent(lblPassword)
-                                        .addComponent(txtPassword, FIELD_SIZE, FIELD_SIZE, FIELD_SIZE)
-                        ).addComponent(glue)
-                        .addGroup(
-                            layout.createSequentialGroup()
-                                    .addComponent(glue1)
-                                    .addComponent(btnOk)
-                                    .addComponent(btnCancel)
-                        )
+        JPanel pnlGeneral = new JPanel();
+        GroupLayoutSimple layout = new GroupLayoutSimple(pnlGeneral);
+        layout.setStacks(
+                new GroupLayoutSimple.Stack()
+                        .addLineAndGlue(lblLookAndFeel, comboBoxLookAndFeel)
+                        .addLineAndGlue(chBoxShowServerCombo, chBoxAutoSave, chBoxSaveOnExit)
+                        .addLine(lblAuthMechanism, comboBoxAuthMechanism, lblUser, txtUser, lblPassword, txtPassword)
         );
 
-
-        layout.setVerticalGroup(
-                layout.createSequentialGroup()
-                    .addGroup(
-                        layout.createParallelGroup(GroupLayout.Alignment.BASELINE)
-                                .addComponent(lblLookAndFeel)
-                                .addComponent(comboBoxLookAndFeel)
-                                .addComponent(glue2)
-                    ).addGroup(
-                        layout.createParallelGroup(GroupLayout.Alignment.BASELINE)
-                                .addComponent(chBoxRTSAAnimateBracketMatching)
-                                .addComponent(chBoxRTSAHighlightCurrentLine)
-                                .addComponent(chBoxRTSAWordWrap)
-                                .addComponent(glue5)
-                    ).addGroup(
-                                layout.createParallelGroup(GroupLayout.Alignment.BASELINE)
-                                        .addComponent(lblDefaultLineEnding)
-                                        .addComponent(comboBoxLineEnding)
-                                        .addComponent(glue6)
-                    ).addGroup(
-                        layout.createParallelGroup(GroupLayout.Alignment.BASELINE)
-                                .addComponent(lblResultTabsCount)
-                                .addComponent(txtTabsCount)
-                                .addComponent(chBoxShowServerCombo)
-                    ).addGroup(
-                        layout.createParallelGroup(GroupLayout.Alignment.BASELINE)
-                                .addComponent(lblMaxCharsInResult)
-                                .addComponent(txtMaxCharsInResult)
-                                .addComponent(lblMaxCharsInTableCell)
-                                .addComponent(txtMaxCharsInTableCell)
-                    ).addGroup(
-                        layout.createParallelGroup(GroupLayout.Alignment.BASELINE)
-                                .addComponent(lblCellRightPadding)
-                                .addComponent(txtCellRightPadding)
-                                .addComponent(lblCellMaxWidth)
-                                .addComponent(txtCellMaxWidth)
-                    ).addGroup(
-                        layout.createParallelGroup(GroupLayout.Alignment.BASELINE)
-                                .addComponent(lblExecAll)
-                                .addComponent(comboBoxExecAll)
-                                .addComponent(glue3)
-                    ).addGroup(
-                                layout.createParallelGroup(GroupLayout.Alignment.BASELINE)
-                                        .addComponent(chBoxAutoSave)
-                                        .addComponent(chBoxSaveOnExit)
-                                        .addComponent(glue4)
-                    ).addGroup(
-                        layout.createParallelGroup(GroupLayout.Alignment.BASELINE)
-                                .addComponent(lblAuthMechanism)
-                                .addComponent(comboBoxAuthMechanism)
-                                .addComponent(lblUser)
-                                .addComponent(txtUser)
-                                .addComponent(lblPassword)
-                                .addComponent(txtPassword)
-                    ).addComponent(glue)
-                    .addGroup(
-                        layout.createParallelGroup(GroupLayout.Alignment.BASELINE)
-                                .addComponent(glue1)
-                                .addComponent(btnOk)
-                                .addComponent(btnCancel)
-                    )
+        JPanel pnlEditor = new JPanel();
+        layout = new GroupLayoutSimple(pnlEditor);
+        layout.setStacks(
+                new GroupLayoutSimple.Stack()
+                        .addLineAndGlue(chBoxRTSAAnimateBracketMatching, chBoxRTSAHighlightCurrentLine, chBoxRTSAWordWrap)
+                        .addLineAndGlue(lblDefaultLineEnding, comboBoxLineEnding)
+                        .addLineAndGlue(lblExecAll, comboBoxExecAll)
         );
-        layout.linkSize(SwingConstants.HORIZONTAL, txtUser, txtPassword, txtTabsCount, txtMaxCharsInResult, txtMaxCharsInTableCell);
-        layout.linkSize(SwingConstants.HORIZONTAL, btnOk, btnCancel);
+
+        JPanel pnlResult = new JPanel();
+        layout = new GroupLayoutSimple(pnlResult);
+        layout.setStacks(
+                new GroupLayoutSimple.Stack()
+                        .addLineAndGlue(lblResultTabsCount, txtTabsCount)
+                        .addLine(lblMaxCharsInResult, txtMaxCharsInResult, lblMaxCharsInTableCell, txtMaxCharsInTableCell)
+                        .addLine(lblCellRightPadding, txtCellRightPadding, lblCellMaxWidth, txtCellMaxWidth)
+        );
+        layout.linkSize(SwingConstants.HORIZONTAL, lblCellRightPadding, txtTabsCount, txtMaxCharsInResult, txtMaxCharsInTableCell,
+                txtCellRightPadding, txtCellMaxWidth);
+
+        JTabbedPane tabs = new JTabbedPane();
+        tabs.addTab("General", pnlGeneral);
+        tabs.addTab("Editor", pnlEditor);
+        tabs.addTab("Result", pnlResult);
+
+        JPanel pnlButtons = new JPanel(new FlowLayout(FlowLayout.RIGHT));
+        pnlButtons.add(btnOk);
+        pnlButtons.add(btnCancel);
+
+        JPanel root = new JPanel(new BorderLayout());
+        root.add(tabs, BorderLayout.CENTER);
+        root.add(pnlButtons, BorderLayout.SOUTH);
         setContentPane(root);
     }
 

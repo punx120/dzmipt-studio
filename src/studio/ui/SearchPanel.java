@@ -81,57 +81,19 @@ public class SearchPanel extends JPanel {
         am.put("replaceAction", replaceAction);
         im.put(KeyStroke.getKeyStroke(KeyEvent.VK_ENTER,0),"replaceAction");
 
+        GroupLayoutSimple layout = new GroupLayoutSimple(this);
+        layout.setAutoCreateGaps(false);
+        layout.setStacks(
+                new GroupLayoutSimple.Stack()
+                        .addLine(lblFind)
+                        .addLine(lblReplace),
+                new GroupLayoutSimple.Stack()
+                        .addLine(txtFind)
+                        .addLine(txtReplace),
+                new GroupLayoutSimple.Stack()
+                        .addLine(tglWholeWord, tglRegex, tglCaseSensitive, btnFind, btnFindBack, btnMarkAll, btnClose)
+                        .addLine(btnReplace, btnReplaceAll)
 
-        GroupLayout layout = new GroupLayout(this);
-        setLayout(layout);
-        layout.setAutoCreateContainerGaps(true);
-
-        layout.setHorizontalGroup(
-                layout.createSequentialGroup()
-                                .addGroup(
-                                    layout.createParallelGroup().addComponent(lblFind).addComponent(lblReplace)
-                                ).addGroup(
-                                    layout.createParallelGroup().addComponent(txtFind).addComponent(txtReplace)
-                                ).addGroup(
-                                        layout.createParallelGroup()
-                                                .addGroup(
-                                                        layout.createSequentialGroup()
-                                                            .addComponent(tglWholeWord)
-                                                            .addComponent(tglRegex)
-                                                            .addComponent(tglCaseSensitive)
-                                                            .addComponent(btnFind)
-                                                            .addComponent(btnFindBack)
-                                                            .addComponent(btnMarkAll)
-                                                            .addComponent(btnClose)
-                                                ).addGroup(
-                                                        layout.createSequentialGroup()
-                                                                .addComponent(btnReplace)
-                                                                .addComponent(btnReplaceAll)
-                                                )
-                                )
-                );
-
-
-        layout.setVerticalGroup(
-                layout.createSequentialGroup()
-                        .addGroup(
-                                layout.createParallelGroup(GroupLayout.Alignment.BASELINE)
-                                        .addComponent(lblFind)
-                                        .addComponent(txtFind)
-                                        .addComponent(tglWholeWord)
-                                        .addComponent(tglRegex)
-                                        .addComponent(tglCaseSensitive)
-                                        .addComponent(btnFind)
-                                        .addComponent(btnFindBack)
-                                        .addComponent(btnMarkAll)
-                                        .addComponent(btnClose)
-                        ).addGroup(
-                                layout.createParallelGroup(GroupLayout.Alignment.BASELINE)
-                                        .addComponent(lblReplace)
-                                        .addComponent(txtReplace)
-                                        .addComponent(btnReplace)
-                                        .addComponent(btnReplaceAll)
-                        )
         );
     }
 
