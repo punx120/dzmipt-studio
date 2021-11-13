@@ -40,8 +40,6 @@ public class RSTokenMaker extends TokenMakerBase {
             return firstToken;
         }
 
-
-
         int initState = mlComment ? QSyntaxParser.MLCommentInitState : QSyntaxParser.InitState;
 
         parser.init(initState, text.array, offset, text.offset + text.count);

@@ -369,6 +369,12 @@ public class Config {
     }
 
     private void checkForUpgrade() {
+        if (p.size() == 0) {
+            log.info("Found no or empty config");
+            p.setProperty("version", VERSION);
+            return;
+        }
+
         if (p.getProperty("version", OLD_VERSION).equals(OLD_VERSION)) {
             upgradeTo12();
             p.setProperty("version", VERSION12);
