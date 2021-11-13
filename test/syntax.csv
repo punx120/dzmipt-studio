@@ -224,7 +224,7 @@ x\,\:y,identifier,operator,operator,operator,identifier
 0 /something,long,whitespace,eol_comment
 /comment,eol_comment
 /comment\n1,eol_comment,long
-1.2f //sdf,float,whitespace,eol_comment
+1.2f //sdf,float,whitespace,ml_comment
  / \n 1,whitespace,ml_comment,ml_comment
  / \n 1\n\ ,whitespace,ml_comment,ml_comment,eol_comment
  / \n 1\n\\ \n+,whitespace,ml_comment,ml_comment,eol_comment,operator
