@@ -2,6 +2,7 @@ package studio.ui.action;
 
 import studio.kdb.K;
 import studio.kdb.KFormatContext;
+import studio.ui.StudioOptionPane;
 import studio.ui.Util;
 
 import javax.swing.*;
@@ -35,10 +36,8 @@ public class CopyTableSelectionAction implements ActionListener {
         numcols = table.getSelectedColumnCount();
         numrows = table.getSelectedRowCount();
         if (numcols == -1 || numrows == -1) {
-            JOptionPane.showMessageDialog(null,
-                    "Invalid Copy Selection",
-                    "Invalid Copy Selection",
-                    JOptionPane.ERROR_MESSAGE);
+            StudioOptionPane.showError("Invalid Copy Selection",
+                    "Invalid Copy Selection");
             return;
         }
 

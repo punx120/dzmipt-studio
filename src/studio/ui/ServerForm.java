@@ -254,10 +254,7 @@ public class ServerForm extends EscapeDialog {
         
         if(logicalName.getText().length() == 0)
         {
-            JOptionPane.showMessageDialog(this,
-                                          "The server's name cannot be empty",
-                                          "Studio for kdb+",
-                                          JOptionPane.ERROR_MESSAGE);
+            StudioOptionPane.showError(this, "The server's name cannot be empty", "Studio for kdb+");
             logicalName.requestFocus();
             return;
         }    
@@ -265,10 +262,7 @@ public class ServerForm extends EscapeDialog {
         boolean clash=false;
         if( clash)
         {
-            JOptionPane.showMessageDialog(this,
-                                          "A server already exists with that name.",
-                                          "Studio for kdb+",
-                                          JOptionPane.ERROR_MESSAGE);
+            StudioOptionPane.showError(this, "A server already exists with that name.", "Studio for kdb+");
             logicalName.requestFocus();
             return;
         }
@@ -285,37 +279,7 @@ public class ServerForm extends EscapeDialog {
             s.setUseTLS(jCheckBox2.isSelected());
             DefaultComboBoxModel dcbm= (DefaultComboBoxModel)authenticationMechanism.getModel();
             s.setAuthenticationMechanism((String)dcbm.getSelectedItem());
-
-
-      /*      if( testConnection.isSelected())
-            {
-                c c= null;
-                try
-                {
-                    c=new c(s.getHost(),s.getPort(),s.getUsername());
-                    c.reconnect();
-                }
-                catch(k4.c.K4Exception e)
-                {
-                    JOptionPane.showMessageDialog(this,
-                                                  "Failed to connect due to invalid username or password.",
-                                                  "Studio for kdb+",
-                                                  JOptionPane.ERROR_MESSAGE);
-                }
-                catch(IOException e)
-                {
-                    JOptionPane.showMessageDialog(this,
-                              "Failed to connect due to network error : " + e.getMessage(),
-                              "Studio for kdb+",
-                              JOptionPane.ERROR_MESSAGE);
-                }
-                finally
-                {
-                    if( c != null)
-                        try{c.close();}catch(Exception e){};
-                }
-            }
-*/        }
+        }
         accept();
     }//GEN-LAST:event_onOk
 

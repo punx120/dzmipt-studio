@@ -135,12 +135,9 @@ class ExcelExporter {
                     openTable(file);
                 }
             } catch (Exception e) {
-                JOptionPane.showMessageDialog(null,
-                        "\nThere was an error encoding the K types into Excel types.\n\n" +
+                StudioOptionPane.showError("\nThere was an error encoding the K types into Excel types.\n\n" +
                                 e.getMessage() + "\n\n",
-                        "Studio for kdb+",
-                        JOptionPane.OK_OPTION,
-                        Util.ERROR_ICON);
+                        "Studio for kdb+");
             } finally {
                 pm.close();
             }
@@ -164,13 +161,9 @@ class ExcelExporter {
                 run.exec("cmd.exe /c start " + file);
             }
         } catch (IOException e) {
-            JOptionPane.showMessageDialog(null,
-                    "\nThere was an error opening excel.\n\n" + e.getMessage() +
+            StudioOptionPane.showError("\nThere was an error opening excel.\n\n" + e.getMessage() +
                             "\n\nPerhaps you do not have Excel installed,\nor .xls files are not associated with Excel",
-                    "Studio for kdb+",
-                    JOptionPane.OK_OPTION,
-                    Util.ERROR_ICON);
-
+                    "Studio for kdb+");
         }
     }
 }

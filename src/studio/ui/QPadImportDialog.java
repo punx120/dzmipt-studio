@@ -169,8 +169,7 @@ public class QPadImportDialog extends EscapeDialog {
     private void selectServersCfg() {
         int result = chooser.showOpenDialog(this);
         if (result == JFileChooser.ERROR_OPTION) {
-            JOptionPane.showMessageDialog(this, "Error while selecting Servers.cfg",
-                                        "Error", JOptionPane.ERROR_MESSAGE);
+            StudioOptionPane.showError(this, "Error while selecting Servers.cfg", "Error");
             return;
         }
         if (result == JFileChooser.CANCEL_OPTION) {
@@ -184,27 +183,23 @@ public class QPadImportDialog extends EscapeDialog {
     private void checkAndAccept() {
         String location = getServersCfgLocation();
         if (location.trim().length() == 0) {
-            JOptionPane.showMessageDialog(this, "File to import is not selected",
-                    "Not Found Servers.cfg", JOptionPane.ERROR_MESSAGE);
+            StudioOptionPane.showError(this, "File to import is not selected", "Not Found Servers.cfg");
             return;
 
         }
 
         if (! new File(location).exists()) {
-            JOptionPane.showMessageDialog(this, "File to import doesn't not exist (" + location + ")",
-                                "Not Found Servers.cfg", JOptionPane.ERROR_MESSAGE);
+            StudioOptionPane.showError(this, "File to import doesn't not exist (" + location + ")", "Not Found Servers.cfg");
             return;
         }
 
         if (getImportTo() == null) {
-            JOptionPane.showMessageDialog(this, "Select how current Server Tree should be modified: Overwrite or Append",
-                    "Where to Import", JOptionPane.ERROR_MESSAGE);
+            StudioOptionPane.showError(this, "Select how current Server Tree should be modified: Overwrite or Append", "Where to Import");
             return;
         }
 
         if (getRootName().contains("/")) {
-            JOptionPane.showMessageDialog(this, "Folder name can't contain /",
-                    "Wrong Folder Name", JOptionPane.ERROR_MESSAGE);
+            StudioOptionPane.showError(this, "Folder name can't contain /", "Wrong Folder Name");
             return;
         }
 

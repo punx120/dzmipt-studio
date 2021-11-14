@@ -1,7 +1,8 @@
 package studio.utils;
 
+import studio.ui.StudioOptionPane;
+
 import java.lang.reflect.Method;
-import javax.swing.JOptionPane;
 
 public class BrowserLaunch {
     private static final String errMsg = "Error attempting to launch web browser";
@@ -33,7 +34,7 @@ public class BrowserLaunch {
             }
         }
         catch (Exception e) {
-            JOptionPane.showMessageDialog(null,errMsg + ":\n" + e.getLocalizedMessage());
+            StudioOptionPane.showError(errMsg + ":\n" + e.getLocalizedMessage(), "Error");
         }
     }
 }

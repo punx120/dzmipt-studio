@@ -501,30 +501,15 @@ public class StudioPanel extends JPanel implements Observer,WindowListener {
                         exportAsTxt(exportFilename);
                     else if (ff == xmlFilter)
                         exportAsXml(getSelectedTable().getModel(),exportFilename);
-                        /*else if( ff == binFilter){
-                        exportAsBin(exportFilename);
-                        }
-                         */
                     else
-                        JOptionPane.showMessageDialog(frame,
-                                "Warning",
+                        StudioOptionPane.showWarning(frame,
                                 "You did not specify what format to export the file as.\n Cancelling data export",
-                                JOptionPane.WARNING_MESSAGE,
-                                Util.WARNING_ICON);
-            /*                else {
-            exportAsBin(exportFilename);
-            }
-             */
+                                "Warning");
             }
             catch (Exception e) {
-                JOptionPane.showMessageDialog(frame,
+                StudioOptionPane.showError(frame,
                         "Error",
-                        "An error occurred whilst writing the export file.\n Details are: " + e.getMessage(),
-                        JOptionPane.ERROR_MESSAGE,
-                        Util.ERROR_ICON);
-            }
-            finally {
-                //            frame.setCursor(cursor);
+                        "An error occurred whilst writing the export file.\n Details are: " + e.getMessage());
             }
         }
     }
@@ -571,15 +556,15 @@ public class StudioPanel extends JPanel implements Observer,WindowListener {
         try {
             content = FileReaderWriter.read(filename);
             if (content.hasMixedLineEnding()) {
-                JOptionPane.showMessageDialog(frame, "The file " + filename + " has mixed line endings. Mixed line endings are not supported.\n\n" +
+                StudioOptionPane.showMessage(frame, "The file " + filename + " has mixed line endings. Mixed line endings are not supported.\n\n" +
                                 "All line endings are set to " + content.getLineEnding() + " style.",
-                        "Mixed Line Ending", JOptionPane.INFORMATION_MESSAGE);
+                        "Mixed Line Ending");
             }
             return true;
         } catch (IOException e) {
             log.error("Failed to load file {}", filename, e);
-            JOptionPane.showMessageDialog(frame, "Failed to load file "+filename + ".\n" + e.getMessage(),
-                    "Error in file load", JOptionPane.ERROR_MESSAGE);
+            StudioOptionPane.showError(frame, "Failed to load file "+filename + ".\n" + e.getMessage(),
+                    "Error in file load");
         } finally {
             editor.setFilename(filename);
             editor.init(content);
@@ -631,14 +616,9 @@ public class StudioPanel extends JPanel implements Observer,WindowListener {
         }
 
         if (new File(filename).exists()) {
-            int choice = JOptionPane.showOptionDialog(frame,
+            int choice = StudioOptionPane.showYesNoDialog(frame,
                     filename + " already exists.\nOverwrite?",
-                    "Overwrite?",
-                    JOptionPane.YES_NO_OPTION,
-                    JOptionPane.QUESTION_MESSAGE,
-                    Util.QUESTION_ICON,
-                    null, // use standard button titles
-                    null);      // no default selection
+                    "Overwrite?");
 
             if (choice != JOptionPane.YES_OPTION)
                 return false;
@@ -855,8 +835,7 @@ public class StudioPanel extends JPanel implements Observer,WindowListener {
                         new ExcelExporter().exportTableX(frame, getSelectedTable(), file, true);
                     } catch (IOException ex) {
                         log.error("Failed to create temporary file", ex);
-                        JOptionPane.showMessageDialog(frame, "Failed to Open in Excel " + ex.getMessage(),
-                                "Error", JOptionPane.ERROR_MESSAGE);
+                        StudioOptionPane.showError(frame, "Failed to Open in Excel " + ex.getMessage(),"Error");
                     }
                 });
 
@@ -890,7 +869,7 @@ public class StudioPanel extends JPanel implements Observer,WindowListener {
                     try {
                         BrowserLaunch.openURL("http://code.kx.com/q/");
                     } catch (Exception ex) {
-                        JOptionPane.showMessageDialog(null, "Error attempting to launch web browser:\n" + ex.getLocalizedMessage());
+                        StudioOptionPane.showError("Error attempting to launch web browser:\n" + ex.getLocalizedMessage(), "Error");
                     }
                 });
 
@@ -974,7 +953,8 @@ public class StudioPanel extends JPanel implements Observer,WindowListener {
         String lfClass = dialog.getLookAndFeelClassName();
         if (!lfClass.equals(UIManager.getLookAndFeel().getClass().getName())) {
             CONFIG.setLookAndFeel(lfClass);
-            JOptionPane.showMessageDialog(frame, "Look and Feel was changed. New L&F will take effect on the next start up.", "Look and Feel Setting Changed", JOptionPane.INFORMATION_MESSAGE);
+            StudioOptionPane.showMessage(frame, "Look and Feel was changed. " +
+                    "New L&F will take effect on the next start up.", "Look and Feel Setting Changed");
         }
 
         rebuildToolbar();
@@ -1060,11 +1040,8 @@ public class StudioPanel extends JPanel implements Observer,WindowListener {
     private boolean checkAndSaveTab(EditorTab editor) {
         if (! editor.isModified()) return true;
 
-        int choice = JOptionPane.showOptionDialog(editor.getTextArea(),
-                editor.getTitle() + " is changed. Save changes?","Save changes?",
-                JOptionPane.YES_NO_CANCEL_OPTION, JOptionPane.QUESTION_MESSAGE, Util.QUESTION_ICON,
-                null, // use standard button titles
-                null);      // no default selection
+        int choice = StudioOptionPane.showYesNoCancelDialog(editor.getPane(),
+                editor.getTitle() + " is changed. Save changes?","Save changes?");
 
         if (choice == JOptionPane.CANCEL_OPTION || choice == JOptionPane.CLOSED_OPTION) return false;
 
@@ -1800,9 +1777,8 @@ public class StudioPanel extends JPanel implements Observer,WindowListener {
             return editor.getText();
         }
         //Ask
-        int result = JOptionPane.showOptionDialog(frame, "Nothing is selected. Execute the whole script?",
-                "Execute All?", JOptionPane.YES_NO_OPTION, JOptionPane.QUESTION_MESSAGE,
-                Util.QUESTION_ICON,null, JOptionPane.NO_OPTION);
+        int result = StudioOptionPane.showYesNoDialog(frame, "Nothing is selected. Execute the whole script?",
+                "Execute All?");
 
         if (result == JOptionPane.YES_OPTION ) {
             return editor.getText();
@@ -1893,14 +1869,12 @@ public class StudioPanel extends JPanel implements Observer,WindowListener {
         if (error != null && ! (error instanceof c.K4Exception)) {
             String message = error.getMessage();
             if ((message == null) || (message.length() == 0))
-                message = "No message with exception. Exception is " + error.toString();
-            JOptionPane.showMessageDialog(textArea,
+                message = "No message with exception. Exception is " + error;
+            StudioOptionPane.showError(editor.getPane(),
                     "\nAn unexpected error occurred whilst communicating with " +
                             editor.getServer().getConnectionString() +
                             "\n\nError detail is\n\n" + message + "\n\n",
-                    "Studio for kdb+",
-                    JOptionPane.ERROR_MESSAGE,
-                    Util.ERROR_ICON);
+                    "Studio for kdb+");
         } else if (queryResult.isComplete()) {
             JTabbedPane tabbedPane = panel.tabbedPane;
             TabPanel tab = new TabPanel(panel, queryResult);

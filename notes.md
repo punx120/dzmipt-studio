@@ -1,3 +1,4 @@
+* Adding mnemonic shortcuts in confirmation dialogs
 * Support of different line ending styles
 * Adding SaveAll action
 * Adding (*) to the title if the tab has modified content

@@ -7,6 +7,7 @@ import studio.kdb.Server;
 import studio.kdb.ServerTreeNode;
 import studio.ui.EscapeDialog;
 import studio.ui.QPadImportDialog;
+import studio.ui.StudioOptionPane;
 import studio.ui.StudioPanel;
 import studio.utils.QPadConverter;
 
@@ -41,8 +42,8 @@ public class QPadImport {
             if (rootName.length() > 0) {
                 serverTree = Config.getInstance().getServerTree();
                 if (serverTree.getChild(rootName) != null) {
-                    JOptionPane.showMessageDialog(panel, "Folder to import already exists (" + rootName + ")",
-                            "Folder Exists", JOptionPane.ERROR_MESSAGE);
+                    StudioOptionPane.showError(panel, "Folder to import already exists (" + rootName + ")",
+                            "Folder Exists");
                     continue;
                 }
                 rootToImport = rootToImport.add(rootName);
@@ -85,10 +86,10 @@ public class QPadImport {
 
         } catch (IOException e) {
             log.error("Error in reading Servers.cfg", e);
-            JOptionPane.showConfirmDialog(panel, "Error in reading QPad Servers.cfg", "Error", JOptionPane.DEFAULT_OPTION, JOptionPane.ERROR_MESSAGE);
+            StudioOptionPane.showError(panel, "Error in reading QPad Servers.cfg", "Error");
         } catch (IllegalArgumentException e) {
             log.error("Error during importing", e);
-            JOptionPane.showConfirmDialog(panel, "Error during import", "Error", JOptionPane.DEFAULT_OPTION, JOptionPane.ERROR_MESSAGE);
+            StudioOptionPane.showError(panel, "Error during import", "Error");
         }
 
     }

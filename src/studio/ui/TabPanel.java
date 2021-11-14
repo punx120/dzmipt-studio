@@ -1,7 +1,5 @@
 package studio.ui;
 
-import org.fife.ui.rsyntaxtextarea.RSyntaxTextArea;
-import org.fife.ui.rtextarea.ConfigurableCaret;
 import studio.kdb.*;
 import studio.kdb.ListModel;
 import studio.ui.action.QueryResult;
@@ -49,7 +47,7 @@ public class TabPanel extends JPanel {
     }
 
     private void upload() {
-        String varName = JOptionPane.showInputDialog(panel, "Enter variable name", "Upload to Server", JOptionPane.QUESTION_MESSAGE);
+        String varName = StudioOptionPane.showInputDialog(panel, "Enter variable name", "Upload to Server");
         if (varName == null) return;
         panel.executeK4Query(new K.KList(new K.Function("{x set y}"), new K.KSymbol(varName), result));
     }

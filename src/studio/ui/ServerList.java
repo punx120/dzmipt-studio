@@ -3,7 +3,6 @@ package studio.ui;
 import org.apache.logging.log4j.LogManager;
 import org.apache.logging.log4j.Logger;
 import studio.kdb.Config;
-import studio.kdb.K;
 import studio.kdb.Server;
 import studio.kdb.ServerTreeNode;
 
@@ -453,7 +452,7 @@ public class ServerList extends EscapeDialog implements TreeExpansionListener  {
         }
 
         String message = "Are you sure you want to remove " + (node.isRoot() ? "folder" : "server") + ": " + node.fullPath();
-        int result = JOptionPane.showConfirmDialog(this, message, "Remove?", JOptionPane.YES_NO_OPTION, JOptionPane.WARNING_MESSAGE);
+        int result = StudioOptionPane.showYesNoDialog(this, message, "Remove?");
         if (result != JOptionPane.YES_OPTION) return;
 
         TreeNode[] path = ((ServerTreeNode)selNode.getParent()).getPath();
@@ -481,7 +480,7 @@ public class ServerList extends EscapeDialog implements TreeExpansionListener  {
 
         ServerTreeNode newNode;
         if (folder) {
-            String name = JOptionPane.showInputDialog(this, "Enter folder name", "Folder Name", JOptionPane.QUESTION_MESSAGE);
+            String name = StudioOptionPane.showInputDialog(this, "Enter folder name", "Folder Name");
             if (name == null || name.trim().length() == 0) return;
             newNode = new ServerTreeNode(name);
         } else {
@@ -507,8 +506,7 @@ public class ServerList extends EscapeDialog implements TreeExpansionListener  {
         } catch (IllegalArgumentException exception) {
             serverTree = Config.getInstance().getServerTree();
             log.error("Error adding new node", exception);
-            JOptionPane.showMessageDialog(this, "Error adding new node:\n" + exception.toString(), "Error", JOptionPane.ERROR_MESSAGE);
-
+            StudioOptionPane.showError(this, "Error adding new node:\n" + exception, "Error");
         }
         refreshServers();
 

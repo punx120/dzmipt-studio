@@ -20,6 +20,7 @@ import studio.kdb.Config;
 import studio.kdb.K;
 import studio.kdb.KTableModel;
 import studio.kdb.ToDouble;
+import studio.ui.StudioOptionPane;
 import studio.ui.Util;
 
 import javax.swing.*;
@@ -92,7 +93,7 @@ public class Chart implements ComponentListener {
 
         if (xIndex.size() == 0 || yIndex.size() ==0) {
             log.info("Nothing to chart. Number of columns for x axes is {}. Number of columns for y axes is {}", xIndex.size(), yIndex.size());
-            JOptionPane.showMessageDialog(null, "It turns out that nothing is found to chart.", "Nothing to chart", JOptionPane.WARNING_MESSAGE);
+            StudioOptionPane.showWarning(null, "It turns out that nothing is found to chart.", "Nothing to chart");
             return;
         }
 
