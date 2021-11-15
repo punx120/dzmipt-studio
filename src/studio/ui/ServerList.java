@@ -344,9 +344,6 @@ public class ServerList extends EscapeDialog implements TreeExpansionListener  {
 
         setPreferredSize(new Dimension(DEFAULT_WIDTH, DEFAULT_HEIGHT));
 
-        Rectangle bounds = Config.getInstance().getBounds(Config.SERVER_LIST_BOUNDS);
-        setBounds(bounds);
-
         initActions();
         initPopupMenu();
     }

@@ -1323,12 +1323,15 @@ public class StudioPanel extends JPanel implements Observer,WindowListener {
         if (serverList == null) {
             serverList = new ServerList(frame);
         }
+        Rectangle bounds = Config.getInstance().getBounds(Config.SERVER_LIST_BOUNDS);
+        serverList.setBounds(bounds);
+
         serverList.updateServerTree(CONFIG.getServerTree(), editor.getServer());
         serverList.updateServerHistory(serverHistory);
         serverList.selectHistoryTab(selectHistory);
         serverList.setVisible(true);
 
-        Rectangle bounds = serverList.getBounds();
+        bounds = serverList.getBounds();
         CONFIG.setBounds(Config.SERVER_LIST_BOUNDS, bounds);
 
         Server selectedServer = serverList.getSelectedServer();
