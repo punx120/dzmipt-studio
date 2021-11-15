@@ -17,9 +17,9 @@ public abstract class KTableModel extends AbstractTableModel {
             K.Dict dict = (K.Dict) obj;
             if ( (dict.x instanceof K.KBaseVector || dict.x instanceof K.Flip) &&
                  (dict.y instanceof K.KBaseVector || dict.y instanceof K.Flip) ) {
-                return new DictTableModel((K.Dict) obj);
+                return new DictTableModel(dict);
             } else {
-                return null; // dict for memory mapped table
+                return null;
             }
         }
 

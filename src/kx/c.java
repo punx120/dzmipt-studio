@@ -349,10 +349,10 @@ public class c {
         byte attr = b[j++];
         if (t == 98) {
             K.Dict d = (K.Dict)r();
-            if (d.x.getType() == 11 && d.y.getType()>=0) {
-                return new K.Flip(d);
+            if (d.x instanceof K.KSymbolVector && d.y instanceof K.KBaseVector) {
+                return new K.Flip((K.KSymbolVector)d.x, (K.KBaseVector<? extends K.KBase>)d.y);
             } else {
-                return d;
+                return new K.MappedTable(d);
             }
         }        n = ri();
         switch (t) {

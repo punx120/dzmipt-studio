@@ -1063,7 +1063,7 @@ public class K {
         @Override
         public StringBuilder format(StringBuilder builder, KFormatContext context) {
             builder = super.format(builder, context);
-            boolean useBrackets = attr != 0 || x instanceof Flip;
+            boolean useBrackets = attr != 0 || x instanceof Flip || (x.count() == 1);
             if (useBrackets) builder.append("(");
             x.format(builder, context);
             if (useBrackets) builder.append(")");
@@ -1092,58 +1092,90 @@ public class K {
         }
     }
 
-    public static class Flip extends KBase {
+    abstract private static class FlipBase extends KBase {
         public String getDataType() {
             return "Flip";
         }
 
+        public FlipBase() {
+            super(98);
+        }
+
+        abstract public K.KBase getX();
+        abstract public K.KBase getY();
+
+        @Override
+        public StringBuilder format(StringBuilder builder, KFormatContext context) {
+            builder = super.format(builder, context);
+            builder.append(flip);
+            return new Dict(getX(), getY()).format(builder, context);
+        }
+
+        @Override
+        protected void serialiseData(OutputStream o) throws IOException {
+            write(o, (byte)0);
+            new Dict(getX(),getY()).serialise(o);
+        }
+
+        @Override
+        public int hashCode() {
+            return getX().hashCode() + 137 * getY().hashCode();
+        }
+
+        @Override
+        public boolean equals(Object obj) {
+            if (! (obj instanceof FlipBase)) return false;
+            FlipBase flip = (FlipBase) obj;
+            return getX().equals(flip.getX()) && getY().equals(flip.getY());
+        }
+    }
+
+    public static class Flip extends FlipBase {
         public K.KSymbolVector x;
         public K.KBaseVector<? extends KBase> y;
 
-        public Flip(Dict X) {
-            super(98);
-            x = (K.KSymbolVector) X.x;
-            y = (K.KBaseVector<? extends KBase>) X.y;
+        public Flip(K.KSymbolVector names, K.KBaseVector<? extends KBase> cols) {
+            super();
+            x = names;
+            y = cols;
+        }
+
+        @Override
+        public KBase getX() {
+            return x;
+        }
+
+        @Override
+        public KBase getY() {
+            return y;
         }
 
         @Override
         public int count() {
             return y.at(0).count();
         }
+    }
 
-        @Override
-        public StringBuilder format(StringBuilder builder, KFormatContext context) {
-            builder =  super.format(builder, context);
-            boolean usebracket = x.getLength() == 1;
-            builder.append(flip);
-            if (usebracket) builder.append("(");
-            x.format(builder, context);
-            if (usebracket) builder.append(")");
-            builder.append("!");
-            y.format(builder, context);
-            return builder;
+    public static class MappedTable extends FlipBase {
+        private K.Dict dict;
+
+        public MappedTable(K.Dict dict) {
+            super();
+            this.dict = dict;
         }
 
         @Override
-        protected void serialiseData(OutputStream o) throws IOException {
-            write(o, (byte)0);
-            new Dict(x,y).serialise(o);
+        public KBase getX() {
+            return dict.x;
         }
 
         @Override
-        public int hashCode() {
-            return x.hashCode() + 137 * y.hashCode();
-        }
-
-        @Override
-        public boolean equals(Object obj) {
-            if (! (obj instanceof Flip)) return false;
-            Flip flip = (Flip) obj;
-            return x.equals(flip.x) && y.equals(flip.y);
+        public KBase getY() {
+            return dict.y;
         }
     }
 
-    //@TODO: renamte to KMonth
+    //@TODO: rename to KMonth
     public static class Month extends KIntBase {
         public String getDataType() {
             return "Month";

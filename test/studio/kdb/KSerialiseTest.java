@@ -208,7 +208,7 @@ public class KSerialiseTest {
         }
         K.KList values = new K.KList(array);
 
-        return new K.Flip(new K.Dict(keys, values));
+        return new K.Flip(keys, values);
     }
 
     @Test
