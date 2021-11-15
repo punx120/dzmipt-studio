@@ -14,7 +14,13 @@ public abstract class KTableModel extends AbstractTableModel {
         }
 
         if (obj instanceof K.Dict) {
-            return new DictTableModel((K.Dict)obj);
+            K.Dict dict = (K.Dict) obj;
+            if ( (dict.x instanceof K.KBaseVector || dict.x instanceof K.Flip) &&
+                 (dict.y instanceof K.KBaseVector || dict.y instanceof K.Flip) ) {
+                return new DictTableModel((K.Dict) obj);
+            } else {
+                return null; // dict for memory mapped table
+            }
         }
 
         if ((obj instanceof K.KBaseVector) && obj.getType() != 10 && obj.getType() != 4) {
