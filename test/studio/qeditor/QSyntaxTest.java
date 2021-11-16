@@ -1,18 +1,17 @@
 package studio.qeditor;
 
+import org.fife.ui.rsyntaxtextarea.Token;
 import org.junit.jupiter.api.BeforeAll;
 import org.junit.jupiter.api.Test;
 import studio.qeditor.syntax.QSyntaxParser;
-import studio.qeditor.syntax.QToken;
 
+import javax.swing.text.Segment;
 import java.io.BufferedReader;
 import java.io.IOException;
 import java.io.InputStream;
 import java.io.InputStreamReader;
-import java.util.Arrays;
-import java.util.List;
 
-import static org.junit.jupiter.api.Assertions.assertTrue;
+import static org.junit.jupiter.api.Assertions.assertEquals;
 
 public class QSyntaxTest {
 
@@ -42,10 +41,40 @@ public class QSyntaxTest {
         return replaceAll(text, "\n","\\n");
     }
 
-    private void assertSyntax(String text, String... expected) {
-        List<QToken> actualTokens = parser.parse(decode(text));
-        String[] actual = actualTokens.stream().map(t -> t.toString().toLowerCase()).toArray(String[]::new);
-        assertTrue(Arrays.equals(actual, expected), String.format("Actual: %s; expected: %s; for text: %s", Arrays.toString(actual), Arrays.toString(expected), encode(text)));
+    private void assertSyntax(String text, String expectedLine) {
+        StringBuilder actualLine = new StringBuilder();
+        RSTokenMaker tokenMaker = new RSTokenMaker();
+        Segment segment = new Segment(text.toCharArray(), 0, 0);
+        int offset = 0;
+        int tokenType = 0;
+        do {
+            if (offset > 0) actualLine.append(';');
+
+            int lineEnd = text.indexOf('\n', offset);
+            if (lineEnd == -1) lineEnd = text.length();
+            segment.offset = offset;
+            segment.count = lineEnd - offset;
+            Token token = tokenMaker.getTokenList(segment, tokenType, offset);
+
+            boolean firstToken = true;
+            while (token != null) {
+                tokenType = token.getType();
+                RSToken rsToken = RSToken.fromTokenType(tokenType);
+                if (rsToken != RSToken.NULL) {
+                    if (firstToken) {
+                        firstToken = false;
+                    } else {
+                        actualLine.append(',');
+                    }
+                    actualLine.append(rsToken.toString().toLowerCase());
+                }
+                token = token.getNextToken();
+            }
+
+            offset = lineEnd + 1;
+        } while (offset < text.length());
+
+        assertEquals(expectedLine, actualLine.toString(), "Failure for text: " + encode(text));
     }
 
     @Test
@@ -65,15 +94,10 @@ public class QSyntaxTest {
             }
             String text = line.substring(0, index);
             String expectedLine = line.substring(index+1);
-            String[] expectedTokens = expectedLine.split(",");
 
-            assertSyntax(text, expectedTokens);
+            assertSyntax(decode(text), expectedLine);
         }
         reader.close();
-    }
-
-    @Test
-    public void test() {
     }
 
 }

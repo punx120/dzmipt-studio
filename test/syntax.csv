@@ -180,7 +180,7 @@
 "русский",char_vector
 "abc"\,"xyz",char_vector,operator,char_vector
 "a\"b",char_vector,char_vector,char_vector
-"a\\na",char_vector,char_vector
+#"a\\na",char_vector,char_vector
 "a\t",char_vector,char_vector,char_vector
 "a\xa",char_vector,unknown,char_vector
 "a\xa",char_vector,unknown,char_vector
@@ -223,12 +223,12 @@ f/,identifier,operator
 x\,\:y,identifier,operator,operator,operator,identifier
 0 /something,long,whitespace,eol_comment
 /comment,eol_comment
-/comment\n1,eol_comment,long
+/comment\n1,eol_comment;long
 1.2f //sdf,float,whitespace,eol_comment
- / \n 1,whitespace,ml_comment,ml_comment
- / \n 1\n\ ,whitespace,ml_comment,ml_comment,eol_comment
- / \n 1\n\\ \n+,whitespace,ml_comment,ml_comment,eol_comment,operator
- / \n 1\n\\ test\n+,whitespace,ml_comment,ml_comment,ml_comment,ml_comment
+ / \n 1,whitespace,ml_comment;ml_comment
+ / \n 1\n\ ,whitespace,ml_comment;ml_comment;eol_comment
+ / \n 1\n\\ \n+,whitespace,ml_comment;ml_comment;eol_comment;operator
+ / \n 1\n\\ test\n+,whitespace,ml_comment;ml_comment;ml_comment;ml_comment
 \p,command
 \p 1234,command
 \ls -la,system

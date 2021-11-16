@@ -61,18 +61,6 @@ public class QSyntaxParser  {
     private int stopOffset;
     private State state;
 
-    public List<QToken> parse(String text) {
-        return parse(0, text.toCharArray(), 0, text.length());
-    }
-
-    public List<QToken> parse(int state, char[] buffer, int offset, int stopOffset) {
-        init(state, buffer, offset, stopOffset);
-        List<QToken> tokens = new ArrayList<>();
-        QToken token;
-        while ( (token = next()) != null) tokens.add(token);
-        return tokens;
-    }
-
     public void init(int state, char[] buffer, int offset, int stopOffset) {
         this.buffer = buffer;
         this.offset = offset;
