@@ -1,9 +1,7 @@
 package studio.qeditor;
 
 import org.fife.ui.rsyntaxtextarea.Token;
-import org.junit.jupiter.api.BeforeAll;
 import org.junit.jupiter.api.Test;
-import studio.qeditor.syntax.QSyntaxParser;
 
 import javax.swing.text.Segment;
 import java.io.BufferedReader;
@@ -14,13 +12,6 @@ import java.io.InputStreamReader;
 import static org.junit.jupiter.api.Assertions.assertEquals;
 
 public class QSyntaxTest {
-
-    private static QSyntaxParser parser;
-
-    @BeforeAll
-    private static void init() {
-        parser = new QSyntaxParser();
-    }
 
     private String replaceAll(String src, String... pairs) {
         assert(pairs.length % 2 == 0);

@@ -15,7 +15,7 @@ public class RSTokenMaker extends TokenMakerBase {
     private QSyntaxParser parser = new QSyntaxParser();
 
     private RSToken[] tokens = new RSToken[] {
-        RSToken.SYMBOL, RSToken.CHAR_VECTOR, RSToken.IDENTIFIER, RSToken.OPERATOR, RSToken.BRACKET, RSToken.EOL_COMMENT,
+        RSToken.SYMBOL, RSToken.STRING, RSToken.IDENTIFIER, RSToken.OPERATOR, RSToken.BRACKET, RSToken.EOL_COMMENT,
         RSToken.ML_COMMENT,
         RSToken.KEYWORD, RSToken.WHITESPACE, RSToken.UNKNOWN, RSToken.INTEGER, RSToken.MINUTE, RSToken.SECOND,
         RSToken.TIME, RSToken.DATE, RSToken.MONTH, RSToken.FLOAT, RSToken.LONG, RSToken.SHORT, RSToken.REAL, RSToken.BYTE,

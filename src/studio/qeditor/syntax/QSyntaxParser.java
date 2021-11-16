@@ -246,7 +246,7 @@ public class QSyntaxParser  {
         add(State.Init, whitespace, State.Init, WHITESPACE, Match);
         add(s(State.AfterOperator, State.AfterAtom, State.AfterWhitespace), whitespace, State.AfterWhitespace, WHITESPACE, Match);
         add(s(State.Init, State.AfterOperator, State.AfterAtom, State.AfterWhitespace), "\n", State.Init, WHITESPACE, Match);
-        add(s(State.Init, State.AfterOperator, State.AfterAtom, State.AfterWhitespace), "\"", State.String, CHAR_VECTOR, LooksLike);
+        add(s(State.Init, State.AfterOperator, State.AfterAtom, State.AfterWhitespace), "\"", State.String, STRING, LooksLike);
         add(s(State.Init, State.AfterOperator, State.AfterAtom, State.AfterWhitespace), "`", State.Symbol, SYMBOL, LooksLike);
         add(s(State.Init, State.AfterOperator, State.AfterAtom, State.AfterWhitespace), alpha, State.Identifier, IDENTIFIER, LooksLike);
 
@@ -310,7 +310,7 @@ public class QSyntaxParser  {
         addAtomTypeEnding("jihfpuvtb", State.Zero, State.One, State.Two, State.MinusZero);
         addAtomTypeEnding("jihfepmdznuvt", State.NullFloat, State.NullLong, State.InfFloat, State.InfLong);
         add(s(State.NullFloat, State.NullLong), "g", State.AfterAtom, KEYWORD, Match);
-        add(s(State.NullFloat, State.NullLong), "c", State.AfterAtom, CHAR_VECTOR, Match);
+        add(s(State.NullFloat, State.NullLong), "c", State.AfterAtom, STRING, Match);
 
         add(s(State.MinusZero, State.Digits), digits, State.Digits, LONG, LooksLike);
 
@@ -361,16 +361,16 @@ public class QSyntaxParser  {
 
         initUnknownAtom(firstAtomState, lastAtomState);
 
-        add(State.String, "\\", State.StringEscape, CHAR_VECTOR, Match);
-        add(State.String, "\"", State.AfterAtom, CHAR_VECTOR, Match);
-        add(State.String, "\n", State.String, CHAR_VECTOR, Match);
-        add(State.String, "", State.String, CHAR_VECTOR, LooksLike);
-        add(State.StringEscape, "nrt\\\"", State.String, CHAR_VECTOR, Match);
+        add(State.String, "\\", State.StringEscape, STRING, Match);
+        add(State.String, "\"", State.AfterAtom, STRING, Match);
+        add(State.String, "\n", State.String, STRING, Match);
+        add(State.String, "", State.String, STRING, LooksLike);
+        add(State.StringEscape, "nrt\\\"", State.String, STRING, Match);
         add(State.StringEscape, "0123", State.StringEscapeD, UNKNOWN, LooksLike);
         add(State.StringEscape, "", State.String, UNKNOWN, Match);
         add(State.StringEscapeD, "01234567", State.StringEscapeDD, UNKNOWN, LooksLike);
         add(State.StringEscapeD, "", State.String, UNKNOWN, Match);
-        add(State.StringEscapeDD, "01234567", State.String, CHAR_VECTOR, Match);
+        add(State.StringEscapeDD, "01234567", State.String, STRING, Match);
         add(State.StringEscapeDD, "", State.String, UNKNOWN, Match);
 
         add(State.Symbol, alphaNumeric + "`_.", State.Symbol, SYMBOL, LooksLike);

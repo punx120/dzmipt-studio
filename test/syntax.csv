@@ -129,8 +129,8 @@
 
 0ng,keyword
 0Ng,keyword
-0nc,char_vector
-0Nc,char_vector
+0nc,string
+0Nc,string
 
 0:,operator
 1:,operator
@@ -175,19 +175,19 @@
 -0k,unknown
 -0:,unknown
 
-"dzmipt",char_vector
-"",char_vector
-"русский",char_vector
-"abc"\,"xyz",char_vector,operator,char_vector
-"a\"b",char_vector,char_vector,char_vector
-#"a\\na",char_vector,char_vector
-"a\t",char_vector,char_vector,char_vector
-"a\xa",char_vector,unknown,char_vector
-"a\xa",char_vector,unknown,char_vector
-"\120",char_vector,char_vector,char_vector
-"\12,char_vector,unknown
-"\99",char_vector,unknown,char_vector
-"\400",char_vector,unknown,char_vector
+"dzmipt",string
+"",string
+"русский",string
+"abc"\,"xyz",string,operator,string
+"a\"b",string,string,string
+#"a\\na",string,string
+"a\t",string,string,string
+"a\xa",string,unknown,string
+"a\xa",string,unknown,string
+"\120",string,string,string
+"\12,string,unknown
+"\99",string,unknown,string
+"\400",string,unknown,string
 
 `,symbol
 ``,symbol

@@ -2,7 +2,7 @@ package studio.qeditor.syntax;
 
 public enum QToken {
     SYMBOL,
-    CHAR_VECTOR,
+    STRING,
     IDENTIFIER,
     OPERATOR,
     BRACKET ,
