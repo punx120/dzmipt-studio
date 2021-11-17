@@ -6,6 +6,7 @@ import studio.qeditor.syntax.QSyntaxParser;
 import studio.qeditor.syntax.QToken;
 
 import javax.swing.text.Segment;
+import java.util.stream.Stream;
 
 
 public class RSTokenMaker extends TokenMakerBase {
@@ -14,33 +15,34 @@ public class RSTokenMaker extends TokenMakerBase {
 
     private QSyntaxParser parser = new QSyntaxParser();
 
-    private RSToken[] tokens = new RSToken[] {
-        RSToken.SYMBOL, RSToken.STRING, RSToken.IDENTIFIER, RSToken.OPERATOR, RSToken.BRACKET, RSToken.EOL_COMMENT,
-        RSToken.ML_COMMENT,
-        RSToken.KEYWORD, RSToken.WHITESPACE, RSToken.UNKNOWN, RSToken.INTEGER, RSToken.MINUTE, RSToken.SECOND,
-        RSToken.TIME, RSToken.DATE, RSToken.MONTH, RSToken.FLOAT, RSToken.LONG, RSToken.SHORT, RSToken.REAL, RSToken.BYTE,
-        RSToken.BOOLEAN, RSToken.DATETIME, RSToken.TIMESTAMP, RSToken.TIMESPAN, RSToken.SYSTEM, RSToken.COMMAND
-    };
+    // Make sure the same list and ordering in QToken, RSToken, RSTokenMaker.tokens
+    private static final RSToken[] tokens = Stream.of(RSToken.values()).skip(1).toArray(RSToken[]::new);
 
     @Override
     public Token getTokenList(Segment text, int initialTokenType, int startOffset) {
         resetTokenList();
 
-        boolean mlComment = initialTokenType == RSToken.ML_COMMENT.getTokenType();
+        RSToken initToken = RSToken.fromTokenType(initialTokenType);
 
         int offset = text.offset;
         int delta = startOffset - text.offset;
 
         if (text.count == 0) {
-            if (mlComment) {
-                addToken(text, offset, offset-1, RSToken.ML_COMMENT.getTokenType(), delta + offset);
-            } else {
+            if (initToken == RSToken.NULL) {
                 addNullToken();
+            } else {
+                addToken(text, offset, offset-1, initialTokenType, delta + offset);
             }
             return firstToken;
         }
 
-        int initState = mlComment ? QSyntaxParser.MLCommentInitState : QSyntaxParser.InitState;
+        int initState;
+        if (initToken == RSToken.NULL) {
+            initState = QSyntaxParser.InitState;
+        } else {
+            QToken qtoken = QToken.values()[initToken.ordinal() - 1];
+            initState = QSyntaxParser.getInitState(qtoken);
+        }
 
         parser.init(initState, text.array, offset, text.offset + text.count);
 
@@ -52,7 +54,7 @@ public class RSTokenMaker extends TokenMakerBase {
             addToken(text, offset, parser.getOffset() - 1, tokens[token.ordinal()].getTokenType(),delta + offset);
             offset = parser.getOffset();
         }
-        if (lastToken != QToken.ML_COMMENT) {
+        if (lastToken == null || ! lastToken.isMultiLine()) {
             addNullToken();
         }
 

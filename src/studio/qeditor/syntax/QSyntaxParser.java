@@ -23,8 +23,8 @@ public class QSyntaxParser  {
         DateD1,DateD2,DateD3,DateD4,DateD5,DateD6,DateD7,DateD8,
         DateT1,DateT2,DateT3,DateT4,DateT5,DateT6,DateT7,DateT8,
         DigitsD1,DigitsD2,DigitsD3,DigitsD4,DigitsD5,DigitsD6,DigitsD7,DigitsD8,
-        MinusZero,
-        MinusForAtom, String, StringEscape, StringEscapeD, StringEscapeDD, Symbol, SymbolColon,
+        MinusZero, MinusForAtom,
+        String, StringEscapeBefore, StringEscape, StringEscapeD, StringEscapeDD, Symbol, SymbolColon,
         Identifier,IdentifierDot,
         CommentEOL,
         CommentMLFirstLine, CommentMLInit, CommentML, CommentMLLastLine,
@@ -33,7 +33,14 @@ public class QSyntaxParser  {
 
     public static final int InitState = State.Init.ordinal();
 
-    public static final int MLCommentInitState = State.CommentMLInit.ordinal();
+    public static int getInitState(QToken token) {
+        switch (token) {
+            case ML_COMMENT: return State.CommentMLInit.ordinal();
+            case ML_STRING:
+            case ERROR_STRING: return State.String.ordinal();
+            default: return State.Init.ordinal();
+        }
+    }
 
     private static final State firstAtomState = State.Long;
     private static final State lastAtomState = State.MinusZero;
@@ -246,7 +253,7 @@ public class QSyntaxParser  {
         add(State.Init, whitespace, State.Init, WHITESPACE, Match);
         add(s(State.AfterOperator, State.AfterAtom, State.AfterWhitespace), whitespace, State.AfterWhitespace, WHITESPACE, Match);
         add(s(State.Init, State.AfterOperator, State.AfterAtom, State.AfterWhitespace), "\n", State.Init, WHITESPACE, Match);
-        add(s(State.Init, State.AfterOperator, State.AfterAtom, State.AfterWhitespace), "\"", State.String, STRING, LooksLike);
+        add(s(State.Init, State.AfterOperator, State.AfterAtom, State.AfterWhitespace), "\"", State.String, ML_STRING, LooksLike);
         add(s(State.Init, State.AfterOperator, State.AfterAtom, State.AfterWhitespace), "`", State.Symbol, SYMBOL, LooksLike);
         add(s(State.Init, State.AfterOperator, State.AfterAtom, State.AfterWhitespace), alpha, State.Identifier, IDENTIFIER, LooksLike);
 
@@ -361,17 +368,18 @@ public class QSyntaxParser  {
 
         initUnknownAtom(firstAtomState, lastAtomState);
 
-        add(State.String, "\\", State.StringEscape, STRING, Match);
+        add(State.String, "\\", State.StringEscapeBefore, ML_STRING, MatchPrev);
         add(State.String, "\"", State.AfterAtom, STRING, Match);
-        add(State.String, "\n", State.String, STRING, Match);
-        add(State.String, "", State.String, STRING, LooksLike);
-        add(State.StringEscape, "nrt\\\"", State.String, STRING, Match);
-        add(State.StringEscape, "0123", State.StringEscapeD, UNKNOWN, LooksLike);
-        add(State.StringEscape, "", State.String, UNKNOWN, Match);
-        add(State.StringEscapeD, "01234567", State.StringEscapeDD, UNKNOWN, LooksLike);
-        add(State.StringEscapeD, "", State.String, UNKNOWN, Match);
-        add(State.StringEscapeDD, "01234567", State.String, STRING, Match);
-        add(State.StringEscapeDD, "", State.String, UNKNOWN, Match);
+        add(State.String, "\n", State.String, ML_STRING, Match); // I think this couldn't happen for RSyntaxTokenMaker
+        add(State.String, "", State.String, ML_STRING, LooksLike);
+        add(State.StringEscapeBefore, "\\", State.StringEscape, ERROR_STRING, LooksLike);
+        add(State.StringEscape, "nrt\\\"", State.String, ML_STRING, Match);
+        add(State.StringEscape, "0123", State.StringEscapeD, ERROR_STRING, LooksLike);
+        add(State.StringEscape, "", State.String, ERROR_STRING, Match);
+        add(State.StringEscapeD, "01234567", State.StringEscapeDD, ERROR_STRING, LooksLike);
+        add(State.StringEscapeD, "", State.String, ERROR_STRING, Match);
+        add(State.StringEscapeDD, "01234567", State.String, ML_STRING, Match);
+        add(State.StringEscapeDD, "", State.String, ERROR_STRING, Match);
 
         add(State.Symbol, alphaNumeric + "`_.", State.Symbol, SYMBOL, LooksLike);
         add(State.Symbol, ":", State.SymbolColon, SYMBOL, LooksLike);

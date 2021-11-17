@@ -3,11 +3,13 @@ package studio.qeditor.syntax;
 public enum QToken {
     SYMBOL,
     STRING,
+    ML_STRING(true),
+    ERROR_STRING(true),
     IDENTIFIER,
     OPERATOR,
     BRACKET ,
     EOL_COMMENT,
-    ML_COMMENT,
+    ML_COMMENT(true),
     KEYWORD,
     WHITESPACE,
     UNKNOWN,
@@ -27,5 +29,20 @@ public enum QToken {
     TIMESTAMP,
     TIMESPAN,
     SYSTEM, //OS command like \ls
-    COMMAND, //q command like \p
+    COMMAND; //q command like \p
+
+    private boolean multiLine;
+
+    QToken() {
+        this(false);
+    }
+
+    QToken(boolean multiLine) {
+        this.multiLine = multiLine;
+    }
+
+    public boolean isMultiLine() {
+        return multiLine;
+    }
+
 }

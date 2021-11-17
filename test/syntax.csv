@@ -179,15 +179,20 @@
 "",string
 "русский",string
 "abc"\,"xyz",string,operator,string
-"a\"b",string,string,string
-#"a\\na",string,string
-"a\t",string,string,string
-"a\xa",string,unknown,string
-"a\xa",string,unknown,string
-"\120",string,string,string
-"\12,string,unknown
-"\99",string,unknown,string
-"\400",string,unknown,string
+"a\"b",ml_string,ml_string,string
+"a\t",ml_string,ml_string,string
+"a\xa",ml_string,error_string,string
+"\120",ml_string,ml_string,string
+"\12,ml_string,error_string
+"\99",ml_string,error_string,string
+"\400",ml_string,error_string,string
+"a\ b",ml_string,error_string,string
+
+"a\\na",ml_string;string
+"a\\n\\na",ml_string;ml_string;string
+"a\\n"b,ml_string;string,identifier
+"a"\\nb,string;identifier
+"a\1\\nb",ml_string,error_string;string
 
 `,symbol
 ``,symbol

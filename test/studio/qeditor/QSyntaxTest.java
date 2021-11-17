@@ -2,16 +2,35 @@ package studio.qeditor;
 
 import org.fife.ui.rsyntaxtextarea.Token;
 import org.junit.jupiter.api.Test;
+import studio.qeditor.syntax.QToken;
 
 import javax.swing.text.Segment;
 import java.io.BufferedReader;
 import java.io.IOException;
 import java.io.InputStream;
 import java.io.InputStreamReader;
+import java.util.Comparator;
+import java.util.stream.Collectors;
+import java.util.stream.Stream;
 
 import static org.junit.jupiter.api.Assertions.assertEquals;
 
 public class QSyntaxTest {
+
+    @Test
+    public void testInternalLogicAssumptions() {
+        String rsToken = Stream.of(RSToken.values()).skip(1).map(Enum::toString).collect(Collectors.joining(","));
+        String qToken = Stream.of(QToken.values()).map(Enum::toString).collect(Collectors.joining(","));
+        assertEquals(rsToken, qToken, "RSToken and QToken should have the same list and order");
+
+        long count = Stream.of(RSToken.values()).map(RSToken::getTokenType).distinct().count();
+        assertEquals(RSToken.values().length, count, "All RSToken types should be different");
+
+        long maxType = Stream.of(RSToken.values()).map(RSToken::getTokenType).max(Comparator.naturalOrder()).orElse(0);
+        assertEquals(RSToken.NUM_TOKEN_TYPES, maxType+1, "RSToken.NUM_TOKEN_TYPES should be max token type + 1");
+
+    }
+
 
     private String replaceAll(String src, String... pairs) {
         assert(pairs.length % 2 == 0);
@@ -91,4 +110,8 @@ public class QSyntaxTest {
         reader.close();
     }
 
+    @Test
+    public void test() {
+        assertSyntax("\"a\\1\nb\"", "ml_string,error_string;string");
+    }
 }

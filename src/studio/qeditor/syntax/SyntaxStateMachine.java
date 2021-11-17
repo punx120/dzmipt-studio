@@ -9,6 +9,9 @@ public class SyntaxStateMachine {
 
     private final static int MAX_CHAR=128;
 
+    //Action.Match: the token is finished on current character
+    //Action.MatchPrev: with the current character, now we know that token finished on previous character
+    //Action.LooksLike: we are in the middle of token. If it is the last character in the system, we return the token which might be not finished
     public enum Action {LooksLike, Match, MatchPrev};
 
     public SyntaxStateMachine() {
