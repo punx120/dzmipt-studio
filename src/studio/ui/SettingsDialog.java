@@ -32,6 +32,7 @@ public class SettingsDialog extends EscapeDialog {
     private JFormattedTextField txtMaxCharsInTableCell;
     private JFormattedTextField txtCellRightPadding;
     private JFormattedTextField txtCellMaxWidth;
+    private JFormattedTextField txtMaxFractionDigits;
     private JComboBox<Config.ExecAllOption> comboBoxExecAll;
     private JComboBox<LineEnding> comboBoxLineEnding;
     private JButton btnOk;
@@ -112,6 +113,10 @@ public class SettingsDialog extends EscapeDialog {
         return (LineEnding) comboBoxLineEnding.getSelectedItem();
     }
 
+    public int getMaxFractionDigits() {
+        return (Integer) txtMaxFractionDigits.getValue();
+    }
+
     private void refreshCredentials() {
         Credentials credentials = Config.getInstance().getDefaultCredentials(getDefaultAuthenticationMechanism());
 
@@ -165,6 +170,13 @@ public class SettingsDialog extends EscapeDialog {
         JLabel lblMaxCharsInTableCell = new JLabel("Max chars in table cell");
         txtMaxCharsInTableCell = new JFormattedTextField(formatter);
         txtMaxCharsInTableCell.setValue(Config.getInstance().getMaxCharsInTableCell());
+
+        JLabel lblMaxFractionDigits = new JLabel("Max number of fraction digits in output");
+        formatter = new NumberFormatter();
+        formatter.setMinimum(1);
+        formatter.setMaximum(20);
+        txtMaxFractionDigits = new JFormattedTextField(formatter);
+        txtMaxFractionDigits.setValue(Config.getInstance().getInt(Config.MAX_FRACTION_DIGITS));
 
         JLabel lblCellRightPadding = new JLabel("Right padding in table cell");
 
@@ -227,12 +239,13 @@ public class SettingsDialog extends EscapeDialog {
         layout = new GroupLayoutSimple(pnlResult);
         layout.setStacks(
                 new GroupLayoutSimple.Stack()
+                        .addLineAndGlue(lblMaxFractionDigits, txtMaxFractionDigits)
                         .addLineAndGlue(lblResultTabsCount, txtTabsCount)
                         .addLine(lblMaxCharsInResult, txtMaxCharsInResult, lblMaxCharsInTableCell, txtMaxCharsInTableCell)
                         .addLine(lblCellRightPadding, txtCellRightPadding, lblCellMaxWidth, txtCellMaxWidth)
         );
-        layout.linkSize(SwingConstants.HORIZONTAL, lblCellRightPadding, txtTabsCount, txtMaxCharsInResult, txtMaxCharsInTableCell,
-                txtCellRightPadding, txtCellMaxWidth);
+        layout.linkSize(SwingConstants.HORIZONTAL, lblCellRightPadding, txtMaxFractionDigits, txtTabsCount,
+                txtMaxCharsInResult, txtMaxCharsInTableCell, txtCellRightPadding, txtCellMaxWidth);
 
         JTabbedPane tabs = new JTabbedPane();
         tabs.addTab("General", pnlGeneral);

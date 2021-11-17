@@ -941,7 +941,12 @@ public class StudioPanel extends JPanel implements Observer,WindowListener {
         CONFIG.setBoolean(Config.SAVE_ON_EXIT, dialog.isSaveOnExit());
         CONFIG.setBoolean(Config.AUTO_SAVE, dialog.isAutoSave());
         CONFIG.setEnum(Config.DEFAULT_LINE_ENDING, dialog.getDefaultLineEnding());
-        
+
+        int maxFractionDigits = dialog.getMaxFractionDigits();
+        CONFIG.setInt(Config.MAX_FRACTION_DIGITS, maxFractionDigits);
+        //Looks like a hack??
+        KFormatContext.setMaxFractionDigits(maxFractionDigits);
+
         boolean changed = CONFIG.setBoolean(Config.RSTA_ANIMATE_BRACKET_MATCHING, dialog.isAnimateBracketMatching());
         changed |= CONFIG.setBoolean(Config.RSTA_HIGHLIGHT_CURRENT_LINE, dialog.isHighlightCurrentLine());
         changed |= CONFIG.setBoolean(Config.RSTA_WORD_WRAP, dialog.isWordWrap());

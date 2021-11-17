@@ -1,3 +1,4 @@
+* Number of fractional digits in output is now configurable 
 * Adding mnemonic shortcuts in confirmation dialogs
 * Support of different line ending styles
 * Adding SaveAll action
