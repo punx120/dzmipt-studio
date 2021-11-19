@@ -36,6 +36,8 @@ dependencies {
     implementation group: 'org.apache.poi', name: 'poi', version: '4.1.2'
     implementation group: 'org.apache.poi', name: 'poi-ooxml', version: '4.1.2'
     implementation group: 'org.drjekyll', name: 'fontchooser', version: '2.4'
+    implementation group: 'net.java.dev.jna', name: 'jna', version: '5.10.0'
+
     runtimeOnly files ('lib/images.jar')
 
     testImplementation 'org.junit.jupiter:junit-jupiter-api:5.3.1'

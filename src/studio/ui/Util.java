@@ -71,6 +71,7 @@ public class Util {
     public final static ImageIcon SEARCH_CASE_SENSITIVE_SHADED_ICON = getImage("/searchCaseSensitive_shaded.png");
 
     public static boolean MAC_OS_X = (System.getProperty("os.name").toLowerCase().startsWith("mac os x"));
+    public static boolean WINDOWS = (System.getProperty("os.name").toLowerCase().contains("win"));
 
     public static ImageIcon getImage(String strFilename) {
         URL url = Util.class.getResource(strFilename);

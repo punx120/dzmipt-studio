@@ -19,6 +19,7 @@ import studio.ui.StudioPanel;
 import studio.ui.action.WorkspaceSaver;
 import studio.utils.Content;
 import studio.utils.FileReaderWriter;
+import studio.utils.WindowsAppUserMode;
 
 import java.util.TimeZone;
 import javax.swing.*;
@@ -44,6 +45,8 @@ public class Studio {
 
     public static void main(final String[] args) {
         initLogger();
+        WindowsAppUserMode.setMainId();
+
         TimeZone.setDefault(TimeZone.getTimeZone("GMT"));
 
         if(System.getProperty("os.name","").contains("OS X")){ 

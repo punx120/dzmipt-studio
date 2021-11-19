@@ -22,6 +22,7 @@ import studio.kdb.KTableModel;
 import studio.kdb.ToDouble;
 import studio.ui.StudioOptionPane;
 import studio.ui.Util;
+import studio.utils.WindowsAppUserMode;
 
 import javax.swing.*;
 import java.awt.*;
@@ -105,17 +106,22 @@ public class Chart implements ComponentListener {
 
         configUpdateTimer = new Timer(CONFIG_UPDATE_DELAY, e -> saveFrameBounds());
 
-        frame = new JFrame();
-        updateTitle(null);
-        frame.setContentPane(contentPane);
-        frame.setDefaultCloseOperation(JFrame.DISPOSE_ON_CLOSE);
-        frame.setIconImage(Util.CHART_BIG_ICON.getImage());
+        WindowsAppUserMode.setChartId();
+        try {
+            frame = new JFrame();
+            updateTitle(null);
+            frame.setContentPane(contentPane);
+            frame.setDefaultCloseOperation(JFrame.DISPOSE_ON_CLOSE);
+            frame.setIconImage(Util.CHART_BIG_ICON.getImage());
 
-        frame.setBounds(config.getBounds(Config.CHART_BOUNDS));
-        frame.addComponentListener(this);
-        frame.setVisible(true);
-        frame.requestFocus();
-        frame.toFront();
+            frame.setBounds(config.getBounds(Config.CHART_BOUNDS));
+            frame.addComponentListener(this);
+            frame.setVisible(true);
+            frame.requestFocus();
+            frame.toFront();
+        } finally {
+            WindowsAppUserMode.setMainId();
+        }
     }
 
     private void updateTitle(JFreeChart chart) {

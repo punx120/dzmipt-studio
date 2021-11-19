@@ -40,6 +40,7 @@ Studio for kdb+ uses the following open source projects:
 * [Gradle] - Build tool
 * [Txtmark] - Java markdown processor - to convert notes.md to HTML during build
 * [Apache] - POI for Excel export
+* [JNA] - Java Native Access
 
 Installation
 --------------
@@ -83,3 +84,4 @@ of a license from Icon Experience.
 [Txtmark]:https://github.com/rjeschke/txtmark
 [Apache]:https://www.apache.org/
 [RSyntaxTextArea]:http://bobbylight.github.io/RSyntaxTextArea/
+[JNA]:https://github.com/java-native-access/jna

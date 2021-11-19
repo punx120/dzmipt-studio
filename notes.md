@@ -1,3 +1,6 @@
+* (Windows only) Icon grouping in taskbar
+    * grouping are different to other application started with the same Java machine
+    * grouping for editor and charting frames are different
 * Number of fractional digits in output is now configurable 
 * Adding mnemonic shortcuts in confirmation dialogs
 * Support of different line ending styles
