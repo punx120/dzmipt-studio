@@ -100,6 +100,7 @@ public class RSTextAreaFactory {
 
         textArea.setSyntaxEditingStyle(RSTokenMaker.CONTENT_TYPE);
         textArea.setSyntaxScheme(RSToken.getDefaulSyntaxScheme());
+        textArea.setHyperlinksEnabled(false);
 
         return textArea;
     }
