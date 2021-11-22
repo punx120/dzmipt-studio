@@ -167,16 +167,16 @@ public class KTest {
 
     @Test
     public void testTimestampToString() throws Exception {
-        check(new K.KTimestamp(-123456789), "1999.12.31 23:59:59.876543211", "1999.12.31 23:59:59.876543211");
-        check(new K.KTimestamp(123456), "2000.01.01 00:00:00.000123456", "2000.01.01 00:00:00.000123456");
+        check(new K.KTimestamp(-123456789), "1999.12.31D23:59:59.876543211", "1999.12.31D23:59:59.876543211");
+        check(new K.KTimestamp(123456), "2000.01.01D00:00:00.000123456", "2000.01.01D00:00:00.000123456");
         check(new K.KTimestamp(-Long.MAX_VALUE), "-0Wp", "-0Wp");
         check(new K.KTimestamp(Long. MAX_VALUE), "0Wp", "0Wp");
         check(new K.KTimestamp(Long.MIN_VALUE), "0Np", "0Np");
 
-        check(new K.KTimestampVector(-10, 10, 3), "1999.12.31 23:59:59.999999990 2000.01.01 00:00:00.000000010 2000.01.01 00:00:00.000000003", "1999.12.31 23:59:59.999999990 2000.01.01 00:00:00.000000010 2000.01.01 00:00:00.000000003");
+        check(new K.KTimestampVector(-10, 10, 3), "1999.12.31D23:59:59.999999990 2000.01.01D00:00:00.000000010 2000.01.01D00:00:00.000000003", "1999.12.31D23:59:59.999999990 2000.01.01D00:00:00.000000010 2000.01.01D00:00:00.000000003");
         check(new K.KTimestampVector(), "`timestamp$()", "`timestamp$()");
-        check(new K.KTimestampVector(0), "enlist 2000.01.01 00:00:00.000000000", "enlist 2000.01.01 00:00:00.000000000");
-        check(new K.KTimestampVector(5, Long.MIN_VALUE, Long.MAX_VALUE, -Long.MAX_VALUE), "2000.01.01 00:00:00.000000005 0Np 0Wp -0Wp", "2000.01.01 00:00:00.000000005 0Np 0Wp -0Wp");
+        check(new K.KTimestampVector(0), "enlist 2000.01.01D00:00:00.000000000", "enlist 2000.01.01D00:00:00.000000000");
+        check(new K.KTimestampVector(5, Long.MIN_VALUE, Long.MAX_VALUE, -Long.MAX_VALUE), "2000.01.01D00:00:00.000000005 0Np 0Wp -0Wp", "2000.01.01D00:00:00.000000005 0Np 0Wp -0Wp");
     }
 
     @Test
@@ -210,14 +210,14 @@ public class KTest {
     @Test
     public void testTimeToString() throws Exception {
         //@ToDo Fix me
-        check(new K.KTime(-1234567890), "17:03:52.110", "17:03:52.110");
-        check(new K.KTime(323456789), "17:50:56.789", "17:50:56.789");
+        check(new K.KTime(-1234567890), "-342:56:07.890", "-342:56:07.890");
+        check(new K.KTime(323456789), "89:50:56.789", "89:50:56.789");
 
         check(new K.KTime(-Integer.MAX_VALUE), "-0Wt", "-0Wt");
         check(new K.KTime(Integer. MAX_VALUE), "0Wt", "0Wt");
         check(new K.KTime(Integer.MIN_VALUE), "0Nt", "0Nt");
 
-        check(new K.KTimeVector(-10, 10, 3), "23:59:59.990 00:00:00.010 00:00:00.003", "23:59:59.990 00:00:00.010 00:00:00.003");
+        check(new K.KTimeVector(-10, 10, 3), "-00:00:00.010 00:00:00.010 00:00:00.003", "-00:00:00.010 00:00:00.010 00:00:00.003");
         check(new K.KTimeVector(), "`time$()", "`time$()");
         check(new K.KTimeVector(0), "enlist 00:00:00.000", "enlist 00:00:00.000");
         check(new K.KTimeVector(5, Integer.MIN_VALUE, Integer.MAX_VALUE, -Integer.MAX_VALUE), "00:00:00.005 0Nt 0Wt -0Wt", "00:00:00.005 0Nt 0Wt -0Wt");
@@ -282,16 +282,16 @@ public class KTest {
 
     @Test
     public void testDatetimeToString() throws Exception {
-        check(new K.KDatetime(-123456.789), "1661.12.26 05:03:50.401", "1661.12.26 05:03:50.401z");
-        check(new K.KDatetime(123.456), "2000.05.03 10:56:38.400", "2000.05.03 10:56:38.400z");
-        check(new K.KDatetime(Double.NEGATIVE_INFINITY), "-0w", "-0wz");
-        check(new K.KDatetime(Double.POSITIVE_INFINITY), "0w", "0wz");
-        check(new K.KDatetime(Double.NaN), "0N", "0Nz");
+        check(new K.KDatetime(-123456.789), "1661.12.26T05:03:50.401", "1661.12.26T05:03:50.401");
+        check(new K.KDatetime(123.456), "2000.05.03T10:56:38.400", "2000.05.03T10:56:38.400");
+        check(new K.KDatetime(Double.NEGATIVE_INFINITY), "-0wz", "-0wz");
+        check(new K.KDatetime(Double.POSITIVE_INFINITY), "0wz", "0wz");
+        check(new K.KDatetime(Double.NaN), "0Nz", "0Nz");
 
-        check(new K.KDatetimeVector(-10.0, 10.0, 3.0), "1999.12.22 00:00:00.000 2000.01.11 00:00:00.000 2000.01.04 00:00:00.000", "1999.12.22 00:00:00.000 2000.01.11 00:00:00.000 2000.01.04 00:00:00.000z");
+        check(new K.KDatetimeVector(-10.0, 10.0, 3.0), "1999.12.22T00:00:00.000 2000.01.11T00:00:00.000 2000.01.04T00:00:00.000", "1999.12.22T00:00:00.000 2000.01.11T00:00:00.000 2000.01.04T00:00:00.000");
         check(new K.KDatetimeVector(), "`datetime$()", "`datetime$()");
-        check(new K.KDatetimeVector(0.0), "enlist 2000.01.01 00:00:00.000", "enlist 2000.01.01 00:00:00.000z");
-        check(new K.KDatetimeVector(5.0, Double.NEGATIVE_INFINITY, Double.POSITIVE_INFINITY, Double.NaN), "2000.01.06 00:00:00.000 -0w 0w 0N", "2000.01.06 00:00:00.000 -0w 0w 0Nz");
+        check(new K.KDatetimeVector(0.0), "enlist 2000.01.01T00:00:00.000", "enlist 2000.01.01T00:00:00.000");
+        check(new K.KDatetimeVector(5.0, Double.NEGATIVE_INFINITY, Double.POSITIVE_INFINITY, Double.NaN), "2000.01.06T00:00:00.000 -0wz 0wz 0Nz", "2000.01.06T00:00:00.000 -0wz 0wz 0Nz");
     }
 
 

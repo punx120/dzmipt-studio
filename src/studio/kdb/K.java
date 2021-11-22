@@ -13,14 +13,13 @@ import java.util.stream.Stream;
 public class K {
     private final static DecimalFormat nsFormatter = new DecimalFormat("000000000");
     private final static SimpleDateFormat dateFormatter = new SimpleDateFormat("yyyy.MM.dd");
-    private final static SimpleDateFormat dateTimeFormatter = new SimpleDateFormat("yyyy.MM.dd HH:mm:ss.SSS");
-    private final static SimpleDateFormat timeFormatter = new SimpleDateFormat("HH:mm:ss.SSS");
-    private final static SimpleDateFormat timestampFormatter = new SimpleDateFormat("yyyy.MM.dd HH:mm:ss.");
+    private final static SimpleDateFormat dateTimeFormatter = new SimpleDateFormat("yyyy.MM.dd'T'HH:mm:ss.SSS");
+    private final static SimpleDateFormat timestampFormatter = new SimpleDateFormat("yyyy.MM.dd'D'HH:mm:ss.");
 
 
     static {
         TimeZone gmtTimeZone = java.util.TimeZone.getTimeZone("GMT");
-        Stream.of(dateFormatter, dateTimeFormatter, timeFormatter, timestampFormatter)
+        Stream.of(dateFormatter, dateTimeFormatter, timestampFormatter)
                 .forEach(f -> f.setTimeZone(gmtTimeZone));
     }
 
@@ -963,7 +962,19 @@ public class K {
             if (isNull()) builder.append("0Nt");
             else if (value == Integer.MAX_VALUE) builder.append("0Wt");
             else if (value == -Integer.MAX_VALUE) builder.append("-0Wt");
-            else builder.append(timeFormatter.format(toTime()));
+            else {
+                int v = value;
+                if (v<0) {
+                    builder.append("-");
+                    v = -v;
+                }
+                int ms = v % 1000;
+                int s = v / 1000 % 60;
+                int m = v / 60000 % 60;
+                int h = v / 3600000;
+                builder.append(i2(h)).append(":").append(i2(m)).append(":").append(i2(s))
+                        .append(".").append(i3(ms));
+            }
             return builder;
         }
 
@@ -984,13 +995,10 @@ public class K {
         @Override
         public StringBuilder format(StringBuilder builder, KFormatContext context) {
             builder = super.format(builder, context);
-            if (isNull()) builder.append("0N");
-            else if (value == Double.POSITIVE_INFINITY) builder.append("0w");
-            else if (value == Double.NEGATIVE_INFINITY) builder.append("-0w");
+            if (isNull()) builder.append("0Nz");
+            else if (value == Double.POSITIVE_INFINITY) builder.append("0wz");
+            else if (value == Double.NEGATIVE_INFINITY) builder.append("-0wz");
             else builder.append(dateTimeFormatter.format(toTimestamp()));
-
-
-            if (context.showType()) builder.append("z");
             return builder;
         }
 
@@ -1308,10 +1316,15 @@ public class K {
         }
     }
 
-    static java.text.DecimalFormat i2Formatter = new java.text.DecimalFormat("00");
+    private static java.text.DecimalFormat i2Formatter = new java.text.DecimalFormat("00");
+    private static java.text.DecimalFormat i3Formatter = new java.text.DecimalFormat("000");
 
-    static String i2(int i) {
+    private static String i2(int i) {
         return i2Formatter.format(i);
+    }
+
+    private static String i3(int i) {
+        return i3Formatter.format(i);
     }
 
     public static abstract class KBaseVector<E extends KBase> extends KBase {
@@ -1568,7 +1581,7 @@ public class K {
         }
 
         public KDatetimeVector(double... array) {
-            super(array, 15, "datetime", "z");
+            super(array, 15, "datetime", "");
         }
 
         public KDatetime at(int i) {
