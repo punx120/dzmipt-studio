@@ -1,7 +1,7 @@
 package studio.kdb;
 
 import org.junit.jupiter.api.Test;
-import java.lang.reflect.Array;
+import java.util.Calendar;
 import java.util.UUID;
 
 import static org.junit.jupiter.api.Assertions.assertEquals;
@@ -217,6 +217,17 @@ public class KTest {
         check(new K.KMonthVector(), "`month$()", "`month$()");
         check(new K.KMonthVector(0), "enlist 2000.01", "enlist 2000.01m");
         check(new K.KMonthVector(5, Integer.MIN_VALUE, Integer.MAX_VALUE, -Integer.MAX_VALUE), "2000.06 0N 0W -0W", "2000.06 0N 0W -0Wm");
+    }
+
+    @Test
+    public void testMonthToDate() {
+        K.Month month = new K.Month(262); // Nov-2021
+        Calendar c = Calendar.getInstance();
+        c.setTime(month.toDate());
+
+        assertEquals(2021, c.get(Calendar.YEAR));
+        assertEquals(Calendar.NOVEMBER, c.get(Calendar.MONTH));
+        assertEquals(1, c.get(Calendar.DAY_OF_MONTH));
     }
 
     @Test

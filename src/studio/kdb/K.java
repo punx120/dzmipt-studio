@@ -1203,8 +1203,8 @@ public class K {
 
         public Date toDate() {
             int m = value + 24000, y = m / 12;
+            m %= 12;
             Calendar cal = Calendar.getInstance();
-            //@TODO: check that below code works. It looks m could be greater than 11.
             cal.set(y, m, 1);
             return cal.getTime();
         }
