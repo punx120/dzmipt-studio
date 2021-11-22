@@ -7,17 +7,21 @@ import java.sql.Time;
 import java.sql.Timestamp;
 import java.text.DecimalFormat;
 import java.text.SimpleDateFormat;
-import java.util.Calendar;
-import java.util.Date;
-import java.util.Objects;
-import java.util.UUID;
+import java.util.*;
+import java.util.stream.Stream;
 
 public class K {
-    private final static SimpleDateFormat formatter = new SimpleDateFormat();
     private final static DecimalFormat nsFormatter = new DecimalFormat("000000000");
+    private final static SimpleDateFormat dateFormatter = new SimpleDateFormat("yyyy.MM.dd");
+    private final static SimpleDateFormat dateTimeFormatter = new SimpleDateFormat("yyyy.MM.dd HH:mm:ss.SSS");
+    private final static SimpleDateFormat timeFormatter = new SimpleDateFormat("HH:mm:ss.SSS");
+    private final static SimpleDateFormat timestampFormatter = new SimpleDateFormat("yyyy.MM.dd HH:mm:ss.");
+
 
     static {
-        formatter.setTimeZone(java.util.TimeZone.getTimeZone("GMT"));
+        TimeZone gmtTimeZone = java.util.TimeZone.getTimeZone("GMT");
+        Stream.of(dateFormatter, dateTimeFormatter, timeFormatter, timestampFormatter)
+                .forEach(f -> f.setTimeZone(gmtTimeZone));
     }
 
     private static final String enlist = "enlist ";
@@ -40,11 +44,6 @@ public class K {
     public static void write(OutputStream o, long j) throws IOException {
         write(o, (int) (j >> 32));
         write(o, (int) j);
-    }
-
-    private static synchronized String sd(String s, java.util.Date x) {
-        formatter.applyPattern(s);
-        return formatter.format(x);
     }
 
     public abstract static class KBase implements Comparable<KBase> {
@@ -898,7 +897,7 @@ public class K {
             if (isNull()) builder.append("0Nd");
             else if (value == Integer.MAX_VALUE) builder.append("0Wd");
             else if (value == -Integer.MAX_VALUE) builder.append("-0Wd");
-            else builder.append(sd("yyyy.MM.dd", toDate()));
+            else builder.append(dateFormatter.format(toDate()));
             return builder;
         }
 
@@ -964,7 +963,7 @@ public class K {
             if (isNull()) builder.append("0Nt");
             else if (value == Integer.MAX_VALUE) builder.append("0Wt");
             else if (value == -Integer.MAX_VALUE) builder.append("-0Wt");
-            else builder.append(sd("HH:mm:ss.SSS", toTime()));
+            else builder.append(timeFormatter.format(toTime()));
             return builder;
         }
 
@@ -988,7 +987,9 @@ public class K {
             if (isNull()) builder.append("0N");
             else if (value == Double.POSITIVE_INFINITY) builder.append("0w");
             else if (value == Double.NEGATIVE_INFINITY) builder.append("-0w");
-            else builder.append(sd("yyyy.MM.dd HH:mm:ss.SSS", toTimestamp()));
+            else builder.append(dateTimeFormatter.format(toTimestamp()));
+
+
             if (context.showType()) builder.append("z");
             return builder;
         }
@@ -1016,8 +1017,8 @@ public class K {
             else if (value == -Long.MAX_VALUE) builder.append("-0Wp");
             else {
                 Timestamp ts = toTimestamp();
-                builder.append(sd("yyyy.MM.dd HH:mm:ss.", ts))
-                        .append(nsFormatter.format(ts.getNanos()));
+                builder.append(timestampFormatter.format(ts))
+                                .append(nsFormatter.format(ts.getNanos()));
             }
             return builder;
         }

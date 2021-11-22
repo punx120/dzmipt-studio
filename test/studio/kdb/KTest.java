@@ -1,5 +1,6 @@
 package studio.kdb;
 
+import org.junit.jupiter.api.BeforeAll;
 import org.junit.jupiter.api.Test;
 import java.util.Calendar;
 import java.util.UUID;
@@ -7,6 +8,13 @@ import java.util.UUID;
 import static org.junit.jupiter.api.Assertions.assertEquals;
 
 public class KTest {
+
+    private static int maxFractionDigits = 7;
+
+    @BeforeAll
+    public static void initMaxFractionDigits() {
+        KFormatContext.setMaxFractionDigits(maxFractionDigits);
+    }
 
     private void check(K.KBase base, String expectedNoType, String expectedWithType) {
         String actualNoType = base.toString(KFormatContext.NO_TYPE);
@@ -87,6 +95,16 @@ public class KTest {
         check(new K.KDoubleVector(), "`float$()", "`float$()");
         check(new K.KDoubleVector((double)0), "enlist 0", "enlist 0f");
         check(new K.KDoubleVector((double)5, Double.NEGATIVE_INFINITY, Double.POSITIVE_INFINITY, Double.NaN), "5 -0w 0w 0n", "5 -0w 0w 0nf");
+    }
+
+    @Test
+    public void testFloatMaxFractionDigits() {
+        check(new K.KFloat(10.1f), "10.1000004", "10.1000004e");
+
+        KFormatContext.setMaxFractionDigits(5);
+        check(new K.KFloat(10.1f), "10.1", "10.1e");
+        //restore for other tests
+        KFormatContext.setMaxFractionDigits(maxFractionDigits);
     }
 
     @Test
