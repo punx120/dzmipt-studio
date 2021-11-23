@@ -153,6 +153,11 @@ public class TabPanel extends JPanel {
         tglBtnComma.doClick();
     }
 
+    public void setDoubleClickTimeout(long doubleClickTimeout) {
+        if (grid == null) return;
+        grid.setDoubleClickTimeout(doubleClickTimeout);
+    }
+
     public JTable getTable() {
         if (grid == null) return null;
         return grid.getTable();

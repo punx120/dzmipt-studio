@@ -1,3 +1,6 @@
+* Double-click in result grid:
+    * beside system double-click, added emulated double-click with configurable speed
+    * ALT + mouse click also copies the cell
 * (Windows only) Icon grouping in taskbar
     * grouping are different to other application started with the same Java machine
     * grouping for editor and charting frames are different

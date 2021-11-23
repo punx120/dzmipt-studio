@@ -8,6 +8,7 @@ import javax.swing.event.ChangeEvent;
 import javax.swing.event.ChangeListener;
 import javax.swing.table.*;
 import java.awt.*;
+import java.awt.event.InputEvent;
 import java.awt.event.KeyEvent;
 import java.awt.event.MouseAdapter;
 import java.awt.event.MouseEvent;
@@ -31,6 +32,8 @@ public class QGrid extends JPanel {
     private final JPopupMenu popupMenu = new JPopupMenu();
     private final UserAction copyExcelFormatAction;
     private final UserAction copyHtmlFormatAction;
+
+    private long doubleClickTimeout;
 
     static class MYJTable extends JTable {
         public MYJTable(TableModel m) {
@@ -86,6 +89,8 @@ public class QGrid extends JPanel {
     public QGrid(StudioPanel panel, KTableModel model) {
         this.panel = panel;
         this.model = model;
+        setDoubleClickTimeout(Config.getInstance().getInt(Config.EMULATED_DOUBLE_CLICK_TIMEOUT));
+
         table = new MYJTable(model);
 
         DefaultTableCellRenderer dhr = new TableHeaderRenderer();
@@ -171,32 +176,62 @@ public class QGrid extends JPanel {
         popupMenu.add(new JMenuItem(copyHtmlFormatAction));
 
         table.addMouseListener(new MouseAdapter() {
+            private int lastRow = -1;
+            private int lastCol = -1;
+            private long lastTimestamp = -1;
+
             public void mousePressed(MouseEvent e) {
-                maybeShowPopup(e);
+                if (maybeShowPopup(e)) return;
+
+                int row = table.rowAtPoint(e.getPoint());
+                int col = table.columnAtPoint(e.getPoint());
+
+                if ((e.getModifiers() & InputEvent.ALT_MASK) == InputEvent.ALT_MASK ) copy(row, col);
+                else if (row == lastRow && col == lastCol &&
+                        System.currentTimeMillis() - lastTimestamp < doubleClickTimeout) {
+                    copy(row, col);
+                } else {
+                    lastRow = row;
+                    lastCol = col;
+                    lastTimestamp = System.currentTimeMillis();
+                }
             }
 
             public void mouseReleased(MouseEvent e) {
                 maybeShowPopup(e);
             }
 
-            private void maybeShowPopup(MouseEvent e) {
-                if (!e.isPopupTrigger()) return;
+            private boolean maybeShowPopup(MouseEvent e) {
+                if (!e.isPopupTrigger()) return false;
 
                 JPopupMenu popupMenu = getPopupMenu(e.getPoint());
                 popupMenu.show(e.getComponent(), e.getX(), e.getY());
+                return true;
             }
 
             @Override
             public void mouseClicked(MouseEvent e) {
                 if (e.getClickCount() != 2) return;
-                K.KBase b = (K.KBase) table.getValueAt(table.getSelectedRow(), table.getSelectedColumn());
+                copy(lastRow, lastCol);
+            }
+
+
+            private void copy(int row, int col) {
+                lastCol = lastRow = -1;
+                lastTimestamp = -1;
+                if (row == -1 || col == -1) return;
+
+                K.KBase b = (K.KBase) table.getValueAt(row, col);
                 //@TODO: we shouldn't duplicate the logic here.
                 KFormatContext formatContextForCell = new KFormatContext(formatContext);
                 formatContextForCell.setShowType(b instanceof K.KBaseVector);
                 Util.copyTextToClipboard(b.toString(formatContextForCell));
-
             }
         });
+    }
+
+    public void setDoubleClickTimeout(long doubleClickTimeout) {
+        this.doubleClickTimeout = doubleClickTimeout;
     }
 
     public void setPanel(StudioPanel panel) {

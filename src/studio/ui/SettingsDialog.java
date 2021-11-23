@@ -6,6 +6,7 @@ import studio.kdb.Config;
 import studio.utils.LineEnding;
 
 import javax.swing.*;
+import javax.swing.border.Border;
 import javax.swing.text.NumberFormatter;
 import java.awt.*;
 import java.math.RoundingMode;
@@ -33,6 +34,7 @@ public class SettingsDialog extends EscapeDialog {
     private JFormattedTextField txtCellRightPadding;
     private JFormattedTextField txtCellMaxWidth;
     private JFormattedTextField txtMaxFractionDigits;
+    private JFormattedTextField txtEmulateDoubleClickTimeout;
     private JComboBox<Config.ExecAllOption> comboBoxExecAll;
     private JComboBox<LineEnding> comboBoxLineEnding;
     private JButton btnOk;
@@ -117,6 +119,10 @@ public class SettingsDialog extends EscapeDialog {
         return (Integer) txtMaxFractionDigits.getValue();
     }
 
+    public int getEmulatedDoubleClickTimeout() {
+        return (Integer) txtEmulateDoubleClickTimeout.getValue();
+    }
+
     private void refreshCredentials() {
         Credentials credentials = Config.getInstance().getDefaultCredentials(getDefaultAuthenticationMechanism());
 
@@ -177,6 +183,13 @@ public class SettingsDialog extends EscapeDialog {
         formatter.setMaximum(20);
         txtMaxFractionDigits = new JFormattedTextField(formatter);
         txtMaxFractionDigits.setValue(Config.getInstance().getInt(Config.MAX_FRACTION_DIGITS));
+
+        JLabel lblEmulatedDoubleClickTimeout = new JLabel("Emulated double-click speed (for copy action), ms");
+        formatter = new NumberFormatter();
+        formatter.setMinimum(0);
+        formatter.setMaximum(2000);
+        txtEmulateDoubleClickTimeout = new JFormattedTextField(formatter);
+        txtEmulateDoubleClickTimeout.setValue(Config.getInstance().getInt(Config.EMULATED_DOUBLE_CLICK_TIMEOUT));
 
         JLabel lblCellRightPadding = new JLabel("Right padding in table cell");
 
@@ -240,17 +253,18 @@ public class SettingsDialog extends EscapeDialog {
         layout.setStacks(
                 new GroupLayoutSimple.Stack()
                         .addLineAndGlue(lblMaxFractionDigits, txtMaxFractionDigits)
+                        .addLineAndGlue(lblEmulatedDoubleClickTimeout, txtEmulateDoubleClickTimeout)
                         .addLineAndGlue(lblResultTabsCount, txtTabsCount)
                         .addLine(lblMaxCharsInResult, txtMaxCharsInResult, lblMaxCharsInTableCell, txtMaxCharsInTableCell)
                         .addLine(lblCellRightPadding, txtCellRightPadding, lblCellMaxWidth, txtCellMaxWidth)
         );
-        layout.linkSize(SwingConstants.HORIZONTAL, lblCellRightPadding, txtMaxFractionDigits, txtTabsCount,
+        layout.linkSize(SwingConstants.HORIZONTAL, lblCellRightPadding, txtMaxFractionDigits, txtEmulateDoubleClickTimeout, txtTabsCount,
                 txtMaxCharsInResult, txtMaxCharsInTableCell, txtCellRightPadding, txtCellMaxWidth);
 
         JTabbedPane tabs = new JTabbedPane();
-        tabs.addTab("General", pnlGeneral);
-        tabs.addTab("Editor", pnlEditor);
-        tabs.addTab("Result", pnlResult);
+        tabs.addTab("General", getTabComponent(pnlGeneral));
+        tabs.addTab("Editor", getTabComponent(pnlEditor));
+        tabs.addTab("Result", getTabComponent(pnlResult));
 
         JPanel pnlButtons = new JPanel(new FlowLayout(FlowLayout.RIGHT));
         pnlButtons.add(btnOk);
@@ -260,6 +274,15 @@ public class SettingsDialog extends EscapeDialog {
         root.add(tabs, BorderLayout.CENTER);
         root.add(pnlButtons, BorderLayout.SOUTH);
         setContentPane(root);
+    }
+
+    private JComponent getTabComponent(JComponent panel) {
+        Box container = Box.createVerticalBox();
+        container.add(panel);
+        container.add(Box.createGlue());
+        container.setBackground(panel.getBackground());
+        container.setOpaque(true);
+        return new JScrollPane(container);
     }
 
     private static class LookAndFeels {

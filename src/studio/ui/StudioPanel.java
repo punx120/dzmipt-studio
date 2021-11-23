@@ -923,8 +923,18 @@ public class StudioPanel extends JPanel implements Observer,WindowListener {
                 e -> toggleWordWrap());
     }
 
+    private static StudioPanel getActivePanel() {
+        Window window = FocusManager.getCurrentManager().getActiveWindow();
+        for(StudioPanel panel: allPanels) {
+            if (window == panel.frame) return panel;
+        }
+        return null;
+    }
+
     public void settings() {
-        SettingsDialog dialog = new SettingsDialog(frame);
+        StudioPanel activePanel = getActivePanel();
+        JFrame ownerFrame = activePanel == null ? frame : activePanel.frame;
+        SettingsDialog dialog = new SettingsDialog(ownerFrame);
         dialog.alignAndShow();
         if (dialog.getResult() == CANCELLED) return;
         //@TODO Need rework - we are reading from Config inside SettingDialog; while saving happens outside
@@ -947,12 +957,17 @@ public class StudioPanel extends JPanel implements Observer,WindowListener {
         //Looks like a hack??
         KFormatContext.setMaxFractionDigits(maxFractionDigits);
 
-        boolean changed = CONFIG.setBoolean(Config.RSTA_ANIMATE_BRACKET_MATCHING, dialog.isAnimateBracketMatching());
-        changed |= CONFIG.setBoolean(Config.RSTA_HIGHLIGHT_CURRENT_LINE, dialog.isHighlightCurrentLine());
-        changed |= CONFIG.setBoolean(Config.RSTA_WORD_WRAP, dialog.isWordWrap());
+        boolean changedEditor = CONFIG.setBoolean(Config.RSTA_ANIMATE_BRACKET_MATCHING, dialog.isAnimateBracketMatching());
+        changedEditor |= CONFIG.setBoolean(Config.RSTA_HIGHLIGHT_CURRENT_LINE, dialog.isHighlightCurrentLine());
+        changedEditor |= CONFIG.setBoolean(Config.RSTA_WORD_WRAP, dialog.isWordWrap());
 
-        if (changed) {
+        if (changedEditor) {
             refreshEditorsSettings();
+        }
+
+        boolean changedResult = CONFIG.setInt(Config.EMULATED_DOUBLE_CLICK_TIMEOUT, dialog.getEmulatedDoubleClickTimeout());
+        if (changedResult) {
+            refreshResultSettings();
         }
 
         String lfClass = dialog.getLookAndFeelClassName();
@@ -981,6 +996,16 @@ public class StudioPanel extends JPanel implements Observer,WindowListener {
                 editor.setHighlightCurrentLine(CONFIG.getBoolean(Config.RSTA_HIGHLIGHT_CURRENT_LINE));
                 editor.setAnimateBracketMatching(CONFIG.getBoolean(Config.RSTA_ANIMATE_BRACKET_MATCHING));
                 editor.setLineWrap(CONFIG.getBoolean(Config.RSTA_WORD_WRAP));
+            }
+        }
+    }
+
+    private static void refreshResultSettings() {
+        long doubleClickTimeout = CONFIG.getInt(Config.EMULATED_DOUBLE_CLICK_TIMEOUT);
+        for (StudioPanel panel: allPanels) {
+            int count = panel.tabbedPane.getTabCount();
+            for (int index=0; index<count; index++) {
+                panel.getResultPane(index).setDoubleClickTimeout(doubleClickTimeout);
             }
         }
     }
@@ -1858,6 +1883,10 @@ public class StudioPanel extends JPanel implements Observer,WindowListener {
 
     private EditorTab getEditor(int index) {
         return (EditorTab) ((JComponent) tabbedEditors.getComponentAt(index)).getClientProperty(EditorTab.class);
+    }
+
+    private TabPanel getResultPane(int index) {
+        return (TabPanel)tabbedPane.getComponentAt(index);
     }
 
     // if the query is cancelled execTime=-1, result and error are null's
