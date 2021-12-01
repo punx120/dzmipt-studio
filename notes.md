@@ -1,3 +1,5 @@
+`dz2.0` 2021.12.01
+-----
 * Double-click in result grid:
     * beside system double-click, added emulated double-click with configurable speed
     * ALT + mouse click also copies the cell
