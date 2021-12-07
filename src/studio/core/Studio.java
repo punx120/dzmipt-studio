@@ -19,6 +19,7 @@ import studio.ui.StudioPanel;
 import studio.ui.action.WorkspaceSaver;
 import studio.utils.Content;
 import studio.utils.FileReaderWriter;
+import studio.utils.FileWatcher;
 import studio.utils.WindowsAppUserMode;
 
 import java.util.TimeZone;
@@ -87,6 +88,7 @@ public class Studio {
     //Executed on the Event Dispatcher Thread
     private static void init(String[] args) {
         log.info("Start Studio with args {}", Arrays.asList(args));
+        FileWatcher.start();
 
         if (args.length > 0) {
             new StudioPanel().addTab(getInitServer(), args[0]);

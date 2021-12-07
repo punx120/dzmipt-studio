@@ -1,3 +1,5 @@
+* Monitoring file changes on disk to reloaded into editor
+
 `dz2.0` 2021.12.01
 -----
 * Double-click in result grid:

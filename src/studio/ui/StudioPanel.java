@@ -537,7 +537,7 @@ public class StudioPanel extends JPanel implements Observer,WindowListener {
         rebuildAll();
     }
 
-    private void addToMruFiles(String filename) {
+    public void addToMruFiles(String filename) {
         if (filename == null)
             return;
 
@@ -625,14 +625,14 @@ public class StudioPanel extends JPanel implements Observer,WindowListener {
         }
 
         editor.setFilename(filename);
-        return saveFileOnDisk(editor);
+        return editor.saveFileOnDisk(false);
     }
 
     private boolean saveEditor(EditorTab editor) {
         if (editor.getFilename() == null) {
             return saveAsFile(editor);
         } else {
-            return saveFileOnDisk(editor);
+            return editor.saveFileOnDisk(false);
         }
     }
 
@@ -640,28 +640,9 @@ public class StudioPanel extends JPanel implements Observer,WindowListener {
         for (StudioPanel panel: allPanels) {
             int count = panel.tabbedEditors.getTabCount();
             for (int index=0; index<count; index++) {
-                saveFileOnDisk(panel.getEditor(index));
+                panel.getEditor(index).saveFileOnDisk(false);
             }
         }
-    }
-
-    // returns true if saved, false if error or cancelled
-    private static boolean saveFileOnDisk(EditorTab editor) {
-        String filename = editor.getFilename();
-        if (filename == null) return false;
-
-        try {
-            FileReaderWriter.write(filename, editor.getTextArea().getText(), editor.getLineEnding());
-            rebuildAll();
-            editor.setModified(false);
-            editor.getPanel().addToMruFiles(filename);
-            return true;
-        }
-        catch (IOException e) {
-            log.error("Error during saving file " + filename, e);
-        }
-
-        return false;
     }
 
     private void arrangeAll() {
@@ -1096,6 +1077,8 @@ public class StudioPanel extends JPanel implements Observer,WindowListener {
     private boolean closeTab() {
         if (!checkAndSaveTab(editor)) return false;
 
+        getEditor(tabbedEditors.getSelectedIndex()).stopFileWatching();
+
         if (tabbedEditors.getTabCount() == 1 && allPanels.size() == 1) {
             WorkspaceSaver.save(getWorkspace());
             log.info("Closed the last tab. Shutting down");
@@ -1467,7 +1450,6 @@ public class StudioPanel extends JPanel implements Observer,WindowListener {
             toolbar.add(findAction);
 
             toolbar.add(replaceAction);
-
             toolbar.addSeparator();
             toolbar.add(codeKxComAction);
 
@@ -1738,14 +1720,18 @@ public class StudioPanel extends JPanel implements Observer,WindowListener {
 
             StudioPanel panel = new StudioPanel();
             for (Workspace.Tab tab: tabs) {
-                EditorTab editor = panel.addTab(getServer(tab), tab.getFilename());
-                editor.init(Content.newContent(tab.getContent(), tab.getLineEnding()));
-                editor.setModified(tab.isModified());
-                int caretPosition = tab.getCaret();
-                if (caretPosition>=0 && caretPosition < editor.getTextArea().getDocument().getLength()) {
-                    editor.getTextArea().setCaretPosition(caretPosition);
+                try {
+                    EditorTab editor = panel.addTab(getServer(tab), tab.getFilename());
+                    editor.init(Content.newContent(tab.getContent(), tab.getLineEnding()));
+                    editor.setModified(tab.isModified());
+                    int caretPosition = tab.getCaret();
+                    if (caretPosition >= 0 && caretPosition < editor.getTextArea().getDocument().getLength()) {
+                        editor.getTextArea().setCaretPosition(caretPosition);
+                    }
+                    editor.getTextArea().discardAllEdits();
+                } catch (RuntimeException e) {
+                    log.error("Failed to init tab with filename {}", tab.getFilename(), e);
                 }
-                editor.getTextArea().discardAllEdits();
             }
             if (window.getSelectedTab() != -1) {
                 panel.tabbedEditors.setSelectedIndex(window.getSelectedTab());
@@ -1938,7 +1924,7 @@ public class StudioPanel extends JPanel implements Observer,WindowListener {
                 String filename = editor.getFilename();
                 boolean modified = editor.isModified();
                 if (modified && CONFIG.getBoolean(Config.AUTO_SAVE)) {
-                    panel.saveFileOnDisk(editor);
+                    editor.saveFileOnDisk(true);
                 }
                 JTextComponent textArea = editor.getTextArea();
 

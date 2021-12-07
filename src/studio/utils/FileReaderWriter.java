@@ -4,6 +4,7 @@ import java.io.BufferedWriter;
 import java.io.IOException;
 import java.nio.charset.Charset;
 import java.nio.file.Files;
+import java.nio.file.Path;
 import java.nio.file.Paths;
 
 public class FileReaderWriter {
@@ -27,7 +28,11 @@ public class FileReaderWriter {
     }
 
     public static Content read(String fileName, Charset charset) throws IOException {
-        byte[] bytes = Files.readAllBytes(Paths.get(fileName));
+        Path path = Paths.get(fileName);
+        if (! Files.exists(path)) throw new IOException("File " + fileName + " + doesn't exist");
+        if (! Files.isRegularFile(path)) throw new IOException(fileName + " is not a regular file");
+
+        byte[] bytes = Files.readAllBytes(path);
         String fileContent = new String(bytes, charset);
         return new Content(fileContent);
     }

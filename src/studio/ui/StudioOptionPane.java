@@ -54,9 +54,18 @@ public class StudioOptionPane {
     public static final Option NO_OPTION = new Option("No", KeyEvent.VK_N);
     public static final Option CANCEL_OPTION = new Option("Cancel", KeyEvent.VK_C);
 
+    public static final Option RELOAD_OPTION = new Option("Reload", KeyEvent.VK_R);
+    public static final Option IGNOREALL_OPTION = new Option("Ignore all", KeyEvent.VK_I);
+
     public static final Option[] OK_OPTIONS = new Option[] {OK_OPTION};
     public static final Option[] YES_NO_OPTIONS = new Option[] {YES_OPTION, NO_OPTION};
     public static final Option[] YES_NO_CANCEL_OPTIONS = new Option[] {YES_OPTION, NO_OPTION, CANCEL_OPTION};
+
+    public static final Option[] RELOADFILE_OPTIONS = new Option[] {RELOAD_OPTION, CANCEL_OPTION, IGNOREALL_OPTION};
+
+    public static final int RELOAD_RESULT = 0;
+    public static final int CANCEL_RESULT = 1;
+    public static final int IGNOREALL_RESULT = 2;
 
     public static void showError(String message, String title) {
         showError(null, message, title);
@@ -81,6 +90,10 @@ public class StudioOptionPane {
 
     public static int showYesNoCancelDialog(Component parentComponent, String message, String title) {
         return showOptionDialog(parentComponent, message, title, JOptionPane.QUESTION_MESSAGE, Util.QUESTION_ICON, YES_NO_CANCEL_OPTIONS, NO_OPTION);
+    }
+
+    public static int reloadFileDialog(Component parentComponent, String message, String title) {
+        return showOptionDialog(parentComponent, message, title, JOptionPane.QUESTION_MESSAGE, Util.QUESTION_ICON, RELOADFILE_OPTIONS, CANCEL_OPTION);
     }
 
     public static String showInputDialog(Component parentComponent, String message, String title) {

@@ -13,7 +13,7 @@ import java.util.concurrent.TimeUnit;
 
 public class WorkspaceSaver {
 
-    private final static int PERIOD_IN_SEC = 60;
+    private final static int PERIOD_IN_SEC = 10;
 
     private final static ScheduledExecutorService scheduler = Executors.newScheduledThreadPool(1);
     private static boolean enabled = true;
