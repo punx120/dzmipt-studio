@@ -85,7 +85,7 @@ public class RSTextAreaFactory {
     }
 
     public static RSyntaxTextArea newTextArea(boolean editable) {
-        RSyntaxTextArea textArea = new RSyntaxTextArea("");
+        RSyntaxTextArea textArea = new StudioRSyntaxTextArea("");
         textArea.setEditable(editable);
         textArea.setLineWrap(Config.getInstance().getBoolean(Config.RSTA_WORD_WRAP));
         textArea.setAnimateBracketMatching(Config.getInstance().getBoolean(Config.RSTA_ANIMATE_BRACKET_MATCHING));
