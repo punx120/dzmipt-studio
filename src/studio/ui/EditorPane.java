@@ -1,13 +1,11 @@
 package studio.ui;
 
 import org.fife.ui.rsyntaxtextarea.RSyntaxTextArea;
-import org.fife.ui.rtextarea.ConfigurableCaret;
 import org.fife.ui.rtextarea.RTextScrollPane;
 import studio.kdb.Config;
 import studio.ui.rstextarea.RSTextAreaFactory;
 
 import javax.swing.*;
-import javax.xml.soap.Text;
 import java.awt.*;
 import java.awt.event.ActionEvent;
 import java.awt.event.KeyAdapter;
@@ -123,11 +121,11 @@ public class EditorPane extends JPanel {
     private void setBorder(JComponent component) {
         component.setBorder(
                 BorderFactory.createCompoundBorder(
-                    BorderFactory.createCompoundBorder(
-                            BorderFactory.createEmptyBorder(yGap,xGap,yGap,xGap),
-                            BorderFactory.createLineBorder(Color.LIGHT_GRAY)
-                    ),
-                    BorderFactory.createEmptyBorder(2*yGap, 2*xGap, yGap, 2*xGap)
+                        BorderFactory.createCompoundBorder(
+                                BorderFactory.createEmptyBorder(yGap, xGap, yGap, xGap),
+                                BorderFactory.createLineBorder(Color.LIGHT_GRAY)
+                        ),
+                        BorderFactory.createEmptyBorder(2 * yGap, 2 * xGap, yGap, 2 * xGap)
                 )
         );
     }
