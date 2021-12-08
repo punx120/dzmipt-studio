@@ -237,7 +237,10 @@ public class EditorTab implements FileWatcher.Listener {
         if (modified) {
             watchFile = false; // prevent to show new dialogs until this one is answered
             int result = StudioOptionPane.reloadFileDialog(editorPane, "File " + filename +
-                                " was modified on disk.\nReload and override local changes?", "Reload");
+                                " was modified on disk.\nReload and override local changes?\n\n" +
+                    "If you select Cancel, then you will be notified about file modifications again.\n\n" +
+                    "However if you select Ignore All, there will be no future notifications\n" +
+                    "about file modifications until the file is saved in the Studio.", "Reload");
 
             if (result != StudioOptionPane.IGNOREALL_RESULT) {
                 watchFile = true;
